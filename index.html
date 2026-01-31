@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecondScreen Pro | Ultra Dashboard</title>
+    <title>SecondScreen Pro | Master Dashboard</title>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -19,22 +19,15 @@
             --text-main: #FFFFFF;
             --text-secondary: #8E8E93;
             --glass-blur: blur(45px) saturate(210%);
-            --transition-smooth: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
-
         body {
             background-color: var(--bg-color);
-            background-image: 
-                radial-gradient(circle at 10% 10%, #151517 0%, transparent 35%),
-                radial-gradient(circle at 90% 90%, #0d0d0e 0%, transparent 35%);
+            background-image: radial-gradient(circle at 10% 10%, #151517 0%, transparent 35%);
             color: var(--text-main);
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
-            height: 100vh;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            height: 100vh; overflow: hidden; display: flex; flex-direction: column;
         }
 
         nav {
@@ -43,274 +36,227 @@
             backdrop-filter: blur(20px); border-bottom: 1px solid var(--card-border);
         }
 
-        .logo { font-size: 22px; font-weight: 700; letter-spacing: -0.8px; display: flex; align-items: center; gap: 10px; }
-        .logo i { color: var(--accent-blue); }
-
         .btn {
             background: rgba(255, 255, 255, 0.08); border: 1px solid var(--card-border);
             color: white; padding: 10px 22px; border-radius: 12px; font-size: 14px;
-            font-weight: 600; cursor: pointer; transition: var(--transition-smooth);
-            display: flex; align-items: center; gap: 10px;
+            font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 10px;
         }
 
         .btn-primary { background: var(--accent-blue); border: none; }
         .btn-danger { background: #2c0e0e; color: var(--accent-red); }
 
-        #dashboard-wrapper { flex: 1; padding: 30px; overflow-y: auto; width: 100%; }
+        #dashboard-wrapper { flex: 1; padding: 30px; overflow-y: auto; }
 
         .grid-stack-item-content {
             background: var(--card-bg) !important;
             backdrop-filter: var(--glass-blur) !important;
             border: 1px solid var(--card-border) !important;
             border-radius: 28px !important;
-            padding: 24px;
-            display: flex;
-            flex-direction: column;
-            overflow: visible !important;
+            padding: 20px; display: flex; flex-direction: column; overflow: hidden !important;
         }
 
         .remove-widget {
             position: absolute; top: -12px; right: -12px; width: 32px; height: 32px;
             background: var(--accent-red); border: 3px solid #000; border-radius: 50%;
             color: white; display: none; justify-content: center; align-items: center;
-            font-size: 14px; font-weight: 900; cursor: pointer; z-index: 1001;
+            font-weight: 900; cursor: pointer; z-index: 1001;
         }
 
         .editing .remove-widget { display: flex; }
-        .editing .grid-stack-item-content { border: 2px solid var(--accent-blue) !important; animation: wiggle 0.3s infinite ease-in-out; }
+        .editing .grid-stack-item-content { border: 2px solid var(--accent-blue) !important; animation: wiggle 0.3s infinite; }
 
-        @keyframes wiggle {
-            0% { transform: rotate(-0.5deg); }
-            50% { transform: rotate(0.5deg); }
-            100% { transform: rotate(-0.5deg); }
-        }
+        @keyframes wiggle { 0%, 100% { transform: rotate(-0.5deg); } 50% { transform: rotate(0.5deg); } }
 
-        .w-label { font-size: 10px; color: var(--accent-blue); text-transform: uppercase; letter-spacing: 1.8px; margin-bottom: 12px; font-weight: 800; display: block; }
-        .time-display { font-size: 58px; font-weight: 800; letter-spacing: -3px; line-height: 1; margin: 10px 0; }
-        .date-display { font-size: 16px; color: var(--text-secondary); }
+        .w-label { font-size: 10px; color: var(--accent-blue); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; font-weight: 800; }
+        
+        /* Widget UI Components */
+        .time-display { font-size: 52px; font-weight: 800; letter-spacing: -2px; }
+        .widget-val { font-size: 32px; font-weight: 800; margin: 5px 0; }
+        input, textarea, select { background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); color: white; padding: 10px; border-radius: 12px; width: 100%; outline: none; margin-bottom: 8px; }
+        
+        /* Spotify & Media */
+        .art-proxy { width: 70px; height: 70px; background: #282828; border-radius: 12px; margin: 0 auto 10px; background-size: cover; display: flex; align-items: center; justify-content: center; }
+        .spotify-btn { background: var(--accent-green); color: black; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; border: none; cursor: pointer; margin-top: 10px; }
 
-        /* Stats */
-        .stat-group { margin-bottom: 15px; }
-        .stat-header { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
-        .stat-track { height: 6px; background: rgba(255,255,255,0.06); border-radius: 10px; overflow: hidden; }
-        .stat-fill { height: 100%; transition: width 0.8s ease; }
+        /* Calculator */
+        .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+        .calc-btn { background: rgba(255,255,255,0.1); border: none; color: white; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
 
-        /* Spotify Widget */
-        .widget-music { text-align: center; }
-        .art-proxy { 
-            width: 80px; height: 80px; margin: 0 auto 15px; background: #282828; border-radius: 12px; 
-            background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; font-size: 30px;
-        }
-        .spotify-btn { display: none; margin-top: 15px; padding: 6px 15px; background: var(--accent-green); color: black; border-radius: 20px; font-size: 11px; font-weight: 800; border: none; cursor: pointer; }
-        .editing .spotify-btn { display: inline-block; }
-
-        /* To-Do Styles */
-        .todo-input { background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); color: white; padding: 8px; border-radius: 8px; margin-bottom: 10px; width: 100%; outline: none; }
-        .todo-list { list-style: none; overflow-y: auto; flex: 1; }
-        .todo-item { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 14px; cursor: pointer; transition: 0.4s; }
-        .todo-item.done { opacity: 0.4; text-decoration: line-through; }
-        .todo-item.fade-out { opacity: 0; transform: translateX(20px); pointer-events: none; }
-        .todo-check { width: 16px; height: 16px; border: 2px solid var(--accent-blue); border-radius: 4px; flex-shrink: 0; }
-        .done .todo-check { background: var(--accent-blue); }
-
-        /* Launcher Styles */
-        .app-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; flex: 1; align-items: center; }
-        .app-icon { aspect-ratio: 1; background: rgba(255,255,255,0.05); border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; position: relative; }
-        .link-edit-input { display: none; position: absolute; bottom: -30px; left: 0; width: 100%; background: #1c1c1e; border: 1px solid var(--accent-blue); color: white; font-size: 10px; padding: 4px; border-radius: 6px; outline: none; }
-        .editing .link-edit-input { display: block; }
-
-        #add-panel { position: fixed; bottom: -500px; left: 0; width: 100%; background: rgba(18, 18, 20, 0.98); backdrop-filter: blur(40px); border-top: 1px solid var(--card-border); padding: 50px; display: flex; justify-content: center; gap: 40px; transition: 0.6s; z-index: 2000; }
+        #add-panel { position: fixed; bottom: -600px; left: 0; width: 100%; background: #121214; padding: 40px; display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; transition: 0.6s; z-index: 2000; border-top: 1px solid var(--card-border); }
         #add-panel.show { bottom: 0; }
     </style>
 </head>
 <body>
 
     <nav>
-        <div class="logo"><i class="fa-solid fa-layer-group"></i> Second<span>Screen</span> Pro</div>
+        <div class="logo"><i class="fa-solid fa-layer-group"></i> Second<span>Screen</span> Master</div>
         <div style="display:flex; gap:14px;">
-            <button class="btn" onclick="toggleAddPanel(true)"><i class="fa fa-plus"></i> Add Widget</button>
-            <button id="edit-mode-btn" class="btn" onclick="Dashboard.toggleEdit()"><i class="fa fa-pencil"></i> Customize</button>
-            <button class="btn btn-primary" onclick="Dashboard.saveState()"><i class="fa fa-save"></i> Save</button>
-            <button class="btn btn-danger" onclick="Dashboard.clearState()"><i class="fa fa-refresh"></i> Reset</button>
+            <button class="btn" onclick="toggleAddPanel(true)">+ Add Widget</button>
+            <button id="edit-mode-btn" class="btn" onclick="Dashboard.toggleEdit()">Customize</button>
+            <button class="btn btn-primary" onclick="Dashboard.saveState()">Save Layout</button>
+            <button class="btn btn-danger" onclick="Dashboard.clearState()">Reset</button>
         </div>
     </nav>
 
-    <div id="dashboard-wrapper">
-        <div class="grid-stack"></div>
-    </div>
+    <div id="dashboard-wrapper"><div class="grid-stack"></div></div>
 
     <div id="add-panel">
         <button class="btn" onclick="Dashboard.addWidget('clock', 4, 3)">Clock</button>
         <button class="btn" onclick="Dashboard.addWidget('music', 3, 3)">Spotify</button>
-        <button class="btn" onclick="Dashboard.addWidget('apps', 4, 3)">Launcher</button>
+        <button class="btn" onclick="Dashboard.addWidget('calc', 3, 5)">Calculator</button>
         <button class="btn" onclick="Dashboard.addWidget('todo', 3, 4)">To-Do</button>
-        <button class="btn" onclick="Dashboard.addWidget('notes', 6, 4)">Notes</button>
+        <button class="btn" onclick="Dashboard.addWidget('notes', 5, 4)">Notes</button>
+        <button class="btn" onclick="Dashboard.addWidget('weather', 3, 3)">Weather</button>
+        <button class="btn" onclick="Dashboard.addWidget('passgen', 4, 3)">Password</button>
         <button class="btn" onclick="Dashboard.addWidget('stats', 3, 4)">System</button>
+        <button class="btn" onclick="Dashboard.addWidget('converter', 3, 4)">Converter</button>
+        <button class="btn" onclick="Dashboard.addWidget('calendar', 4, 4)">Calendar</button>
         <button class="btn btn-danger" onclick="toggleAddPanel(false)">Close</button>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack-all.js"></script>
-    
     <script>
+        const WidgetLogic = {
+            calc: (id, v) => {
+                const s = document.getElementById(id + '-s');
+                if (v === '=') try { s.value = eval(s.value); } catch { s.value = "Error"; }
+                else if (v === 'C') s.value = '';
+                else s.value += v;
+            },
+            genPass: (id) => {
+                const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+                let pass = "";
+                for(let i=0; i<16; i++) pass += chars.charAt(Math.floor(Math.random() * chars.length));
+                document.getElementById(id + '-pass').value = pass;
+            }
+        };
+
         const Dashboard = (() => {
-            const SPOTIFY_CLIENT_ID = 'PASTE_YOUR_ID_HERE'; 
-            // Automatically use the current site URL as the redirect
-            const SPOTIFY_REDIRECT_URI = window.location.origin + window.location.pathname;
-            
-            let grid = null;
-            let isEditing = false;
+            const SPOTIFY_CLIENT_ID = '2aea224b957a49e0ade20938094a2170';
+            const REDIRECT_URI = window.location.origin + window.location.pathname;
+            let grid = null, isEditing = false;
 
             const init = () => {
-                grid = GridStack.init({ column: 12, cellHeight: '90px', margin: 15, animate: true, disableDrag: true, disableResize: true, float: true });
+                grid = GridStack.init({ column: 12, cellHeight: '85px', margin: 12, animate: true, float: true });
                 handleSpotifyAuth();
-                loadInitialState();
-                setInterval(updateSpotifyUI, 3000);
+                loadState();
+                setInterval(updateSpotify, 3000);
+                setInterval(updateStats, 2000);
             };
 
             const toggleEdit = () => {
                 isEditing = !isEditing;
                 grid.enableMove(isEditing); grid.enableResize(isEditing);
-                document.getElementById('dashboard-wrapper').classList.toggle('editing', isEditing);
-                document.getElementById('edit-mode-btn').innerHTML = isEditing ? '<i class="fa fa-check"></i> Done' : '<i class="fa fa-pencil"></i> Customize';
-                if (!isEditing) saveState();
+                document.body.classList.toggle('editing', isEditing);
+                if(!isEditing) saveState();
+            };
+
+            const getTemplate = (type, id) => {
+                const base = `<div class="remove-widget">✕</div><span class="w-label">${type}</span>`;
+                const temps = {
+                    clock: `<div id="${id}">${base}<div class="time-display">00:00</div><div style="color:var(--text-secondary)">...</div></div>`,
+                    music: `<div id="${id}" style="text-align:center">${base}<div class="art-proxy" id="${id}-art"><i class="fa-brands fa-spotify"></i></div><h4 id="${id}-t">Idle</h4><div style="display:flex;justify-content:center;gap:20px;margin-top:10px;font-size:18px"><i class="fa fa-backward" onclick="Dashboard.spotifyAction('previous')"></i><i class="fa fa-play" id="${id}-p" onclick="Dashboard.spotifyAction('toggle')"></i><i class="fa fa-forward" onclick="Dashboard.spotifyAction('next')"></i></div><button class="spotify-btn" onclick="Dashboard.spotifyLogin()">Link Account</button></div>`,
+                    calc: `<div id="${id}">${base}<input id="${id}-s" readonly placeholder="0"><div class="calc-grid">` + ['7','8','9','/','4','5','6','*','1','2','3','-','C','0','=','+'].map(k=>`<button class="calc-btn" onclick="WidgetLogic.calc('${id}','${k}')">${k}</button>`).join('') + `</div></div>`,
+                    todo: `<div id="${id}">${base}<input type="text" placeholder="Add task..."><div class="todo-list" style="overflow-y:auto;flex:1"></div></div>`,
+                    notes: `<div id="${id}" style="height:100%">${base}<textarea style="height:80%;" placeholder="Write..."></textarea></div>`,
+                    weather: `<div id="${id}">${base}<div class="widget-val" id="${id}-temp">--°C</div><div id="${id}-loc">Detecting...</div></div>`,
+                    passgen: `<div id="${id}">${base}<input id="${id}-pass" readonly><button class="btn btn-primary" style="width:100%" onclick="WidgetLogic.genPass('${id}')">Generate</button></div>`,
+                    stats: `<div id="${id}">${base}<div style="margin-bottom:10px">CPU <span class="cpu-v">0%</span></div><div style="margin-bottom:10px">RAM <span class="ram-v">0%</span></div></div>`,
+                    converter: `<div id="${id}">${base}<input type="number" id="${id}-v"><select><option>C to F</option><option>Kg to Lb</option></select><div class="widget-val" style="font-size:20px">Result</div></div>`,
+                    calendar: `<div id="${id}">${base}<div id="${id}-cal" style="display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:11px"></div></div>`
+                };
+                return temps[type];
             };
 
             const addWidget = (type, w, h, x, y, data) => {
                 const id = 'w-' + Math.random().toString(36).substr(2, 9);
-                const template = getTemplate(type, id);
-                const el = grid.addWidget({ w, h, x, y, content: template });
+                const el = grid.addWidget({ w, h, x, y, content: getTemplate(type, id) });
                 el.querySelector('.remove-widget').onclick = () => grid.removeWidget(el);
-
-                if (type === 'clock') startClock(id);
-                if (type === 'stats') startStats(id);
-                if (type === 'todo') initTodo(id, data);
-                if (type === 'notes') initNotes(id, data);
-                if (type === 'apps' && data) {
-                    const icons = el.querySelectorAll('.app-icon');
-                    data.forEach((link, i) => { if(icons[i]) { icons[i].dataset.link = link; icons[i].querySelector('input').value = link; } });
-                }
+                
+                if(type === 'clock') startClock(id);
+                if(type === 'weather') initWeather(id);
+                if(type === 'calendar') initCalendar(id);
+                if(type === 'notes' && data) el.querySelector('textarea').value = data;
+                
                 toggleAddPanel(false);
                 saveState();
             };
 
-            const getTemplate = (type, id) => {
-                const templates = {
-                    clock: `<div class="widget-clock" id="${id}"><div class="remove-widget">✕</div><span class="w-label">Live Time</span><div class="time-display">00:00</div><div class="date-display">...</div></div>`,
-                    stats: `<div class="widget-stats" id="${id}"><div class="remove-widget">✕</div><span class="w-label">System Performance</span>
-                                <div class="stat-group">CPU <span class="cpu-text">0%</span><div class="stat-track"><div class="stat-fill cpu-bar" style="width:0%; background:var(--accent-blue)"></div></div></div>
-                                <div class="stat-group">RAM <span class="ram-text">0%</span><div class="stat-track"><div class="stat-fill ram-bar" style="width:0%; background:var(--accent-green)"></div></div></div>
-                            </div>`,
-                    apps: `<div class="widget-apps"><div class="remove-widget">✕</div><span class="w-label">Launcher</span><div class="app-grid">
-                                <div class="app-icon" data-link="https://discord.com" onclick="if(!Dashboard.isEditingMode()) window.open(this.dataset.link)"><i class="fa-brands fa-discord"></i><input type="text" class="link-edit-input" value="https://discord.com" oninput="this.parentElement.dataset.link = this.value; Dashboard.saveState();"></div>
-                                <div class="app-icon" data-link="https://spotify.com" onclick="if(!Dashboard.isEditingMode()) window.open(this.dataset.link)"><i class="fa-brands fa-spotify"></i><input type="text" class="link-edit-input" value="https://spotify.com" oninput="this.parentElement.dataset.link = this.value; Dashboard.saveState();"></div>
-                                <div class="app-icon" data-link="https://github.com" onclick="if(!Dashboard.isEditingMode()) window.open(this.dataset.link)"><i class="fa-brands fa-github"></i><input type="text" class="link-edit-input" value="https://github.com" oninput="this.parentElement.dataset.link = this.value; Dashboard.saveState();"></div>
-                            </div></div>`,
-                    music: `<div class="widget-music" id="${id}"><div class="remove-widget">✕</div><span class="w-label">Spotify</span>
-                                <div class="music-ui"><div class="art-proxy"><i class="fa-brands fa-spotify"></i></div><h4 class="m-title">Idle</h4><p class="m-artist" style="color:var(--text-secondary); font-size:13px;">Not Connected</p>
-                                <div style="display:flex; justify-content:center; gap:25px; margin-top:15px; font-size:20px; cursor:pointer;">
-                                    <i class="fa fa-step-backward" onclick="Dashboard.spotifyAction('previous')"></i><i class="fa fa-play play-btn" onclick="Dashboard.spotifyAction('toggle')"></i><i class="fa fa-step-forward" onclick="Dashboard.spotifyAction('next')"></i>
-                                </div><button class="spotify-btn" onclick="Dashboard.spotifyLogin()">Link Account</button></div></div>`,
-                    todo: `<div class="widget-todo" id="${id}" style="height:100%; display:flex; flex-direction:column;"><div class="remove-widget">✕</div><span class="w-label">Tasks</span><input type="text" class="todo-input" placeholder="Add..."><div class="todo-list"></div></div>`,
-                    notes: `<div class="widget-notes" id="${id}" style="height:100%; display:flex; flex-direction:column;"><div class="remove-widget">✕</div><span class="w-label">Notes</span><textarea class="note-area" style="background:transparent; border:none; color:#ddd; flex:1; outline:none; resize:none; font-size:14px;" placeholder="Write thoughts..."></textarea></div>`
-                };
-                return templates[type];
-            };
-
-            const initTodo = (id, data) => {
-                const el = document.getElementById(id); if(!el) return;
-                const input = el.querySelector('.todo-input'); const list = el.querySelector('.todo-list');
-                const addTask = (text, done = false) => {
-                    const item = document.createElement('div'); item.className = `todo-item ${done ? 'done' : ''}`;
-                    item.innerHTML = `<div class="todo-check"></div><span>${text}</span>`;
-                    item.oncontextmenu = (e) => { e.preventDefault(); item.remove(); saveState(); };
-                    item.onclick = () => { 
-                        item.classList.toggle('done'); saveState(); 
-                        if(item.classList.contains('done')) setTimeout(() => { if(item.classList.contains('done')){item.classList.add('fade-out'); setTimeout(() => {item.remove(); saveState();}, 400);} }, 1000);
-                    };
-                    list.appendChild(item);
-                };
-                input.onkeypress = (e) => { if(e.key === 'Enter' && input.value){addTask(input.value); input.value = ''; saveState();} };
-                if(data) data.forEach(d => addTask(d.text, d.done));
-            };
-
-            const initNotes = (id, data) => {
-                const el = document.getElementById(id); if(!el) return;
-                const area = el.querySelector('.note-area'); if(data) area.value = data;
-                area.oninput = () => saveState();
-            };
-
-            const startClock = (id) => setInterval(() => {
-                const el = document.getElementById(id); if(!el) return;
-                const d = new Date();
-                el.querySelector('.time-display').innerText = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-                el.querySelector('.date-display').innerText = d.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
-            }, 1000);
-
-            const startStats = (id) => setInterval(() => {
-                const el = document.getElementById(id); if(!el) return;
-                const cpu = Math.floor(Math.random() * 95) + 5; const ram = Math.floor(Math.random() * 40) + 55;
-                el.querySelector('.cpu-text').innerText = cpu + '%'; el.querySelector('.cpu-bar').style.width = cpu + '%';
-                el.querySelector('.ram-text').innerText = ram + '%'; el.querySelector('.ram-bar').style.width = ram + '%';
-            }, 3000);
-
+            // Spotify Logic
             const spotifyLogin = () => {
                 const scope = 'user-read-playback-state user-modify-playback-state';
-                window.location.href = `https://accounts.spotify.com/authorize?client_id=${SPOTIFY_CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(SPOTIFY_REDIRECT_URI)}&scope=${encodeURIComponent(scope)}`;
+                window.location.href = `https://accounts.spotify.com/authorize?client_id=${SPOTIFY_CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${encodeURIComponent(scope)}`;
             };
-
             const handleSpotifyAuth = () => {
-                const hash = window.location.hash.substring(1).split('&').reduce((a, i) => { if(i){var p=i.split('='); a[p[0]]=decodeURIComponent(p[1]);} return a; }, {});
-                if(hash.access_token) { localStorage.setItem('spotify_token', hash.access_token); window.location.hash = ''; }
+                const h = window.location.hash.substring(1).split('&').reduce((a,i)=>{if(i){let p=i.split('=');a[p[0]]=p[1];}return a;},{});
+                if(h.access_token) { localStorage.setItem('sp_t', h.access_token); window.location.hash = ''; }
             };
-
             const spotifyAction = async (act) => {
-                const token = localStorage.getItem('spotify_token'); if(!token) return;
-                let method = 'POST'; let ep = act;
-                if(act === 'toggle') { ep = document.querySelector('.play-btn').classList.contains('fa-pause') ? 'pause' : 'play'; method = 'PUT'; }
-                await fetch(`https://api.spotify.com/v1/me/player/${ep}`, { method, headers: {'Authorization': `Bearer ${token}`} });
-                setTimeout(updateSpotifyUI, 400);
+                const t = localStorage.getItem('sp_t'); if(!t) return;
+                let method = 'POST', ep = act;
+                if(act === 'toggle') { ep = document.querySelector('.fa-pause') ? 'pause' : 'play'; method = 'PUT'; }
+                await fetch(`https://api.spotify.com/v1/me/player/${ep}`, { method, headers: {'Authorization': `Bearer ${t}`} });
             };
-
-            const updateSpotifyUI = async () => {
-                const token = localStorage.getItem('spotify_token'); if(!token) return;
+            const updateSpotify = async () => {
+                const t = localStorage.getItem('sp_t'); if(!t) return;
                 try {
-                    const res = await fetch('https://api.spotify.com/v1/me/player', { headers: {'Authorization': `Bearer ${token}`} });
-                    if(res.status !== 200) return;
-                    const d = await res.json(); const widget = document.querySelector('.widget-music'); if(!widget) return;
-                    widget.querySelector('.m-title').innerText = d.item.name;
-                    widget.querySelector('.m-artist').innerText = d.item.artists[0].name;
-                    widget.querySelector('.art-proxy').style.backgroundImage = `url(${d.item.album.images[0].url})`;
-                    widget.querySelector('.art-proxy').innerHTML = '';
-                    widget.querySelector('.play-btn').className = d.is_playing ? 'fa fa-pause play-btn' : 'fa fa-play play-btn';
+                    const r = await fetch('https://api.spotify.com/v1/me/player', { headers: {'Authorization':`Bearer ${t}`} });
+                    if(r.status === 200) {
+                        const d = await r.json();
+                        document.querySelector('[id$="-t"]').innerText = d.item.name;
+                        document.querySelector('[id$="-art"]').style.backgroundImage = `url(${d.item.album.images[0].url})`;
+                        document.querySelector('[id$="-p"]').className = d.is_playing ? 'fa fa-pause' : 'fa fa-play';
+                    }
                 } catch(e) {}
             };
 
+            // Global Updates
+            const startClock = (id) => setInterval(() => {
+                const el = document.getElementById(id); if(!el) return;
+                const d = new Date();
+                el.querySelector('.time-display').innerText = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                el.lastChild.innerText = d.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric' });
+            }, 1000);
+
+            const initWeather = (id) => {
+                navigator.geolocation.getCurrentPosition(pos => {
+                    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&current_weather=true`)
+                    .then(r=>r.json()).then(data => {
+                        document.getElementById(id+'-temp').innerText = Math.round(data.current_weather.temperature) + '°C';
+                        document.getElementById(id+'-loc').innerText = "Current Location";
+                    });
+                });
+            };
+
+            const initCalendar = (id) => {
+                const cal = document.getElementById(id+'-cal');
+                for(let i=1; i<=31; i++) cal.innerHTML += `<div>${i}</div>`;
+            };
+
+            const updateStats = () => {
+                document.querySelectorAll('.cpu-v').forEach(el => el.innerText = Math.floor(Math.random()*20+5) + "%");
+                document.querySelectorAll('.ram-v').forEach(el => el.innerText = Math.floor(Math.random()*15+40) + "%");
+            };
+
             const saveState = () => {
-                const data = grid.getGridItems().map(el => {
-                    const div = el.querySelector('[class^="widget-"]'); if (!div) return null;
-                    const type = div.classList[0].split('-')[1];
-                    let custom = null;
-                    if (type === 'notes') custom = el.querySelector('.note-area').value;
-                    if (type === 'apps') custom = Array.from(el.querySelectorAll('.app-icon')).map(i => i.dataset.link);
-                    if (type === 'todo') custom = Array.from(el.querySelectorAll('.todo-item')).map(it => ({ text: it.querySelector('span').innerText, done: it.classList.contains('done') }));
-                    return { w: el.gridstackNode.w, h: el.gridstackNode.h, x: el.gridstackNode.x, y: el.gridstackNode.y, type, data: custom };
-                }).filter(x => x !== null);
-                localStorage.setItem('ss_ultra_v5', JSON.stringify(data));
+                const d = grid.getGridItems().map(el => ({
+                    x: el.gridstackNode.x, y: el.gridstackNode.y, w: el.gridstackNode.w, h: el.gridstackNode.h,
+                    type: el.querySelector('.w-label').innerText.toLowerCase(),
+                    data: el.querySelector('textarea')?.value || null
+                }));
+                localStorage.setItem('ss_master_v1', JSON.stringify(d));
             };
 
-            const loadInitialState = () => {
-                const saved = JSON.parse(localStorage.getItem('ss_ultra_v5'));
-                if (saved && saved.length > 0) saved.forEach(w => addWidget(w.type, w.w, w.h, w.x, w.y, w.data));
-                else { 
-                    addWidget('clock', 5, 3, 0, 0); addWidget('music', 3, 3, 5, 0); addWidget('apps', 4, 3, 8, 0); 
-                    addWidget('todo', 3, 4, 0, 3); addWidget('notes', 6, 4, 3, 3); addWidget('stats', 3, 4, 9, 3);
-                }
+            const loadState = () => {
+                const s = JSON.parse(localStorage.getItem('ss_master_v1'));
+                if(s) s.forEach(w => addWidget(w.type, w.w, w.h, w.x, w.y, w.data));
+                else { addWidget('clock', 4, 3); addWidget('music', 3, 3); addWidget('stats', 3, 4); }
             };
 
-            return { init, toggleEdit, addWidget, saveState, clearState: () => {localStorage.removeItem('ss_ultra_v5'); location.reload();}, spotifyLogin, spotifyAction, isEditingMode: () => isEditing };
+            return { init, toggleEdit, addWidget, saveState, spotifyLogin, spotifyAction, clearState: () => {localStorage.removeItem('ss_master_v1'); location.reload();} };
         })();
 
-        function toggleAddPanel(f) { document.getElementById('add-panel').classList.toggle('show', f); }
+        function toggleAddPanel(s) { document.getElementById('add-panel').classList.toggle('show', s); }
         window.onload = Dashboard.init;
     </script>
 </body>
