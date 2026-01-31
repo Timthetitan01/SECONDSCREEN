@@ -3,261 +3,437 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecondScreen Pro | Master Dashboard</title>
+    <title>SecondScreen Pro | Ultimate Dashboard</title>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     
     <style>
         :root {
-            --bg-color: #000000;
-            --card-bg: rgba(22, 22, 24, 0.7);
-            --card-border: rgba(255, 255, 255, 0.12);
-            --accent-blue: #0A84FF;
-            --accent-green: #1DB954;
-            --accent-red: #FF3B30;
+            --bg-deep: #050505;
+            --card-bg: rgba(28, 28, 30, 0.6);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --accent: #0A84FF;
+            --accent-green: #30D158;
+            --accent-red: #FF453A;
             --text-main: #FFFFFF;
-            --text-secondary: #8E8E93;
-            --glass-blur: blur(45px) saturate(210%);
+            --text-dim: #A1A1A6;
+            --glass: blur(30px) saturate(180%);
+            --radius: 24px;
+            --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            background-color: var(--bg-color);
-            background-image: radial-gradient(circle at 10% 10%, #151517 0%, transparent 35%);
+            background-color: var(--bg-deep);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(10, 132, 255, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(48, 209, 88, 0.1) 0px, transparent 50%);
             color: var(--text-main);
-            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-            height: 100vh; overflow: hidden; display: flex; flex-direction: column;
+            font-family: var(--font);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
+        /* Navigation Bar */
         nav {
-            height: 75px; display: flex; justify-content: space-between; align-items: center;
-            padding: 0 40px; z-index: 1000; background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(20px); border-bottom: 1px solid var(--card-border);
+            height: 80px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 40px;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--card-border);
+            z-index: 1000;
         }
 
+        .brand { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px; }
+        .brand span { color: var(--accent); }
+
+        .nav-actions { display: flex; gap: 12px; }
+
+        /* Buttons */
         .btn {
-            background: rgba(255, 255, 255, 0.08); border: 1px solid var(--card-border);
-            color: white; padding: 10px 22px; border-radius: 12px; font-size: 14px;
-            font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 10px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--card-border);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
+        .btn:hover { background: rgba(255, 255, 255, 0.15); transform: translateY(-1px); }
+        .btn-primary { background: var(--accent); border: none; }
+        .btn-primary:hover { background: #409cff; box-shadow: 0 4px 15px rgba(10, 132, 255, 0.3); }
+        .btn-danger { color: var(--accent-red); background: rgba(255, 69, 58, 0.1); }
 
-        .btn-primary { background: var(--accent-blue); border: none; }
-        .btn-danger { background: #2c0e0e; color: var(--accent-red); }
-
-        #dashboard-wrapper { flex: 1; padding: 30px; overflow-y: auto; }
+        /* Dashboard Area */
+        #dashboard-wrapper { flex: 1; padding: 25px; overflow-y: auto; }
 
         .grid-stack-item-content {
             background: var(--card-bg) !important;
-            backdrop-filter: var(--glass-blur) !important;
+            backdrop-filter: var(--glass) !important;
             border: 1px solid var(--card-border) !important;
-            border-radius: 28px !important;
-            padding: 20px; display: flex; flex-direction: column; overflow: hidden !important;
+            border-radius: var(--radius) !important;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
 
+        /* Remove Widget Button */
         .remove-widget {
-            position: absolute; top: -12px; right: -12px; width: 32px; height: 32px;
-            background: var(--accent-red); border: 3px solid #000; border-radius: 50%;
+            position: absolute; top: -10px; right: -10px; width: 28px; height: 28px;
+            background: var(--accent-red); border: 2px solid var(--bg-deep); border-radius: 50%;
             color: white; display: none; justify-content: center; align-items: center;
-            font-weight: 900; cursor: pointer; z-index: 1001;
+            font-size: 12px; cursor: pointer; z-index: 1001;
+        }
+        .editing .remove-widget { display: flex; }
+        .editing .grid-stack-item-content { border-color: var(--accent) !important; animation: wiggle 0.4s infinite ease-in-out; }
+
+        @keyframes wiggle {
+            0%, 100% { transform: rotate(-0.3deg); }
+            50% { transform: rotate(0.3deg); }
         }
 
-        .editing .remove-widget { display: flex; }
-        .editing .grid-stack-item-content { border: 2px solid var(--accent-blue) !important; animation: wiggle 0.3s infinite; }
-
-        @keyframes wiggle { 0%, 100% { transform: rotate(-0.5deg); } 50% { transform: rotate(0.5deg); } }
-
-        .w-label { font-size: 10px; color: var(--accent-blue); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; font-weight: 800; }
+        /* Widget Typography */
+        .w-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
+        .w-label { font-size: 11px; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: 1.2px; }
         
-        /* Widget UI Components */
-        .time-display { font-size: 52px; font-weight: 800; letter-spacing: -2px; }
-        .widget-val { font-size: 32px; font-weight: 800; margin: 5px 0; }
-        input, textarea, select { background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); color: white; padding: 10px; border-radius: 12px; width: 100%; outline: none; margin-bottom: 8px; }
-        
-        /* Spotify & Media */
-        .art-proxy { width: 70px; height: 70px; background: #282828; border-radius: 12px; margin: 0 auto 10px; background-size: cover; display: flex; align-items: center; justify-content: center; }
-        .spotify-btn { background: var(--accent-green); color: black; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; border: none; cursor: pointer; margin-top: 10px; }
+        /* Specific Widget Styles */
+        .time-big { font-size: 64px; font-weight: 800; letter-spacing: -3px; line-height: 1; margin: 10px 0; }
+        .date-sub { font-size: 16px; color: var(--text-dim); font-weight: 500; }
 
-        /* Calculator */
-        .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
-        .calc-btn { background: rgba(255,255,255,0.1); border: none; color: white; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .stat-row { margin-bottom: 12px; }
+        .stat-label { font-size: 12px; color: var(--text-dim); display: flex; justify-content: space-between; margin-bottom: 6px; }
+        .bar-bg { height: 6px; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; }
+        .bar-fill { height: 100%; transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); }
 
-        #add-panel { position: fixed; bottom: -600px; left: 0; width: 100%; background: #121214; padding: 40px; display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; transition: 0.6s; z-index: 2000; border-top: 1px solid var(--card-border); }
-        #add-panel.show { bottom: 0; }
+        /* Input Styles */
+        input, textarea, select {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+            color: white;
+            padding: 12px;
+            border-radius: 12px;
+            width: 100%;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        input:focus { border-color: var(--accent); }
+
+        /* Spotify Widget */
+        .spotify-container { text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: center; }
+        .album-art { 
+            width: 90px; height: 90px; margin: 0 auto 15px; border-radius: 16px; 
+            background: #282828; background-size: cover; background-position: center;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center;
+        }
+        .track-name { font-weight: 700; font-size: 16px; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .artist-name { font-size: 13px; color: var(--text-dim); margin-bottom: 15px; }
+        .media-ctrls { display: flex; justify-content: center; gap: 20px; font-size: 22px; }
+        .media-ctrls i { cursor: pointer; transition: color 0.2s; }
+        .media-ctrls i:hover { color: var(--accent); }
+        .sp-link-btn { background: var(--accent-green); color: black; border: none; padding: 8px 16px; border-radius: 20px; font-size: 11px; font-weight: 800; margin-top: 15px; cursor: pointer; display: none; }
+        .editing .sp-link-btn { display: inline-block; }
+
+        /* Add Panel */
+        #add-panel {
+            position: fixed; bottom: -600px; left: 0; width: 100%;
+            background: rgba(10, 10, 12, 0.98); backdrop-filter: blur(40px);
+            border-top: 1px solid var(--card-border); padding: 50px;
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 20px;
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 2000;
+        }
+        #add-panel.show { transform: translateY(-600px); }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 10px; }
     </style>
 </head>
 <body>
 
     <nav>
-        <div class="logo"><i class="fa-solid fa-layer-group"></i> Second<span>Screen</span> Master</div>
-        <div style="display:flex; gap:14px;">
-            <button class="btn" onclick="toggleAddPanel(true)">+ Add Widget</button>
-            <button id="edit-mode-btn" class="btn" onclick="Dashboard.toggleEdit()">Customize</button>
-            <button class="btn btn-primary" onclick="Dashboard.saveState()">Save Layout</button>
-            <button class="btn btn-danger" onclick="Dashboard.clearState()">Reset</button>
+        <div class="brand"><i class="fa-solid fa-shapes"></i> Second<span>Screen</span> Pro</div>
+        <div class="nav-actions">
+            <button class="btn" onclick="UI.toggleAdd(true)"><i class="fa-solid fa-plus"></i> Add Widget</button>
+            <button id="edit-btn" class="btn" onclick="Core.toggleEdit()"><i class="fa-solid fa-pen-nib"></i> Customize</button>
+            <button class="btn btn-primary" onclick="Core.saveLayout()"><i class="fa-solid fa-cloud-arrow-up"></i> Save</button>
+            <button class="btn btn-danger" onclick="Core.reset()"><i class="fa-solid fa-rotate-left"></i> Reset</button>
         </div>
     </nav>
 
-    <div id="dashboard-wrapper"><div class="grid-stack"></div></div>
+    <div id="dashboard-wrapper">
+        <div class="grid-stack"></div>
+    </div>
 
     <div id="add-panel">
-        <button class="btn" onclick="Dashboard.addWidget('clock', 4, 3)">Clock</button>
-        <button class="btn" onclick="Dashboard.addWidget('music', 3, 3)">Spotify</button>
-        <button class="btn" onclick="Dashboard.addWidget('calc', 3, 5)">Calculator</button>
-        <button class="btn" onclick="Dashboard.addWidget('todo', 3, 4)">To-Do</button>
-        <button class="btn" onclick="Dashboard.addWidget('notes', 5, 4)">Notes</button>
-        <button class="btn" onclick="Dashboard.addWidget('weather', 3, 3)">Weather</button>
-        <button class="btn" onclick="Dashboard.addWidget('passgen', 4, 3)">Password</button>
-        <button class="btn" onclick="Dashboard.addWidget('stats', 3, 4)">System</button>
-        <button class="btn" onclick="Dashboard.addWidget('converter', 3, 4)">Converter</button>
-        <button class="btn" onclick="Dashboard.addWidget('calendar', 4, 4)">Calendar</button>
-        <button class="btn btn-danger" onclick="toggleAddPanel(false)">Close</button>
+        <button class="btn" onclick="Core.createWidget('clock', 4, 3)">Clock</button>
+        <button class="btn" onclick="Core.createWidget('music', 3, 4)">Spotify</button>
+        <button class="btn" onclick="Core.createWidget('stats', 3, 4)">System</button>
+        <button class="btn" onclick="Core.createWidget('calc', 3, 5)">Calculator</button>
+        <button class="btn" onclick="Core.createWidget('todo', 3, 5)">To-Do List</button>
+        <button class="btn" onclick="Core.createWidget('notes', 5, 4)">Notebook</button>
+        <button class="btn" onclick="Core.createWidget('weather', 3, 3)">Weather</button>
+        <button class="btn" onclick="Core.createWidget('pass', 4, 3)">Key Gen</button>
+        <button class="btn" onclick="Core.createWidget('conv', 3, 4)">Converter</button>
+        <button class="btn" onclick="Core.createWidget('cal', 4, 4)">Calendar</button>
+        <button class="btn" onclick="Core.createWidget('stop', 3, 3)">Stopwatch</button>
+        <button class="btn btn-danger" onclick="UI.toggleAdd(false)">Close Gallery</button>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack-all.js"></script>
+    
     <script>
-        const WidgetLogic = {
-            calc: (id, v) => {
-                const s = document.getElementById(id + '-s');
-                if (v === '=') try { s.value = eval(s.value); } catch { s.value = "Error"; }
-                else if (v === 'C') s.value = '';
-                else s.value += v;
+        /** * Logic Helpers 
+         */
+        const Utils = {
+            calc: (id, val) => {
+                const screen = document.getElementById(`scr-${id}`);
+                if (val === '=') { try { screen.value = eval(screen.value); } catch { screen.value = "Error"; } }
+                else if (val === 'C') screen.value = '';
+                else screen.value += val;
             },
             genPass: (id) => {
-                const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
-                let pass = "";
-                for(let i=0; i<16; i++) pass += chars.charAt(Math.floor(Math.random() * chars.length));
-                document.getElementById(id + '-pass').value = pass;
+                const charset = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*";
+                let ret = "";
+                for (let i = 0; i < 16; i++) ret += charset.charAt(Math.floor(Math.random() * charset.length));
+                document.getElementById(`pass-${id}`).value = ret;
+            },
+            convert: (id) => {
+                const input = parseFloat(document.getElementById(`in-${id}`).value);
+                const type = document.getElementById(`mode-${id}`).value;
+                const out = document.getElementById(`out-${id}`);
+                if (isNaN(input)) return;
+                if (type === 'cf') out.innerText = (input * 9/5 + 32).toFixed(1) + " °F";
+                if (type === 'kl') out.innerText = (input * 2.204).toFixed(2) + " lbs";
             }
         };
 
-        const Dashboard = (() => {
-            const SPOTIFY_CLIENT_ID = '2aea224b957a49e0ade20938094a2170';
-            const REDIRECT_URI = window.location.origin + window.location.pathname;
-            let grid = null, isEditing = false;
+        /**
+         * Core Dashboard Controller
+         */
+        const Core = (() => {
+            const SPOTIFY_ID = '2aea224b957a49e0ade20938094a2170';
+            const REDIRECT = window.location.origin + window.location.pathname;
+            let grid = null;
+            let editing = false;
 
             const init = () => {
-                grid = GridStack.init({ column: 12, cellHeight: '85px', margin: 12, animate: true, float: true });
-                handleSpotifyAuth();
-                loadState();
-                setInterval(updateSpotify, 3000);
-                setInterval(updateStats, 2000);
+                grid = GridStack.init({ 
+                    column: 12, 
+                    cellHeight: '90px', 
+                    margin: 15, 
+                    float: true,
+                    animate: true 
+                });
+                
+                Auth.checkSpotify();
+                loadData();
+                
+                // Background loops
+                setInterval(UI.updateTime, 1000);
+                setInterval(UI.updateStats, 3000);
+                setInterval(Auth.updateSpotifyUI, 3000);
             };
 
             const toggleEdit = () => {
-                isEditing = !isEditing;
-                grid.enableMove(isEditing); grid.enableResize(isEditing);
-                document.body.classList.toggle('editing', isEditing);
-                if(!isEditing) saveState();
+                editing = !editing;
+                grid.enableMove(editing);
+                grid.enableResize(editing);
+                document.body.classList.toggle('editing', editing);
+                document.getElementById('edit-btn').innerHTML = editing ? 
+                    '<i class="fa-solid fa-check"></i> Done' : '<i class="fa-solid fa-pen-nib"></i> Customize';
             };
 
-            const getTemplate = (type, id) => {
-                const base = `<div class="remove-widget">✕</div><span class="w-label">${type}</span>`;
-                const temps = {
-                    clock: `<div id="${id}">${base}<div class="time-display">00:00</div><div style="color:var(--text-secondary)">...</div></div>`,
-                    music: `<div id="${id}" style="text-align:center">${base}<div class="art-proxy" id="${id}-art"><i class="fa-brands fa-spotify"></i></div><h4 id="${id}-t">Idle</h4><div style="display:flex;justify-content:center;gap:20px;margin-top:10px;font-size:18px"><i class="fa fa-backward" onclick="Dashboard.spotifyAction('previous')"></i><i class="fa fa-play" id="${id}-p" onclick="Dashboard.spotifyAction('toggle')"></i><i class="fa fa-forward" onclick="Dashboard.spotifyAction('next')"></i></div><button class="spotify-btn" onclick="Dashboard.spotifyLogin()">Link Account</button></div>`,
-                    calc: `<div id="${id}">${base}<input id="${id}-s" readonly placeholder="0"><div class="calc-grid">` + ['7','8','9','/','4','5','6','*','1','2','3','-','C','0','=','+'].map(k=>`<button class="calc-btn" onclick="WidgetLogic.calc('${id}','${k}')">${k}</button>`).join('') + `</div></div>`,
-                    todo: `<div id="${id}">${base}<input type="text" placeholder="Add task..."><div class="todo-list" style="overflow-y:auto;flex:1"></div></div>`,
-                    notes: `<div id="${id}" style="height:100%">${base}<textarea style="height:80%;" placeholder="Write..."></textarea></div>`,
-                    weather: `<div id="${id}">${base}<div class="widget-val" id="${id}-temp">--°C</div><div id="${id}-loc">Detecting...</div></div>`,
-                    passgen: `<div id="${id}">${base}<input id="${id}-pass" readonly><button class="btn btn-primary" style="width:100%" onclick="WidgetLogic.genPass('${id}')">Generate</button></div>`,
-                    stats: `<div id="${id}">${base}<div style="margin-bottom:10px">CPU <span class="cpu-v">0%</span></div><div style="margin-bottom:10px">RAM <span class="ram-v">0%</span></div></div>`,
-                    converter: `<div id="${id}">${base}<input type="number" id="${id}-v"><select><option>C to F</option><option>Kg to Lb</option></select><div class="widget-val" style="font-size:20px">Result</div></div>`,
-                    calendar: `<div id="${id}">${base}<div id="${id}-cal" style="display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:11px"></div></div>`
-                };
-                return temps[type];
-            };
-
-            const addWidget = (type, w, h, x, y, data) => {
-                const id = 'w-' + Math.random().toString(36).substr(2, 9);
-                const el = grid.addWidget({ w, h, x, y, content: getTemplate(type, id) });
+            const createWidget = (type, w, h, x, y, savedData) => {
+                const id = 'id-' + Math.random().toString(36).substr(2, 9);
+                const content = Templates.get(type, id);
+                const el = grid.addWidget({ w, h, x, y, content });
+                
+                // Functionality wiring
                 el.querySelector('.remove-widget').onclick = () => grid.removeWidget(el);
-                
-                if(type === 'clock') startClock(id);
-                if(type === 'weather') initWeather(id);
-                if(type === 'calendar') initCalendar(id);
-                if(type === 'notes' && data) el.querySelector('textarea').value = data;
-                
-                toggleAddPanel(false);
-                saveState();
+                if (type === 'todo') UI.initTodo(id, savedData);
+                if (type === 'notes') UI.initNotes(id, savedData);
+                if (type === 'weather') UI.initWeather(id);
+                if (type === 'cal') UI.initCal(id);
+
+                UI.toggleAdd(false);
+                saveLayout();
             };
 
-            // Spotify Logic
-            const spotifyLogin = () => {
-                const scope = 'user-read-playback-state user-modify-playback-state';
-                window.location.href = `https://accounts.spotify.com/authorize?client_id=${SPOTIFY_CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${encodeURIComponent(scope)}`;
-            };
-            const handleSpotifyAuth = () => {
-                const h = window.location.hash.substring(1).split('&').reduce((a,i)=>{if(i){let p=i.split('=');a[p[0]]=p[1];}return a;},{});
-                if(h.access_token) { localStorage.setItem('sp_t', h.access_token); window.location.hash = ''; }
-            };
-            const spotifyAction = async (act) => {
-                const t = localStorage.getItem('sp_t'); if(!t) return;
-                let method = 'POST', ep = act;
-                if(act === 'toggle') { ep = document.querySelector('.fa-pause') ? 'pause' : 'play'; method = 'PUT'; }
-                await fetch(`https://api.spotify.com/v1/me/player/${ep}`, { method, headers: {'Authorization': `Bearer ${t}`} });
-            };
-            const updateSpotify = async () => {
-                const t = localStorage.getItem('sp_t'); if(!t) return;
-                try {
-                    const r = await fetch('https://api.spotify.com/v1/me/player', { headers: {'Authorization':`Bearer ${t}`} });
-                    if(r.status === 200) {
-                        const d = await r.json();
-                        document.querySelector('[id$="-t"]').innerText = d.item.name;
-                        document.querySelector('[id$="-art"]').style.backgroundImage = `url(${d.item.album.images[0].url})`;
-                        document.querySelector('[id$="-p"]').className = d.is_playing ? 'fa fa-pause' : 'fa fa-play';
-                    }
-                } catch(e) {}
-            };
-
-            // Global Updates
-            const startClock = (id) => setInterval(() => {
-                const el = document.getElementById(id); if(!el) return;
-                const d = new Date();
-                el.querySelector('.time-display').innerText = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                el.lastChild.innerText = d.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric' });
-            }, 1000);
-
-            const initWeather = (id) => {
-                navigator.geolocation.getCurrentPosition(pos => {
-                    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&current_weather=true`)
-                    .then(r=>r.json()).then(data => {
-                        document.getElementById(id+'-temp').innerText = Math.round(data.current_weather.temperature) + '°C';
-                        document.getElementById(id+'-loc').innerText = "Current Location";
-                    });
+            const saveLayout = () => {
+                const items = grid.getGridItems().map(el => {
+                    const type = el.querySelector('.w-label').innerText.toLowerCase().replace(' ', '');
+                    let extra = null;
+                    if (type === 'notebook') extra = el.querySelector('textarea').value;
+                    if (type === 'todolist') extra = Array.from(el.querySelectorAll('.todo-item')).map(i => ({t: i.innerText, d: i.classList.contains('done')}));
+                    
+                    return {
+                        x: el.gridstackNode.x, y: el.gridstackNode.y,
+                        w: el.gridstackNode.w, h: el.gridstackNode.h,
+                        type: type === 'notebook' ? 'notes' : type === 'todolist' ? 'todo' : type,
+                        data: extra
+                    };
                 });
+                localStorage.setItem('ss_pro_v1', JSON.stringify(items));
             };
 
-            const initCalendar = (id) => {
-                const cal = document.getElementById(id+'-cal');
-                for(let i=1; i<=31; i++) cal.innerHTML += `<div>${i}</div>`;
+            const loadData = () => {
+                const saved = JSON.parse(localStorage.getItem('ss_pro_v1'));
+                if (saved) saved.forEach(s => createWidget(s.type, s.w, s.h, s.x, s.y, s.data));
+                else {
+                    createWidget('clock', 4, 3, 0, 0);
+                    createWidget('music', 3, 4, 4, 0);
+                    createWidget('stats', 3, 4, 7, 0);
+                }
             };
 
-            const updateStats = () => {
-                document.querySelectorAll('.cpu-v').forEach(el => el.innerText = Math.floor(Math.random()*20+5) + "%");
-                document.querySelectorAll('.ram-v').forEach(el => el.innerText = Math.floor(Math.random()*15+40) + "%");
-            };
-
-            const saveState = () => {
-                const d = grid.getGridItems().map(el => ({
-                    x: el.gridstackNode.x, y: el.gridstackNode.y, w: el.gridstackNode.w, h: el.gridstackNode.h,
-                    type: el.querySelector('.w-label').innerText.toLowerCase(),
-                    data: el.querySelector('textarea')?.value || null
-                }));
-                localStorage.setItem('ss_master_v1', JSON.stringify(d));
-            };
-
-            const loadState = () => {
-                const s = JSON.parse(localStorage.getItem('ss_master_v1'));
-                if(s) s.forEach(w => addWidget(w.type, w.w, w.h, w.x, w.y, w.data));
-                else { addWidget('clock', 4, 3); addWidget('music', 3, 3); addWidget('stats', 3, 4); }
-            };
-
-            return { init, toggleEdit, addWidget, saveState, spotifyLogin, spotifyAction, clearState: () => {localStorage.removeItem('ss_master_v1'); location.reload();} };
+            return { init, toggleEdit, createWidget, saveLayout, reset: () => { localStorage.removeItem('ss_pro_v1'); location.reload(); }, SPOTIFY_ID, REDIRECT };
         })();
 
-        function toggleAddPanel(s) { document.getElementById('add-panel').classList.toggle('show', s); }
-        window.onload = Dashboard.init;
+        /**
+         * Spotify Authentication
+         */
+        const Auth = {
+            login: () => {
+                const scope = 'user-read-playback-state user-modify-playback-state';
+                window.location.href = `https://accounts.spotify.com/authorize?client_id=${Core.SPOTIFY_ID}&response_type=token&redirect_uri=${encodeURIComponent(Core.REDIRECT)}&scope=${encodeURIComponent(scope)}`;
+            },
+            checkSpotify: () => {
+                const h = window.location.hash.substring(1).split('&').reduce((a, i) => { if(i){var p=i.split('='); a[p[0]]=p[1];} return a; }, {});
+                if (h.access_token) { localStorage.setItem('sp_token', h.access_token); window.location.hash = ''; }
+            },
+            action: async (type) => {
+                const t = localStorage.getItem('sp_token'); if(!t) return;
+                let method = 'POST', url = type;
+                if(type === 'toggle') {
+                    const isPlaying = document.querySelector('.fa-play') === null;
+                    url = isPlaying ? 'pause' : 'play';
+                    method = 'PUT';
+                }
+                await fetch(`https://api.spotify.com/v1/me/player/${url}`, { method, headers: {'Authorization': `Bearer ${t}`} });
+            },
+            updateSpotifyUI: async () => {
+                const t = localStorage.getItem('sp_token'); if(!t) return;
+                try {
+                    const res = await fetch('https://api.spotify.com/v1/me/player/currently-playing', { headers: {'Authorization': `Bearer ${t}`} });
+                    if (res.status === 200) {
+                        const d = await res.json();
+                        document.querySelectorAll('.track-name').forEach(el => el.innerText = d.item.name);
+                        document.querySelectorAll('.artist-name').forEach(el => el.innerText = d.item.artists[0].name);
+                        document.querySelectorAll('.album-art').forEach(el => {
+                            el.style.backgroundImage = `url(${d.item.album.images[0].url})`;
+                            el.innerHTML = '';
+                        });
+                        document.querySelectorAll('.play-trigger').forEach(el => el.className = d.is_playing ? 'fa-solid fa-pause play-trigger' : 'fa-solid fa-play play-trigger');
+                    }
+                } catch(e) {}
+            }
+        };
+
+        /**
+         * UI Manipulation
+         */
+        const UI = {
+            toggleAdd: (show) => document.getElementById('add-panel').classList.toggle('show', show),
+            
+            updateTime: () => {
+                const now = new Date();
+                document.querySelectorAll('.time-big').forEach(el => el.innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false}));
+                document.querySelectorAll('.date-sub').forEach(el => el.innerText = now.toLocaleDateString(undefined, {weekday:'long', month:'long', day:'numeric'}));
+            },
+
+            updateStats: () => {
+                document.querySelectorAll('.cpu-bar').forEach(el => {
+                    const v = Math.floor(Math.random() * 30) + 10;
+                    el.style.width = v + '%';
+                    el.closest('.stat-row').querySelector('.v-label').innerText = v + '%';
+                });
+                document.querySelectorAll('.ram-bar').forEach(el => {
+                    const v = Math.floor(Math.random() * 20) + 60;
+                    el.style.width = v + '%';
+                    el.closest('.stat-row').querySelector('.v-label').innerText = v + '%';
+                });
+            },
+
+            initTodo: (id, data) => {
+                const input = document.getElementById(`in-${id}`);
+                const list = document.getElementById(`list-${id}`);
+                const add = (text, done) => {
+                    const item = document.createElement('div');
+                    item.className = `todo-item ${done ? 'done' : ''}`;
+                    item.style = "padding: 8px; margin-bottom: 5px; background: rgba(255,255,255,0.03); border-radius: 8px; cursor: pointer; font-size: 13px;";
+                    item.innerText = text;
+                    item.onclick = () => { item.classList.toggle('done'); Core.saveLayout(); };
+                    item.oncontextmenu = (e) => { e.preventDefault(); item.remove(); Core.saveLayout(); };
+                    list.appendChild(item);
+                };
+                input.onkeypress = (e) => { if(e.key === 'Enter' && input.value) { add(input.value, false); input.value = ''; Core.saveLayout(); }};
+                if(data) data.forEach(d => add(d.t, d.d));
+            },
+
+            initNotes: (id, data) => {
+                const area = document.getElementById(`nt-${id}`);
+                if(data) area.value = data;
+                area.oninput = () => Core.saveLayout();
+            },
+
+            initWeather: (id) => {
+                navigator.geolocation.getCurrentPosition(pos => {
+                    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&current_weather=true`)
+                    .then(r=>r.json()).then(d => {
+                        const el = document.getElementById(`temp-${id}`);
+                        if(el) el.innerText = Math.round(d.current_weather.temperature) + '°C';
+                    });
+                });
+            },
+
+            initCal: (id) => {
+                const container = document.getElementById(`cal-${id}`);
+                let html = '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px;text-align:center;font-size:10px;">';
+                ['S','M','T','W','T','F','S'].forEach(d => html += `<div style="color:var(--accent)">${d}</div>`);
+                for(let i=1; i<=31; i++) html += `<div style="padding:4px;">${i}</div>`;
+                container.innerHTML = html + '</div>';
+            }
+        };
+
+        /**
+         * HTML Templates
+         */
+        const Templates = {
+            get: (type, id) => {
+                const base = `<div class="remove-widget">✕</div><div class="w-header"><span class="w-label">${type}</span></div>`;
+                const map = {
+                    clock: `${base}<div class="time-big">00:00</div><div class="date-sub">...</div>`,
+                    music: `${base}<div class="spotify-container"><div class="album-art"><i class="fa-brands fa-spotify" style="font-size:40px;color:#1DB954"></i></div><div class="track-name">No Media</div><div class="artist-name">Connect Spotify</div><div class="media-ctrls"><i class="fa-solid fa-backward-step" onclick="Auth.action('previous')"></i><i class="fa-solid fa-play play-trigger" onclick="Auth.action('toggle')"></i><i class="fa-solid fa-forward-step" onclick="Auth.action('next')"></i></div><button class="sp-link-btn" onclick="Auth.login()">LINK ACCOUNT</button></div>`,
+                    stats: `${base}<div class="stat-row"><div class="stat-label">CPU <span class="v-label">--%</span></div><div class="bar-bg"><div class="bar-fill cpu-bar" style="width:0%; background:var(--accent)"></div></div></div><div class="stat-row"><div class="stat-label">RAM <span class="v-label">--%</span></div><div class="bar-bg"><div class="bar-fill ram-bar" style="width:0%; background:var(--accent-green)"></div></div></div>`,
+                    calc: `${base}<input id="scr-${id}" readonly placeholder="0" style="text-align:right; margin-bottom:10px; font-family:monospace; font-size:20px;"><div style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px;">` + ['7','8','9','/','4','5','6','*','1','2','3','-','C','0','=','+'].map(k => `<button class="btn" style="padding:10px 0; justify-content:center" onclick="Utils.calc('${id}','${k}')">${k}</button>`).join('') + `</div>`,
+                    todo: `${base}<input type="text" id="in-${id}" placeholder="New task..."><div id="list-${id}" style="flex:1; overflow-y:auto; margin-top:10px;"></div>`,
+                    notes: `${base}<textarea id="nt-${id}" placeholder="Start typing..." style="flex:1; resize:none; background:transparent; border:none; padding:0;"></textarea>`,
+                    weather: `${base}<div style="display:flex; align-items:center; gap:15px; margin-top:10px;"><i class="fa-solid fa-cloud-sun" style="font-size:40px; color:var(--accent)"></i><div><div id="temp-${id}" style="font-size:32px; font-weight:800;">--°C</div><div style="font-size:12px; color:var(--text-dim)">Local Forecast</div></div></div>`,
+                    pass: `${base}<input id="pass-${id}" readonly placeholder="Generated Key" style="font-family:monospace; text-align:center; margin-bottom:15px;"><button class="btn btn-primary" style="width:100%; justify-content:center" onclick="Utils.genPass('${id}')">NEW PASSWORD</button>`,
+                    conv: `${base}<input type="number" id="in-${id}" placeholder="Value" oninput="Utils.convert('${id}')"><select id="mode-${id}" onchange="Utils.convert('${id}')" style="margin-top:8px"><option value="cf">Celsius to Fahr</option><option value="kl">Kg to Lbs</option></select><div id="out-${id}" style="margin-top:15px; font-size:24px; font-weight:700; text-align:center">---</div>`,
+                    cal: `${base}<div id="cal-${id}" style="margin-top:10px"></div>`,
+                    stop: `${base}<div id="sw-${id}" style="font-size:36px; font-weight:800; text-align:center; margin:10px 0; font-family:monospace;">00:00.0</div><div style="display:flex; gap:10px"><button class="btn" style="flex:1; justify-content:center" onclick="let s=Date.now(); this.i=setInterval(()=>{let d=new Date(Date.now()-s); document.getElementById('sw-${id}').innerText=d.toISOString().substr(14,7)},100)">Start</button><button class="btn btn-danger" onclick="clearInterval(this.previousElementSibling.i)">Stop</button></div>`
+                };
+                return map[type] || `<div>Widget Error</div>`;
+            }
+        };
+
+        window.onload = Core.init;
     </script>
 </body>
 </html>
