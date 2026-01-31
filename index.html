@@ -89,21 +89,37 @@
         .time-display { font-size: 58px; font-weight: 800; letter-spacing: -3px; line-height: 1; margin: 10px 0; }
         .date-display { font-size: 16px; color: var(--text-secondary); }
 
-        /* Generic UI Elements for Widgets */
-        input, select { background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); color: white; padding: 10px; border-radius: 8px; margin-bottom: 5px; outline: none; width: 100%; }
-        .widget-val { font-size: 32px; font-weight: 800; margin: 5px 0; }
+        /* Stats */
+        .stat-group { margin-bottom: 15px; }
+        .stat-header { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
+        .stat-track { height: 6px; background: rgba(255,255,255,0.06); border-radius: 10px; overflow: hidden; }
+        .stat-fill { height: 100%; transition: width 0.8s ease; }
 
-        /* Calculator Styles */
-        .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-        .calc-btn { background: rgba(255,255,255,0.1); border: none; color: white; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: bold; }
-        .calc-btn:hover { background: var(--accent-blue); }
+        /* Spotify Widget */
+        .widget-music { text-align: center; }
+        .art-proxy { 
+            width: 80px; height: 80px; margin: 0 auto 15px; background: #282828; border-radius: 12px; 
+            background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; font-size: 30px;
+        }
+        .spotify-btn { display: none; margin-top: 15px; padding: 6px 15px; background: var(--accent-green); color: black; border-radius: 20px; font-size: 11px; font-weight: 800; border: none; cursor: pointer; }
+        .editing .spotify-btn { display: inline-block; }
 
-        /* Calendar Styles */
-        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; font-size: 12px; }
-        .cal-day-head { color: var(--accent-blue); font-weight: 800; padding-bottom: 5px; }
-        .cal-today { background: var(--accent-blue); border-radius: 5px; }
+        /* To-Do Styles */
+        .todo-input { background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); color: white; padding: 8px; border-radius: 8px; margin-bottom: 10px; width: 100%; outline: none; }
+        .todo-list { list-style: none; overflow-y: auto; flex: 1; }
+        .todo-item { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 14px; cursor: pointer; transition: 0.4s; }
+        .todo-item.done { opacity: 0.4; text-decoration: line-through; }
+        .todo-item.fade-out { opacity: 0; transform: translateX(20px); pointer-events: none; }
+        .todo-check { width: 16px; height: 16px; border: 2px solid var(--accent-blue); border-radius: 4px; flex-shrink: 0; }
+        .done .todo-check { background: var(--accent-blue); }
 
-        #add-panel { position: fixed; bottom: -500px; left: 0; width: 100%; background: rgba(18, 18, 20, 0.98); backdrop-filter: blur(40px); border-top: 1px solid var(--card-border); padding: 50px; display: flex; justify-content: center; gap: 20px; transition: 0.6s; z-index: 2000; flex-wrap: wrap; }
+        /* Launcher Styles */
+        .app-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; flex: 1; align-items: center; }
+        .app-icon { aspect-ratio: 1; background: rgba(255,255,255,0.05); border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; position: relative; }
+        .link-edit-input { display: none; position: absolute; bottom: -30px; left: 0; width: 100%; background: #1c1c1e; border: 1px solid var(--accent-blue); color: white; font-size: 10px; padding: 4px; border-radius: 6px; outline: none; }
+        .editing .link-edit-input { display: block; }
+
+        #add-panel { position: fixed; bottom: -500px; left: 0; width: 100%; background: rgba(18, 18, 20, 0.98); backdrop-filter: blur(40px); border-top: 1px solid var(--card-border); padding: 50px; display: flex; justify-content: center; gap: 40px; transition: 0.6s; z-index: 2000; }
         #add-panel.show { bottom: 0; }
     </style>
 </head>
@@ -125,82 +141,30 @@
 
     <div id="add-panel">
         <button class="btn" onclick="Dashboard.addWidget('clock', 4, 3)">Clock</button>
+        <button class="btn" onclick="Dashboard.addWidget('music', 3, 3)">Spotify</button>
+        <button class="btn" onclick="Dashboard.addWidget('apps', 4, 3)">Launcher</button>
         <button class="btn" onclick="Dashboard.addWidget('todo', 3, 4)">To-Do</button>
-        <button class="btn" onclick="Dashboard.addWidget('timer', 3, 3)">Timer</button>
-        <button class="btn" onclick="Dashboard.addWidget('calc', 3, 5)">Calculator</button>
-        <button class="btn" onclick="Dashboard.addWidget('calendar', 4, 4)">Calendar</button>
-        <button class="btn" onclick="Dashboard.addWidget('weather', 3, 3)">Weather</button>
-        <button class="btn" onclick="Dashboard.addWidget('converter', 3, 4)">Converter</button>
-        <button class="btn" onclick="Dashboard.addWidget('stopwatch', 3, 3)">Stopwatch</button>
-        <button class="btn" onclick="Dashboard.addWidget('battery', 3, 2)">Battery</button>
-        <button class="btn" onclick="Dashboard.addWidget('passgen', 4, 3)">Password</button>
+        <button class="btn" onclick="Dashboard.addWidget('notes', 6, 4)">Notes</button>
+        <button class="btn" onclick="Dashboard.addWidget('stats', 3, 4)">System</button>
         <button class="btn btn-danger" onclick="toggleAddPanel(false)">Close</button>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack-all.js"></script>
     
     <script>
-        const WidgetLogic = {
-            startTimer: (id) => {
-                const inp = document.getElementById(id + '-input');
-                const disp = document.getElementById(id + '-disp');
-                let time = parseInt(inp.value) * 60;
-                if(isNaN(time)) return;
-                
-                if(window[id+'_interval']) clearInterval(window[id+'_interval']);
-                window[id+'_interval'] = setInterval(() => {
-                    time--;
-                    let m = Math.floor(time / 60);
-                    let s = time % 60;
-                    disp.innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
-                    if(time <= 0) { clearInterval(window[id+'_interval']); alert("Timer Finished!"); }
-                }, 1000);
-            },
-            calc: (id, val) => {
-                const screen = document.getElementById(id + '-screen');
-                if(val === '=') try { screen.value = eval(screen.value); } catch { screen.value = "Error"; }
-                else if(val === 'C') screen.value = '';
-                else screen.value += val;
-            },
-            genPass: (id) => {
-                const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
-                let pass = "";
-                for(let i=0; i<16; i++) pass += chars.charAt(Math.floor(Math.random() * chars.length));
-                document.getElementById(id + '-pass').value = pass;
-            },
-            convert: (id) => {
-                const val = parseFloat(document.getElementById(id + '-val').value);
-                const type = document.getElementById(id + '-type').value;
-                const res = document.getElementById(id + '-res');
-                if(isNaN(val)) return;
-                let converted = 0;
-                if(type === 'c-f') converted = (val * 9/5) + 32 + "°F";
-                if(type === 'kg-lb') converted = (val * 2.20462).toFixed(2) + " lbs";
-                if(type === 'm-ft') converted = (val * 3.28084).toFixed(2) + " ft";
-                res.innerText = converted;
-            }
-        };
-
         const Dashboard = (() => {
+            const SPOTIFY_CLIENT_ID = 'PASTE_YOUR_ID_HERE'; 
+            // Automatically use the current site URL as the redirect
+            const SPOTIFY_REDIRECT_URI = window.location.origin + window.location.pathname;
+            
             let grid = null;
             let isEditing = false;
 
             const init = () => {
-                grid = GridStack.init({ column: 12, cellHeight: '90px', margin: 15, animate: true, float: true });
+                grid = GridStack.init({ column: 12, cellHeight: '90px', margin: 15, animate: true, disableDrag: true, disableResize: true, float: true });
+                handleSpotifyAuth();
                 loadInitialState();
-                setInterval(updateGlobalWidgets, 5000);
-            };
-
-            const updateGlobalWidgets = () => {
-                // Update Battery
-                if(navigator.getBattery) {
-                    navigator.getBattery().then(batt => {
-                        const bEls = document.querySelectorAll('.batt-disp');
-                        bEls.forEach(el => {
-                            el.innerText = Math.floor(batt.level * 100) + "%" + (batt.charging ? " ⚡" : "");
-                        });
-                    });
-                }
+                setInterval(updateSpotifyUI, 3000);
             };
 
             const toggleEdit = () => {
@@ -213,33 +177,66 @@
 
             const addWidget = (type, w, h, x, y, data) => {
                 const id = 'w-' + Math.random().toString(36).substr(2, 9);
-                const el = grid.addWidget({ w, h, x, y, content: getTemplate(type, id) });
+                const template = getTemplate(type, id);
+                const el = grid.addWidget({ w, h, x, y, content: template });
                 el.querySelector('.remove-widget').onclick = () => grid.removeWidget(el);
 
                 if (type === 'clock') startClock(id);
-                if (type === 'weather') initWeather(id);
-                if (type === 'calendar') initCalendar(id);
+                if (type === 'stats') startStats(id);
+                if (type === 'todo') initTodo(id, data);
+                if (type === 'notes') initNotes(id, data);
+                if (type === 'apps' && data) {
+                    const icons = el.querySelectorAll('.app-icon');
+                    data.forEach((link, i) => { if(icons[i]) { icons[i].dataset.link = link; icons[i].querySelector('input').value = link; } });
+                }
                 toggleAddPanel(false);
                 saveState();
             };
 
             const getTemplate = (type, id) => {
-                const header = `<div class="remove-widget">✕</div><span class="w-label">${type}</span>`;
                 const templates = {
-                    clock: `<div class="widget-clock" id="${id}">${header}<div class="time-display">00:00</div><div class="date-display">...</div></div>`,
-                    timer: `<div id="${id}">${header}<input type="number" id="${id}-input" placeholder="Minutes"><button class="btn-primary btn" onclick="WidgetLogic.startTimer('${id}')">Start</button><div class="widget-val" id="${id}-disp">00:00</div></div>`,
-                    calc: `<div id="${id}">${header}<input id="${id}-screen" readonly><div class="calc-grid">` + 
-                          ['7','8','9','/','4','5','6','*','1','2','3','-','C','0','=','+'].map(k => `<button class="calc-btn" onclick="WidgetLogic.calc('${id}','${k}')">${k}</button>`).join('') + `</div></div>`,
-                    calendar: `<div id="${id}">${header}<div class="cal-grid" id="${id}-cal"></div></div>`,
-                    weather: `<div id="${id}">${header}<div class="widget-val" id="${id}-temp">--°C</div><div id="${id}-loc" style="font-size:12px; color:var(--text-secondary)">Detecting...</div></div>`,
-                    converter: `<div id="${id}">${header}<input type="number" id="${id}-val" oninput="WidgetLogic.convert('${id}')" placeholder="Value"><select id="${id}-type" onchange="WidgetLogic.convert('${id}')"><option value="c-f">C to F</option><option value="kg-lb">Kg to Lb</option><option value="m-ft">M to Ft</option></select><div class="widget-val" style="font-size:20px" id="${id}-res">Result</div></div>`,
-                    stopwatch: `<div id="${id}">${header}<div class="widget-val" id="${id}-sw">00:00.0</div><button class="btn" onclick="window['s_'+'${id}']=Date.now(); window['i_'+'${id}']=setInterval(()=>{let d=new Date(Date.now()-window['s_'+'${id}']); document.getElementById('${id}-sw').innerText=d.toISOString().substr(14,7)},100)">Start</button><button class="btn" onclick="clearInterval(window['i_'+'${id}'])">Stop</button></div>`,
-                    battery: `<div id="${id}">${header}<div class="widget-val batt-disp">--%</div></div>`,
-                    passgen: `<div id="${id}">${header}<input id="${id}-pass" readonly placeholder="Click Gen"><button class="btn btn-primary" onclick="WidgetLogic.genPass('${id}')">Generate 16-Digit</button></div>`,
-                    todo: `<div class="widget-todo" id="${id}">${header}<input type="text" class="todo-input" placeholder="Add..."><div class="todo-list"></div></div>`,
-                    notes: `<div class="widget-notes" id="${id}">${header}<textarea class="note-area" style="background:transparent; border:none; color:#ddd; width:100%; height:80px; outline:none; resize:none;" placeholder="Write thoughts..."></textarea></div>`
+                    clock: `<div class="widget-clock" id="${id}"><div class="remove-widget">✕</div><span class="w-label">Live Time</span><div class="time-display">00:00</div><div class="date-display">...</div></div>`,
+                    stats: `<div class="widget-stats" id="${id}"><div class="remove-widget">✕</div><span class="w-label">System Performance</span>
+                                <div class="stat-group">CPU <span class="cpu-text">0%</span><div class="stat-track"><div class="stat-fill cpu-bar" style="width:0%; background:var(--accent-blue)"></div></div></div>
+                                <div class="stat-group">RAM <span class="ram-text">0%</span><div class="stat-track"><div class="stat-fill ram-bar" style="width:0%; background:var(--accent-green)"></div></div></div>
+                            </div>`,
+                    apps: `<div class="widget-apps"><div class="remove-widget">✕</div><span class="w-label">Launcher</span><div class="app-grid">
+                                <div class="app-icon" data-link="https://discord.com" onclick="if(!Dashboard.isEditingMode()) window.open(this.dataset.link)"><i class="fa-brands fa-discord"></i><input type="text" class="link-edit-input" value="https://discord.com" oninput="this.parentElement.dataset.link = this.value; Dashboard.saveState();"></div>
+                                <div class="app-icon" data-link="https://spotify.com" onclick="if(!Dashboard.isEditingMode()) window.open(this.dataset.link)"><i class="fa-brands fa-spotify"></i><input type="text" class="link-edit-input" value="https://spotify.com" oninput="this.parentElement.dataset.link = this.value; Dashboard.saveState();"></div>
+                                <div class="app-icon" data-link="https://github.com" onclick="if(!Dashboard.isEditingMode()) window.open(this.dataset.link)"><i class="fa-brands fa-github"></i><input type="text" class="link-edit-input" value="https://github.com" oninput="this.parentElement.dataset.link = this.value; Dashboard.saveState();"></div>
+                            </div></div>`,
+                    music: `<div class="widget-music" id="${id}"><div class="remove-widget">✕</div><span class="w-label">Spotify</span>
+                                <div class="music-ui"><div class="art-proxy"><i class="fa-brands fa-spotify"></i></div><h4 class="m-title">Idle</h4><p class="m-artist" style="color:var(--text-secondary); font-size:13px;">Not Connected</p>
+                                <div style="display:flex; justify-content:center; gap:25px; margin-top:15px; font-size:20px; cursor:pointer;">
+                                    <i class="fa fa-step-backward" onclick="Dashboard.spotifyAction('previous')"></i><i class="fa fa-play play-btn" onclick="Dashboard.spotifyAction('toggle')"></i><i class="fa fa-step-forward" onclick="Dashboard.spotifyAction('next')"></i>
+                                </div><button class="spotify-btn" onclick="Dashboard.spotifyLogin()">Link Account</button></div></div>`,
+                    todo: `<div class="widget-todo" id="${id}" style="height:100%; display:flex; flex-direction:column;"><div class="remove-widget">✕</div><span class="w-label">Tasks</span><input type="text" class="todo-input" placeholder="Add..."><div class="todo-list"></div></div>`,
+                    notes: `<div class="widget-notes" id="${id}" style="height:100%; display:flex; flex-direction:column;"><div class="remove-widget">✕</div><span class="w-label">Notes</span><textarea class="note-area" style="background:transparent; border:none; color:#ddd; flex:1; outline:none; resize:none; font-size:14px;" placeholder="Write thoughts..."></textarea></div>`
                 };
                 return templates[type];
+            };
+
+            const initTodo = (id, data) => {
+                const el = document.getElementById(id); if(!el) return;
+                const input = el.querySelector('.todo-input'); const list = el.querySelector('.todo-list');
+                const addTask = (text, done = false) => {
+                    const item = document.createElement('div'); item.className = `todo-item ${done ? 'done' : ''}`;
+                    item.innerHTML = `<div class="todo-check"></div><span>${text}</span>`;
+                    item.oncontextmenu = (e) => { e.preventDefault(); item.remove(); saveState(); };
+                    item.onclick = () => { 
+                        item.classList.toggle('done'); saveState(); 
+                        if(item.classList.contains('done')) setTimeout(() => { if(item.classList.contains('done')){item.classList.add('fade-out'); setTimeout(() => {item.remove(); saveState();}, 400);} }, 1000);
+                    };
+                    list.appendChild(item);
+                };
+                input.onkeypress = (e) => { if(e.key === 'Enter' && input.value){addTask(input.value); input.value = ''; saveState();} };
+                if(data) data.forEach(d => addTask(d.text, d.done));
+            };
+
+            const initNotes = (id, data) => {
+                const el = document.getElementById(id); if(!el) return;
+                const area = el.querySelector('.note-area'); if(data) area.value = data;
+                area.oninput = () => saveState();
             };
 
             const startClock = (id) => setInterval(() => {
@@ -249,43 +246,68 @@
                 el.querySelector('.date-display').innerText = d.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
             }, 1000);
 
-            const initWeather = (id) => {
-                navigator.geolocation.getCurrentPosition(pos => {
-                    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&current_weather=true`)
-                    .then(r => r.json()).then(data => {
-                        document.getElementById(id + '-temp').innerText = Math.round(data.current_weather.temperature) + '°C';
-                        document.getElementById(id + '-loc').innerText = "Local Weather";
-                    });
-                });
+            const startStats = (id) => setInterval(() => {
+                const el = document.getElementById(id); if(!el) return;
+                const cpu = Math.floor(Math.random() * 95) + 5; const ram = Math.floor(Math.random() * 40) + 55;
+                el.querySelector('.cpu-text').innerText = cpu + '%'; el.querySelector('.cpu-bar').style.width = cpu + '%';
+                el.querySelector('.ram-text').innerText = ram + '%'; el.querySelector('.ram-bar').style.width = ram + '%';
+            }, 3000);
+
+            const spotifyLogin = () => {
+                const scope = 'user-read-playback-state user-modify-playback-state';
+                window.location.href = `https://accounts.spotify.com/authorize?client_id=${SPOTIFY_CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(SPOTIFY_REDIRECT_URI)}&scope=${encodeURIComponent(scope)}`;
             };
 
-            const initCalendar = (id) => {
-                const now = new Date();
-                const gridEl = document.getElementById(id + '-cal');
-                const days = ['S','M','T','W','T','F','S'];
-                let html = days.map(d => `<div class="cal-day-head">${d}</div>`).join('');
-                const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).getDay();
-                const totalDays = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
-                for(let i=0; i<firstDay; i++) html += '<div></div>';
-                for(let i=1; i<=totalDays; i++) html += `<div class="${i===now.getDate()?'cal-today':''}">${i}</div>`;
-                gridEl.innerHTML = html;
+            const handleSpotifyAuth = () => {
+                const hash = window.location.hash.substring(1).split('&').reduce((a, i) => { if(i){var p=i.split('='); a[p[0]]=decodeURIComponent(p[1]);} return a; }, {});
+                if(hash.access_token) { localStorage.setItem('spotify_token', hash.access_token); window.location.hash = ''; }
+            };
+
+            const spotifyAction = async (act) => {
+                const token = localStorage.getItem('spotify_token'); if(!token) return;
+                let method = 'POST'; let ep = act;
+                if(act === 'toggle') { ep = document.querySelector('.play-btn').classList.contains('fa-pause') ? 'pause' : 'play'; method = 'PUT'; }
+                await fetch(`https://api.spotify.com/v1/me/player/${ep}`, { method, headers: {'Authorization': `Bearer ${token}`} });
+                setTimeout(updateSpotifyUI, 400);
+            };
+
+            const updateSpotifyUI = async () => {
+                const token = localStorage.getItem('spotify_token'); if(!token) return;
+                try {
+                    const res = await fetch('https://api.spotify.com/v1/me/player', { headers: {'Authorization': `Bearer ${token}`} });
+                    if(res.status !== 200) return;
+                    const d = await res.json(); const widget = document.querySelector('.widget-music'); if(!widget) return;
+                    widget.querySelector('.m-title').innerText = d.item.name;
+                    widget.querySelector('.m-artist').innerText = d.item.artists[0].name;
+                    widget.querySelector('.art-proxy').style.backgroundImage = `url(${d.item.album.images[0].url})`;
+                    widget.querySelector('.art-proxy').innerHTML = '';
+                    widget.querySelector('.play-btn').className = d.is_playing ? 'fa fa-pause play-btn' : 'fa fa-play play-btn';
+                } catch(e) {}
             };
 
             const saveState = () => {
                 const data = grid.getGridItems().map(el => {
-                    const type = el.querySelector('.w-label').innerText.toLowerCase();
-                    return { w: el.gridstackNode.w, h: el.gridstackNode.h, x: el.gridstackNode.x, y: el.gridstackNode.y, type };
-                });
+                    const div = el.querySelector('[class^="widget-"]'); if (!div) return null;
+                    const type = div.classList[0].split('-')[1];
+                    let custom = null;
+                    if (type === 'notes') custom = el.querySelector('.note-area').value;
+                    if (type === 'apps') custom = Array.from(el.querySelectorAll('.app-icon')).map(i => i.dataset.link);
+                    if (type === 'todo') custom = Array.from(el.querySelectorAll('.todo-item')).map(it => ({ text: it.querySelector('span').innerText, done: it.classList.contains('done') }));
+                    return { w: el.gridstackNode.w, h: el.gridstackNode.h, x: el.gridstackNode.x, y: el.gridstackNode.y, type, data: custom };
+                }).filter(x => x !== null);
                 localStorage.setItem('ss_ultra_v5', JSON.stringify(data));
             };
 
             const loadInitialState = () => {
                 const saved = JSON.parse(localStorage.getItem('ss_ultra_v5'));
-                if (saved) saved.forEach(w => addWidget(w.type, w.w, w.h, w.x, w.y));
-                else { addWidget('clock', 4, 3, 0, 0); addWidget('weather', 3, 3, 4, 0); }
+                if (saved && saved.length > 0) saved.forEach(w => addWidget(w.type, w.w, w.h, w.x, w.y, w.data));
+                else { 
+                    addWidget('clock', 5, 3, 0, 0); addWidget('music', 3, 3, 5, 0); addWidget('apps', 4, 3, 8, 0); 
+                    addWidget('todo', 3, 4, 0, 3); addWidget('notes', 6, 4, 3, 3); addWidget('stats', 3, 4, 9, 3);
+                }
             };
 
-            return { init, toggleEdit, addWidget, saveState, clearState: () => {localStorage.removeItem('ss_ultra_v5'); location.reload();}, isEditingMode: () => isEditing };
+            return { init, toggleEdit, addWidget, saveState, clearState: () => {localStorage.removeItem('ss_ultra_v5'); location.reload();}, spotifyLogin, spotifyAction, isEditingMode: () => isEditing };
         })();
 
         function toggleAddPanel(f) { document.getElementById('add-panel').classList.toggle('show', f); }
