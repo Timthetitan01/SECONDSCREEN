@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecondScreen Pro | Ultra Dashboard</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    
+    <style>
+        :root {
+            --bg-color: #000000;
+            --card-bg: rgba(22, 22, 24, 0.7);
+            --card-border: rgba(255, 255, 255, 0.12);
+            --accent-blue: #0A84FF;
+            --accent-green: #1DB954;
+            --accent-red: #FF3B30;
+            --text-main: #FFFFFF;
+            --text-secondary: #8E8E93;
+            --glass-blur: blur(45px) saturate(210%);
+            --transition-smooth: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 10% 10%, #151517 0%, transparent 35%),
+                radial-gradient(circle at 90% 90%, #0d0d0e 0%, transparent 35%);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        nav {
+            height: 75px; display: flex; justify-content: space-between; align-items: center;
+            padding: 0 40px; z-index: 1000; background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(20px); border-bottom: 1px solid var(--card-border);
+        }
+
+        .logo { font-size: 22px; font-weight: 700; letter-spacing: -0.8px; display: flex; align-items: center; gap: 10px; }
+        .logo i { color: var(--accent-blue); }
+
+        .nav-actions { display: flex; gap: 14px; }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.08); border: 1px solid var(--card-border);
+            color: white; padding: 10px 22px; border-radius: 12px; font-size: 14px;
+            font-weight: 600; cursor: pointer; transition: var(--transition-smooth);
+            display: flex; align-items: center; gap: 10px;
+        }
+
+        .btn:hover { background: rgba(255, 255, 255, 0.15); transform: translateY(-1px); }
+        .btn-primary { background: var(--accent-blue); border: none; }
+        .btn-danger { background: #2c0e0e; color: var(--accent-red); }
+
+        #dashboard-wrapper { flex: 1; padding: 30px; overflow-y: auto; width: 100%; }
+
+        .grid-stack-item-content {
+            background: var(--card-bg) !important;
+            backdrop-filter: var(--glass-blur) !important;
+            border: 1px solid var(--card-border) !important;
+            border-radius: 28px !important;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            overflow: visible !important;
+        }
+
+        .remove-widget {
+            position: absolute; top: -12px; right: -12px; width: 32px; height: 32px;
+            background: var(--accent-red); border: 3px solid #000; border-radius: 50%;
+            color: white; display: none; justify-content: center; align-items: center;
+            font-size: 14px; font-weight: 900; cursor: pointer; z-index: 1001;
+            box-shadow: 0 4px 15px rgba(255, 59, 48, 0.4);
+        }
+
+        .editing .remove-widget { display: flex; }
+        .editing .grid-stack-item-content { border: 2px solid var(--accent-blue) !important; animation: wiggle 0.3s infinite ease-in-out; }
+
+        @keyframes wiggle {
+            0% { transform: rotate(-0.5deg); }
+            50% { transform: rotate(0.5deg); }
+            100% { transform: rotate(-0.5deg); }
+        }
+
+        .w-label { font-size: 10px; color: var(--accent-blue); text-transform: uppercase; letter-spacing: 1.8px; margin-bottom: 12px; font-weight: 800; display: block; }
+        
+        .time-display { font-size: 58px; font-weight: 800; letter-spacing: -3px; line-height: 1; margin: 10px 0; }
+        .date-display { font-size: 16px; color: var(--text-secondary); }
+
+        .stat-group { margin-bottom: 15px; }
+        .stat-header { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
+        .stat-track { height: 6px; background: rgba(255,255,255,0.06); border-radius: 10px; overflow: hidden; }
+        .stat-fill { height: 100%; transition: width 0.8s ease-in-out, background-color 0.4s ease; }
+
+        /* Spotify Widget */
+        .widget-music { text-align: center; }
+        .art-proxy { 
+            width: 80px; height: 80px; margin: 0 auto 15px; background: #282828; border-radius: 12px; 
+            background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; font-size: 30px;
+        }
+        .spotify-btn {
+            display: none; margin-top: 15px; padding: 6px 15px; background: var(--accent-green); 
+            color: black; border-radius: 20px; font-size: 11px; font-weight: 800; border: none; cursor: pointer;
+        }
+        .editing .spotify-btn { display: inline-block; }
+
+        /* To-Do Styles */
+        .todo-input { background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); color: white; padding: 8px; border-radius: 8px; margin-bottom: 10px; width: 100%; outline: none; }
+        .todo-list { list-style: none; overflow-y: auto; flex: 1; }
+        .todo-item { 
+            display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 14px; 
+            cursor: pointer; transition: opacity 0.4s ease, transform 0.4s ease; 
+        }
+        .todo-item.done { opacity: 0.4; text-decoration: line-through; }
+        .todo-item.fade-out { opacity: 0; transform: translateX(20px); pointer-events: none; }
+        .todo-check { width: 16px; height: 16px; border: 2px solid var(--accent-blue); border-radius: 4px; flex-shrink: 0; }
+        .done .todo-check { background: var(--accent-blue); }
+
+        /* Launcher Styles */
+        .app-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; flex: 1; align-items: center; }
+        .app-icon { 
+            aspect-ratio: 1; background: rgba(255,255,255,0.05); border-radius: 18px; 
+            display: flex; align-items: center; justify-content: center; font-size: 24px;
+            cursor: pointer; transition: 0.2s; border: 1px solid transparent; position: relative;
+        }
+        .app-icon:hover { background: var(--accent-blue); color: white; transform: scale(1.05); }
+        .link-edit-input {
+            display: none; position: absolute; bottom: -30px; left: 0; width: 100%;
+            background: #1c1c1e; border: 1px solid var(--accent-blue); color: white;
+            font-size: 10px; padding: 4px; border-radius: 6px; z-index: 10; outline: none;
+        }
+        .editing .link-edit-input { display: block; }
+
+        #add-panel {
+            position: fixed; bottom: -500px; left: 0; width: 100%;
+            background: rgba(18, 18, 20, 0.98); backdrop-filter: blur(40px);
+            border-top: 1px solid var(--card-border); padding: 50px;
+            display: flex; justify-content: center; gap: 40px;
+            transition: bottom 0.6s cubic-bezier(0.19, 1, 0.22, 1); z-index: 2000;
+        }
+        #add-panel.show { bottom: 0; }
+        .add-item { text-align: center; width: 100px; cursor: pointer; transition: 0.3s; }
+        .add-item .icon-box { height: 70px; background: rgba(255,255,255,0.04); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 10px; }
+        .add-item:hover { color: var(--accent-blue); transform: translateY(-5px); }
+
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="logo"><i class="fa-solid fa-layer-group"></i> Second<span>Screen</span> Pro</div>
+        <div class="nav-actions">
+            <button class="btn" onclick="toggleAddPanel()"><i class="fa fa-plus"></i> Add Widget</button>
+            <button id="edit-mode-btn" class="btn" onclick="Dashboard.toggleEdit()"><i class="fa fa-pencil"></i> Customize</button>
+            <button class="btn btn-primary" onclick="Dashboard.saveState()"><i class="fa fa-save"></i> Save</button>
+            <button class="btn btn-danger" onclick="Dashboard.clearState()"><i class="fa fa-refresh"></i> Reset</button>
+        </div>
+    </nav>
+
+    <div id="dashboard-wrapper">
+        <div class="grid-stack"></div>
+    </div>
+
+    <div id="add-panel">
+        <div class="add-item" onclick="Dashboard.addWidget('clock', 4, 3)">
+            <div class="icon-box"><i class="fa-regular fa-clock"></i></div><span>Clock</span>
+        </div>
+        <div class="add-item" onclick="Dashboard.addWidget('music', 3, 3)">
+            <div class="icon-box"><i class="fa-solid fa-music"></i></div><span>Spotify</span>
+        </div>
+        <div class="add-item" onclick="Dashboard.addWidget('apps', 4, 3)">
+            <div class="icon-box"><i class="fa-solid fa-grip"></i></div><span>Launcher</span>
+        </div>
+        <div class="add-item" onclick="Dashboard.addWidget('todo', 3, 4)">
+            <div class="icon-box"><i class="fa-solid fa-check-double"></i></div><span>To-Do</span>
+        </div>
+        <div class="add-item" onclick="Dashboard.addWidget('notes', 6, 4)">
+            <div class="icon-box"><i class="fa-regular fa-comment-dots"></i></div><span>Notes</span>
+        </div>
+        <div class="add-item" onclick="Dashboard.addWidget('stats', 3, 4)">
+            <div class="icon-box"><i class="fa-solid fa-chart-line"></i></div><span>System</span>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack-all.js"></script>
+    
+    <script>
+        const Dashboard = (() => {
+            const SPOTIFY_CLIENT_ID = 'PASTE_YOUR_ID_HERE'; // <--- PUT YOUR CLIENT ID HERE
+            const SPOTIFY_REDIRECT_URI = 'http://127.0.0.1:5500';
+            let grid = null;
+            let isEditing = false;
+
+            const init = () => {
+                grid = GridStack.init({
+                    column: 12, cellHeight: '90px', margin: 15, animate: true,
+                    disableDrag: true, disableResize: true, float: true, resizable: { handles: 'se' }
+                });
+
+                handleSpotifyAuth();
+                loadInitialState();
+                setInterval(updateSpotifyUI, 3000);
+            };
+
+            const toggleEdit = () => {
+                isEditing = !isEditing;
+                grid.enableMove(isEditing);
+                grid.enableResize(isEditing);
+                document.getElementById('dashboard-wrapper').classList.toggle('editing', isEditing);
+                document.getElementById('edit-mode-btn').innerHTML = isEditing ? '<i class="fa fa-check"></i> Done' : '<i class="fa fa-pencil"></i> Customize';
+                if (!isEditing) saveState();
+            };
+
+            const addWidget = (type, w = 2, h = 2, x = undefined, y = undefined, savedData = null) => {
+                const id = 'w-' + Math.random().toString(36).substr(2, 9);
+                const template = getTemplate(type, id);
+                const widgetEl = grid.addWidget({ w, h, x, y, content: template });
+                widgetEl.querySelector('.remove-widget').onclick = () => grid.removeWidget(widgetEl);
+
+                if (type === 'clock') startClockLogic(id);
+                if (type === 'stats') startStatsLogic(id);
+                if (type === 'todo') initTodoLogic(id, savedData);
+                if (type === 'notes') initNotesLogic(id, savedData);
+                if (type === 'apps' && savedData) {
+                    const icons = widgetEl.querySelectorAll('.app-icon');
+                    savedData.forEach((link, idx) => { if (icons[idx]) { icons[idx].dataset.link = link; icons[idx].querySelector('input').value = link; } });
+                }
+                toggleAddPanel(false);
+            };
+
+            const getTemplate = (type, id) => {
+                const templates = {
+                    clock: `<div class="widget-clock" id="${id}"><div class="remove-widget">✕</div><span class="w-label">Live Time</span><div class="time-display">00:00</div><div class="date-display">...</div></div>`,
+                    stats: `<div class="widget-stats" id="${id}"><div class="remove-widget">✕</div><span class="w-label">System Performance</span>
+                                <div class="stat-group"><div class="stat-header"><span>CPU Load</span><span class="cpu-text">0%</span></div><div class="stat-track"><div class="stat-fill cpu-bar" style="width:0%; background-color:var(--accent-blue);"></div></div></div>
+                                <div class="stat-group"><div class="stat-header"><span>RAM Usage</span><span class="ram-text">0%</span></div><div class="stat-track"><div class="stat-fill ram-bar" style="width:0%; background-color:var(--accent-green);"></div></div></div>
+                            </div>`,
+                    apps: `<div class="widget-apps"><div class="remove-widget">✕</div><span class="w-label">Launcher</span><div class="app-grid">
+                                <div class="app-icon" data-link="https://discord.com" onclick="if(!Dashboard.isEditingMode()) window.open(this.dataset.link)">
+                                    <i class="fa-brands fa-discord"></i><input type="text" class="link-edit-input" value="https://discord.com" onclick="event.stopPropagation()" oninput="this.parentElement.dataset.link = this.value; Dashboard.saveState();">
+                                </div>
+                                <div class="app-icon" data-link="https://spotify.com" onclick="if(!Dashboard.isEditingMode()) window.open(this.dataset.link)">
+                                    <i class="fa-brands fa-spotify"></i><input type="text" class="link-edit-input" value="https://spotify.com" onclick="event.stopPropagation()" oninput="this.parentElement.dataset.link = this.value; Dashboard.saveState();">
+                                </div>
+                                <div class="app-icon" data-link="https://github.com" onclick="if(!Dashboard.isEditingMode()) window.open(this.dataset.link)">
+                                    <i class="fa-brands fa-github"></i><input type="text" class="link-edit-input" value="https://github.com" onclick="event.stopPropagation()" oninput="this.parentElement.dataset.link = this.value; Dashboard.saveState();">
+                                </div>
+                            </div></div>`,
+                    music: `<div class="widget-music" id="${id}"><div class="remove-widget">✕</div><span class="w-label">Spotify</span>
+                                <div class="music-ui"><div class="art-proxy"><i class="fa-brands fa-spotify"></i></div><h4 class="m-title">Idle</h4><p class="m-artist" style="color:var(--text-secondary); font-size:13px;">Not Connected</p>
+                                <div style="display:flex; justify-content:center; gap:25px; margin-top:15px; font-size:20px; cursor:pointer;">
+                                    <i class="fa fa-step-backward" onclick="Dashboard.spotifyAction('previous')"></i><i class="fa fa-play play-btn" onclick="Dashboard.spotifyAction('toggle')"></i><i class="fa fa-step-forward" onclick="Dashboard.spotifyAction('next')"></i>
+                                </div><button class="spotify-btn" onclick="Dashboard.spotifyLogin()">Link Account</button></div></div>`,
+                    todo: `<div class="widget-todo" id="${id}" style="height:100%; display:flex; flex-direction:column;"><div class="remove-widget">✕</div><span class="w-label">Tasks</span>
+                                <input type="text" class="todo-input" placeholder="Add a task..."><div class="todo-list"></div></div>`,
+                    notes: `<div class="widget-notes" id="${id}" style="height:100%; display:flex; flex-direction:column;"><div class="remove-widget">✕</div><span class="w-label">Live Note</span>
+                                <textarea class="note-area" style="background:transparent; border:none; color:#ddd; flex:1; outline:none; resize:none; font-size:14px;" placeholder="Write thoughts..."></textarea></div>`
+                };
+                return templates[type];
+            };
+
+            const initTodoLogic = (id, data) => {
+                const el = document.getElementById(id); if (!el) return;
+                const input = el.querySelector('.todo-input');
+                const list = el.querySelector('.todo-list');
+
+                const addTask = (text, done = false) => {
+                    const item = document.createElement('div');
+                    item.className = `todo-item ${done ? 'done' : ''}`;
+                    item.innerHTML = `<div class="todo-check"></div><span>${text}</span>`;
+                    
+                    item.oncontextmenu = (e) => { e.preventDefault(); item.remove(); saveState(); };
+                    item.onclick = () => {
+                        const isNowDone = item.classList.toggle('done');
+                        saveState();
+                        if (isNowDone) {
+                            setTimeout(() => {
+                                if (item.classList.contains('done')) {
+                                    item.classList.add('fade-out');
+                                    setTimeout(() => { item.remove(); saveState(); }, 400);
+                                }
+                            }, 1000);
+                        }
+                    };
+                    list.appendChild(item);
+                };
+
+                input.addEventListener('keypress', (e) => { if (e.key === 'Enter' && input.value) { addTask(input.value); input.value = ''; saveState(); } });
+                if (data) data.forEach(d => addTask(d.text, d.done));
+            };
+
+            const startClockLogic = (id) => {
+                const update = () => {
+                    const el = document.getElementById(id); if (!el) return;
+                    const d = new Date();
+                    el.querySelector('.time-display').innerText = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+                    el.querySelector('.date-display').innerText = d.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+                };
+                setInterval(update, 1000); update();
+            };
+
+            const startStatsLogic = (id) => {
+                setInterval(() => {
+                    const el = document.getElementById(id); if (!el) return;
+                    const cpu = Math.floor(Math.random() * 95) + 5; const ram = Math.floor(Math.random() * 40) + 55;
+                    const cpuB = el.querySelector('.cpu-bar'); const ramB = el.querySelector('.ram-bar');
+                    el.querySelector('.cpu-text').innerText = cpu + '%'; cpuB.style.width = cpu + '%';
+                    cpuB.style.backgroundColor = cpu >= 80 ? 'var(--accent-red)' : 'var(--accent-blue)';
+                    el.querySelector('.ram-text').innerText = ram + '%'; ramB.style.width = ram + '%';
+                    ramB.style.backgroundColor = ram >= 80 ? 'var(--accent-red)' : 'var(--accent-green)';
+                }, 3000);
+            };
+
+            const spotifyLogin = () => {
+                const scope = 'user-read-playback-state user-modify-playback-state';
+                window.location.href = `https://accounts.spotify.com/authorize?client_id=${SPOTIFY_CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(SPOTIFY_REDIRECT_URI)}&scope=${encodeURIComponent(scope)}`;
+            };
+
+            const handleSpotifyAuth = () => {
+                const hash = window.location.hash.substring(1).split('&').reduce((a, i) => { if(i){var p=i.split('='); a[p[0]]=decodeURIComponent(p[1]);} return a; }, {});
+                if(hash.access_token) { localStorage.setItem('spotify_token', hash.access_token); window.location.hash = ''; }
+            };
+
+            const spotifyAction = async (action) => {
+                const token = localStorage.getItem('spotify_token'); if(!token) return;
+                let method = 'POST'; let ep = action;
+                if(action === 'toggle') { ep = document.querySelector('.play-btn').classList.contains('fa-pause') ? 'pause' : 'play'; method = 'PUT'; }
+                await fetch(`https://api.spotify.com/v1/me/player/${ep}`, { method, headers: {'Authorization': `Bearer ${token}`} });
+                setTimeout(updateSpotifyUI, 400);
+            };
+
+            const updateSpotifyUI = async () => {
+                const token = localStorage.getItem('spotify_token'); if(!token) return;
+                try {
+                    const res = await fetch('https://api.spotify.com/v1/me/player/currently-playing', { headers: {'Authorization': `Bearer ${token}`} });
+                    if(res.status !== 200) return;
+                    const d = await res.json(); const widget = document.querySelector('.widget-music'); if(!widget) return;
+                    widget.querySelector('.m-title').innerText = d.item.name;
+                    widget.querySelector('.m-artist').innerText = d.item.artists[0].name;
+                    widget.querySelector('.art-proxy').style.backgroundImage = `url(${d.item.album.images[0].url})`;
+                    widget.querySelector('.art-proxy').innerHTML = '';
+                    widget.querySelector('.play-btn').className = d.is_playing ? 'fa fa-pause play-btn' : 'fa fa-play play-btn';
+                } catch(e) {}
+            };
+
+            const initNotesLogic = (id, data) => {
+                const el = document.getElementById(id); if (!el) return;
+                const area = el.querySelector('.note-area'); if (data) area.value = data;
+                area.addEventListener('input', () => saveState());
+            };
+
+            const saveState = () => {
+                const data = grid.getGridItems().map(el => {
+                    const div = el.querySelector('[class^="widget-"]'); if (!div) return null;
+                    const type = div.classList[0].split('-')[1];
+                    let custom = null;
+                    if (type === 'notes') custom = el.querySelector('.note-area').value;
+                    if (type === 'apps') custom = Array.from(el.querySelectorAll('.app-icon')).map(i => i.dataset.link);
+                    if (type === 'todo') custom = Array.from(el.querySelectorAll('.todo-item')).map(it => ({ text: it.querySelector('span').innerText, done: it.classList.contains('done') }));
+                    return { w: el.gridstackNode.w, h: el.gridstackNode.h, x: el.gridstackNode.x, y: el.gridstackNode.y, type, data: custom };
+                }).filter(x => x !== null);
+                localStorage.setItem('ss_ultra_v5', JSON.stringify(data));
+            };
+
+            const loadInitialState = () => {
+                const saved = JSON.parse(localStorage.getItem('ss_ultra_v5'));
+                if (saved && saved.length > 0) saved.forEach(w => addWidget(w.type, w.w, w.h, w.x, w.y, w.data));
+                else { addWidget('clock', 5, 3, 0, 0); addWidget('music', 3, 3, 5, 0); addWidget('apps', 4, 3, 8, 0); }
+            };
+
+            const clearState = () => { if(confirm('Reset all?')) { localStorage.removeItem('ss_ultra_v5'); location.reload(); } };
+
+            return { init, toggleEdit, addWidget, saveState, clearState, spotifyLogin, spotifyAction, isEditingMode: () => isEditing };
+        })();
+
+        function toggleAddPanel(f) { document.getElementById('add-panel').classList.toggle('show', f); }
+        window.onload = Dashboard.init;
+    </script>
+</body>
+</html>
