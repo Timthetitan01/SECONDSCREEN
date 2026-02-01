@@ -3,11 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecondScreen Pro | Free Drag</title>
+    <title>SecondScreen Pro | Cloud Edition</title>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
     <style>
         :root {
             /* iOS System Colors */
@@ -37,7 +41,7 @@
             color: var(--text-main); font-family: var(--font); height: 100vh; overflow: hidden; display: flex; flex-direction: column;
         }
 
-        /* --- CRITICAL FIX: Enable Text Selection --- */
+        /* Input Text Selection Fix */
         input, textarea { 
             user-select: text !important; 
             -webkit-user-select: text !important; 
@@ -53,7 +57,7 @@
             background: rgba(20, 20, 20, 0.4); backdrop-filter: blur(20px); border-bottom: 1px solid var(--ios-card-border); z-index: 1000;
         }
         .brand { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
-        .nav-actions { display: flex; gap: 10px; }
+        .nav-actions { display: flex; gap: 10px; align-items: center; }
 
         .btn {
             background: rgba(255, 255, 255, 0.1); border: none; color: white; padding: 6px 14px; border-radius: 99px;
@@ -64,32 +68,23 @@
         .btn-primary { background: var(--ios-blue); }
         .btn-danger { background: rgba(255, 69, 58, 0.15); color: var(--ios-red); }
 
+        /* Auth Profile */
+        .user-pill { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.3); padding: 4px 12px 4px 4px; border-radius: 99px; cursor: pointer; }
+        .user-avatar { width: 24px; height: 24px; border-radius: 50%; background: #555; }
+        .user-name { font-size: 12px; font-weight: 500; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
         /* Dashboard */
         #dashboard-wrapper { flex: 1; padding: 20px; overflow-y: auto; overflow-x: hidden; cursor: default; }
 
-        /* Grid Item Wrapper */
+        /* Grid Items */
         .grid-stack-item { overflow: visible !important; }
-
-        /* Card Content */
         .grid-stack-item-content {
             background: var(--ios-card) !important; backdrop-filter: var(--blur) !important;
             border: 1px solid var(--ios-card-border) !important; border-radius: var(--radius) !important;
             padding: 16px; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.2); overflow: hidden;
         }
 
-        /* --- DRAG LOGIC CSS --- */
-        
-        /* When editing, the whole card shows the grab cursor */
-        .editing .grid-stack-item-content { 
-            cursor: grab; 
-            animation: jiggle 0.3s infinite ease-in-out; 
-            border-color: var(--ios-blue) !important; 
-        }
-        .editing .grid-stack-item-content:active { cursor: grabbing; }
-
-        /* Inputs should still use text cursor even in edit mode */
-        .editing input, .editing textarea { cursor: text !important; }
-
+        /* Edit Mode Styles */
         .remove-widget {
             position: absolute; top: -10px; right: -10px; width: 26px; height: 26px;
             background: #8e8e93; border: 2px solid var(--bg-body); border-radius: 50%;
@@ -97,7 +92,10 @@
             font-size: 12px; cursor: pointer; z-index: 9999; box-shadow: 0 2px 6px rgba(0,0,0,0.4);
         }
         .editing .remove-widget { display: flex; animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        
+        .editing .grid-stack-item-content { cursor: grab; animation: jiggle 0.3s infinite ease-in-out; border-color: var(--ios-blue) !important; }
+        .editing .grid-stack-item-content:active { cursor: grabbing; }
+        .editing input, .editing textarea { cursor: text !important; } /* Keep inputs typable */
+
         @keyframes jiggle { 0% { transform: rotate(-0.8deg); } 50% { transform: rotate(0.8deg); } 100% { transform: rotate(-0.8deg); } }
         @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
 
@@ -105,7 +103,7 @@
         .w-label { font-size: 11px; font-weight: 600; color: var(--ios-blue); text-transform: uppercase; letter-spacing: 0.5px; }
         .w-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
 
-        /* --- NEW WIDGET CSS --- */
+        /* --- WIDGET STYLES --- */
         
         /* Battery */
         .batt-container { display: flex; align-items: center; justify-content: center; height: 100%; gap: 15px; }
@@ -116,7 +114,7 @@
         .batt-state { font-size: 11px; color: var(--text-sec); text-align: center; margin-top: 5px; }
 
         /* Password */
-        .pass-display { font-family: monospace; font-size: 16px; text-align: center; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-bottom: 10px; user-select: text !important; cursor: text; letter-spacing: 1px; color: var(--ios-green); }
+        .pass-display { font-family: monospace; font-size: 16px; text-align: center; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-bottom: 10px; color: var(--ios-green); word-break: break-all; }
         .pass-controls { display: flex; gap: 10px; align-items: center; }
         
         /* Clipboard History */
@@ -132,7 +130,7 @@
         .timer-bar { height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 10px; overflow: hidden; }
         .timer-fill { height: 100%; background: var(--ios-orange); width: 100%; transition: width 1s linear; }
 
-        /* --- EXISTING WIDGETS --- */
+        /* Tasks */
         .task-input-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
         .task-list { flex: 1; overflow-y: auto; padding-right: 2px; }
         .task-item { display: flex; align-items: center; gap: 10px; padding: 10px 8px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1); border-radius: 8px; animation: slideIn 0.2s ease-out; }
@@ -149,14 +147,14 @@
         .task-delete:hover { color: var(--ios-red); transform: scale(1.1); }
         .task-empty { text-align: center; color: var(--text-sec); font-size: 12px; margin-top: 20px; font-style: italic; opacity: 0.7; }
 
-        /* --- Calculator --- */
+        /* Calculator */
         .calc-screen { text-align:right; font-size:42px; font-weight:200; margin-bottom:10px; height:50px; white-space:nowrap; overflow:hidden; }
         .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; flex: 1; }
         .calc-btn { background: rgba(255,255,255,0.1); border:none; color:white; border-radius:50px; font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
         .calc-btn:active { background: rgba(255,255,255,0.3); }
         .calc-orange { background: var(--ios-orange); font-weight: 600; }
         
-        /* --- Other Widgets --- */
+        /* Standard Widgets */
         .clock-container { display: flex; flex-direction: column; justify-content: center; height: 100%; text-align: center; }
         .time-big { font-size: 48px; font-weight: 200; letter-spacing: -1px; line-height: 1; margin-bottom: 5px; white-space: nowrap; }
         .date-sub { font-size: 15px; color: var(--ios-red); font-weight: 500; text-transform: uppercase; }
@@ -179,7 +177,7 @@
         .count-progress { height: 4px; background: rgba(255,255,255,0.1); margin-top: 10px; border-radius: 2px; width: 80%; margin-left: auto; margin-right: auto; overflow: hidden; }
         .count-fill { height: 100%; background: var(--ios-indigo); width: 0%; transition: width 1s ease; }
 
-        /* --- CALENDAR WIDGET --- */
+        /* Calendar */
         .cal-wrapper { height: 100%; display: flex; flex-direction: column; }
         .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-weight: 600; font-size: 14px; }
         .cal-title { cursor: pointer; transition: color 0.2s; }
@@ -196,44 +194,15 @@
         .cal-day.today { background: var(--ios-red); color: white; font-weight: 700; }
         .cal-day.empty { pointer-events: none; }
 
-        /* --- MODAL SYSTEM --- */
-        #modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(8px);
-            z-index: 1999;
-            opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
-        }
+        /* Modal */
+        #modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); z-index: 1999; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
         #modal-overlay.show { opacity: 1; pointer-events: all; }
-
-        #add-modal {
-            position: fixed; top: 50%; left: 50%;
-            transform: translate(-50%, -50%) scale(0.9);
-            width: 90%; max-width: 500px; max-height: 80vh;
-            background: rgba(28, 28, 30, 0.95);
-            border: 1px solid var(--ios-card-border);
-            border-radius: 24px;
-            padding: 24px;
-            z-index: 2000;
-            display: flex; flex-direction: column;
-            opacity: 0; pointer-events: none;
-            transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1);
-            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
-        }
+        #add-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); width: 90%; max-width: 500px; max-height: 80vh; background: rgba(28, 28, 30, 0.95); border: 1px solid var(--ios-card-border); border-radius: 24px; padding: 24px; z-index: 2000; display: flex; flex-direction: column; opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1); box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
         #add-modal.show { opacity: 1; pointer-events: all; transform: translate(-50%, -50%) scale(1); }
-
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .modal-title { font-size: 20px; font-weight: 700; color: white; }
-        
-        .modal-grid { 
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 15px; 
-            overflow-y: auto; padding: 2px;
-        }
-
-        .add-card {
-            background: rgba(255,255,255,0.08); padding: 15px; border-radius: 18px; text-align: center; cursor: pointer;
-            transition: 0.2s; display:flex; flex-direction:column; align-items:center; gap:10px; height: 100px; justify-content: center;
-        }
+        .modal-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 15px; overflow-y: auto; padding: 2px; }
+        .add-card { background: rgba(255,255,255,0.08); padding: 15px; border-radius: 18px; text-align: center; cursor: pointer; transition: 0.2s; display:flex; flex-direction:column; align-items:center; gap:10px; height: 100px; justify-content: center; }
         .add-card:hover { background: rgba(255,255,255,0.12); transform: translateY(-2px); }
         .add-card:active { transform: scale(0.96); }
         .add-label { font-size: 11px; font-weight: 500; color: white; }
@@ -245,53 +214,25 @@
 <body>
 
     <div id="modal-overlay" onclick="UI.toggleAdd(false)"></div>
-    
     <div id="add-modal">
         <div class="modal-header">
             <div class="modal-title">Gallery</div>
             <button class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;" onclick="UI.toggleAdd(false)">Close</button>
         </div>
         <div class="modal-grid">
-            <div class="add-card" onclick="Core.createWidget('timer', 3, 2)">
-                <i class="fa-solid fa-hourglass-end add-icon" style="color:var(--ios-orange)"></i><span class="add-label">Timer</span>
-            </div>
-            <div class="add-card" onclick="Core.createWidget('battery', 3, 2)">
-                <i class="fa-solid fa-battery-half add-icon" style="color:var(--ios-green)"></i><span class="add-label">Battery</span>
-            </div>
-            <div class="add-card" onclick="Core.createWidget('password', 4, 3)">
-                <i class="fa-solid fa-key add-icon" style="color:var(--ios-purple)"></i><span class="add-label">Passwords</span>
-            </div>
-            <div class="add-card" onclick="Core.createWidget('clipboard', 3, 4)">
-                <i class="fa-solid fa-clipboard add-icon" style="color:var(--ios-teal)"></i><span class="add-label">Clipboard</span>
-            </div>
-
-            <div class="add-card" onclick="Core.createWidget('calendar', 4, 4)">
-                <i class="fa-regular fa-calendar add-icon" style="color:var(--ios-red)"></i><span class="add-label">Calendar</span>
-            </div>
-            <div class="add-card" onclick="Core.createWidget('links', 4, 2)">
-                <i class="fa-solid fa-gamepad add-icon" style="color:var(--ios-blue)"></i><span class="add-label">Quick Links</span>
-            </div>
-            <div class="add-card" onclick="Core.createWidget('countdown', 2, 2)">
-                <i class="fa-solid fa-hourglass-half add-icon" style="color:var(--ios-indigo)"></i><span class="add-label">Countdown</span>
-            </div>
-            <div class="add-card" onclick="Core.createWidget('clock', 4, 2)">
-                <i class="fa-regular fa-clock add-icon" style="color:white"></i><span class="add-label">Clock</span>
-            </div>
-            <div class="add-card" onclick="Core.createWidget('weather', 3, 2)">
-                <i class="fa-solid fa-cloud-sun add-icon" style="color:var(--ios-yellow)"></i><span class="add-label">Weather</span>
-            </div>
-            <div class="add-card" onclick="Core.createWidget('todo', 3, 4)">
-                <i class="fa-solid fa-check-circle add-icon" style="color:var(--ios-orange)"></i><span class="add-label">Reminders</span>
-            </div>
-            <div class="add-card" onclick="Core.createWidget('music', 3, 3)">
-                <i class="fa-brands fa-spotify add-icon" style="color:#1DB954"></i><span class="add-label">Music</span>
-            </div>
-            <div class="add-card" onclick="Core.createWidget('calc', 3, 5)">
-                <i class="fa-solid fa-calculator add-icon" style="color:var(--ios-green)"></i><span class="add-label">Calculator</span>
-            </div>
-            <div class="add-card" onclick="Core.createWidget('notes', 6, 3)">
-                <i class="fa-solid fa-note-sticky add-icon" style="color:var(--ios-yellow)"></i><span class="add-label">Notes</span>
-            </div>
+            <div class="add-card" onclick="Core.createWidget('timer', 3, 2)"><i class="fa-solid fa-hourglass-end add-icon" style="color:var(--ios-orange)"></i><span class="add-label">Timer</span></div>
+            <div class="add-card" onclick="Core.createWidget('battery', 3, 2)"><i class="fa-solid fa-battery-half add-icon" style="color:var(--ios-green)"></i><span class="add-label">Battery</span></div>
+            <div class="add-card" onclick="Core.createWidget('password', 4, 3)"><i class="fa-solid fa-key add-icon" style="color:var(--ios-purple)"></i><span class="add-label">Passwords</span></div>
+            <div class="add-card" onclick="Core.createWidget('clipboard', 3, 4)"><i class="fa-solid fa-clipboard add-icon" style="color:var(--ios-teal)"></i><span class="add-label">Clipboard</span></div>
+            <div class="add-card" onclick="Core.createWidget('calendar', 4, 4)"><i class="fa-regular fa-calendar add-icon" style="color:var(--ios-red)"></i><span class="add-label">Calendar</span></div>
+            <div class="add-card" onclick="Core.createWidget('links', 4, 2)"><i class="fa-solid fa-gamepad add-icon" style="color:var(--ios-blue)"></i><span class="add-label">Quick Links</span></div>
+            <div class="add-card" onclick="Core.createWidget('countdown', 2, 2)"><i class="fa-solid fa-hourglass-half add-icon" style="color:var(--ios-indigo)"></i><span class="add-label">Countdown</span></div>
+            <div class="add-card" onclick="Core.createWidget('clock', 4, 2)"><i class="fa-regular fa-clock add-icon" style="color:white"></i><span class="add-label">Clock</span></div>
+            <div class="add-card" onclick="Core.createWidget('weather', 3, 2)"><i class="fa-solid fa-cloud-sun add-icon" style="color:var(--ios-yellow)"></i><span class="add-label">Weather</span></div>
+            <div class="add-card" onclick="Core.createWidget('todo', 3, 4)"><i class="fa-solid fa-check-circle add-icon" style="color:var(--ios-orange)"></i><span class="add-label">Reminders</span></div>
+            <div class="add-card" onclick="Core.createWidget('music', 3, 3)"><i class="fa-brands fa-spotify add-icon" style="color:#1DB954"></i><span class="add-label">Music</span></div>
+            <div class="add-card" onclick="Core.createWidget('calc', 3, 5)"><i class="fa-solid fa-calculator add-icon" style="color:var(--ios-green)"></i><span class="add-label">Calculator</span></div>
+            <div class="add-card" onclick="Core.createWidget('notes', 6, 3)"><i class="fa-solid fa-note-sticky add-icon" style="color:var(--ios-yellow)"></i><span class="add-label">Notes</span></div>
         </div>
     </div>
 
@@ -302,6 +243,10 @@
             <button id="edit-btn" class="btn" onclick="Core.toggleEdit()"><i class="fa-solid fa-pen-nib"></i> Edit</button>
             <button class="btn" onclick="Core.saveLayout()"><i class="fa-solid fa-cloud"></i></button>
             <button class="btn btn-danger" onclick="Core.reset()"><i class="fa-solid fa-power-off"></i></button>
+            
+            <div id="auth-section">
+                <button class="btn" onclick="Cloud.login()"><i class="fa-brands fa-google"></i> Login</button>
+            </div>
         </div>
     </nav>
 
@@ -312,6 +257,66 @@
     <script src="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack-all.js"></script>
     
     <script>
+        // --- 1. FIREBASE CONFIGURATION (PASTE YOUR CONFIG HERE) ---
+        // ------------------------------------------------------------
+        const firebaseConfig = {
+        apiKey: "AIzaSyArqMp658OSK8u46cjCefyVKiDJe4oe8-g",
+        authDomain: "secondscreen-f7cd9.firebaseapp.com",
+        projectId: "secondscreen-f7cd9",
+        storageBucket: "secondscreen-f7cd9.firebasestorage.app",
+        messagingSenderId: "233696091813",
+        appId: "1:233696091813:web:734ed34d527ba05dbbf74c",
+        measurementId: "G-QTQZ0ET1KJ"
+        };
+        // ------------------------------------------------------------
+
+        // Initialize Firebase safely
+        try {
+            firebase.initializeApp(firebaseConfig);
+            var db = firebase.firestore();
+            var auth = firebase.auth();
+            var provider = new firebase.auth.GoogleAuthProvider();
+        } catch(e) {
+            console.warn("Firebase not configured correctly. Cloud features disabled.");
+        }
+
+        // --- 2. CLOUD LOGIC ---
+        const Cloud = {
+            user: null,
+            login: () => {
+                if(!auth) return alert("Firebase not configured.");
+                auth.signInWithPopup(provider).then(res => {
+                    Cloud.user = res.user;
+                    Cloud.updateUI();
+                    Core.loadData(true); // Attempt cloud load
+                }).catch(e => alert(e.message));
+            },
+            logout: () => {
+                if(!auth) return;
+                auth.signOut().then(() => {
+                    Cloud.user = null;
+                    Cloud.updateUI();
+                    location.reload(); // Reset to local state
+                });
+            },
+            updateUI: () => {
+                const sec = document.getElementById('auth-section');
+                if(Cloud.user) {
+                    sec.innerHTML = `<div class="user-pill" onclick="Cloud.logout()" title="Logout"><img src="${Cloud.user.photoURL}" class="user-avatar"><span class="user-name">${Cloud.user.displayName}</span></div>`;
+                } else {
+                    sec.innerHTML = `<button class="btn" onclick="Cloud.login()"><i class="fa-brands fa-google"></i> Login</button>`;
+                }
+            },
+            save: (data) => {
+                if(Cloud.user && db) {
+                    db.collection('users').doc(Cloud.user.uid).set({ 
+                        layout: JSON.stringify(data), 
+                        updated: Date.now() 
+                    }).catch(e => console.error("Cloud Save Failed", e));
+                }
+            }
+        };
+
         const Utils = {
             calc: (id, val) => {
                 const s = document.getElementById(`scr-${id}`);
@@ -357,21 +362,9 @@
                     document.getElementById(`cd-bar-${id}`).style.width = (100 - pct) + '%';
                 }
             },
-            
-            // --- CALENDAR LOGIC ---
-            initCalendar: (id) => {
-                if(!window[`cal_date_${id}`]) { window[`cal_date_${id}`] = new Date(); }
-                Utils.renderCalendar(id);
-            },
-            changeMonth: (id, offset) => {
-                const currentDate = window[`cal_date_${id}`];
-                currentDate.setMonth(currentDate.getMonth() + offset);
-                Utils.renderCalendar(id);
-            },
-            resetCalendar: (id) => {
-                window[`cal_date_${id}`] = new Date(); 
-                Utils.renderCalendar(id);
-            },
+            initCalendar: (id) => { if(!window[`cal_date_${id}`]) { window[`cal_date_${id}`] = new Date(); } Utils.renderCalendar(id); },
+            changeMonth: (id, offset) => { const currentDate = window[`cal_date_${id}`]; currentDate.setMonth(currentDate.getMonth() + offset); Utils.renderCalendar(id); },
+            resetCalendar: (id) => { window[`cal_date_${id}`] = new Date(); Utils.renderCalendar(id); },
             renderCalendar: (id) => {
                 const date = window[`cal_date_${id}`];
                 const year = date.getFullYear();
@@ -382,49 +375,33 @@
                 const firstDayIndex = new Date(year, month, 1).getDay();
                 const lastDay = new Date(year, month + 1, 0).getDate();
                 const today = new Date();
-                for (let i = 0; i < firstDayIndex; i++) {
-                    const empty = document.createElement('div'); empty.classList.add('cal-day', 'empty'); daysContainer.appendChild(empty);
-                }
+                for (let i = 0; i < firstDayIndex; i++) { const empty = document.createElement('div'); empty.classList.add('cal-day', 'empty'); daysContainer.appendChild(empty); }
                 for (let i = 1; i <= lastDay; i++) {
                     const dayEl = document.createElement('div'); dayEl.classList.add('cal-day'); dayEl.innerText = i;
                     if (i === today.getDate() && month === today.getMonth() && year === today.getFullYear()) { dayEl.classList.add('today'); }
                     daysContainer.appendChild(dayEl);
                 }
             },
-
-            // --- NEW WIDGET UTILS ---
-            
-            // Timer
             setTimer: (id) => {
                 const time = prompt("Enter Time (e.g. 5:00 PM or 17:00):");
                 if(!time) return;
-                const d = new Date();
-                const [timeStr, mod] = time.split(' ');
-                let [h, m] = timeStr.split(':');
-                if (h === '12') h = '00';
-                if (mod && (mod.toLowerCase() === 'pm')) h = parseInt(h, 10) + 12;
+                const d = new Date(); const [timeStr, mod] = time.split(' '); let [h, m] = timeStr.split(':');
+                if (h === '12') h = '00'; if (mod && (mod.toLowerCase() === 'pm')) h = parseInt(h, 10) + 12;
                 d.setHours(h, m, 0, 0);
                 if(d < new Date()) { alert("Time passed!"); return; }
-                
                 document.getElementById(`timer-wrap-${id}`).setAttribute('data-end', d.getTime());
                 document.getElementById(`timer-lbl-${id}`).innerText = `Until ${time}`;
-                Utils.updateTimer(id);
-                Core.saveLayout();
+                Utils.updateTimer(id); Core.saveLayout();
             },
             updateTimer: (id) => {
-                const el = document.getElementById(`timer-wrap-${id}`);
-                if(!el) return;
-                const end = parseInt(el.getAttribute('data-end'));
-                if(!end) return;
+                const el = document.getElementById(`timer-wrap-${id}`); if(!el) return;
+                const end = parseInt(el.getAttribute('data-end')); if(!end) return;
                 const diff = end - Date.now();
                 if(diff <= 0) { document.getElementById(`timer-val-${id}`).innerText = "Done"; return; }
-                
                 const hr = Math.floor((diff % (86400000)) / (3600000));
                 const mn = Math.floor((diff % (3600000)) / 60000);
                 document.getElementById(`timer-val-${id}`).innerText = `${hr}h ${mn}m`;
             },
-
-            // Battery
             updateBattery: async (id) => {
                 if('getBattery' in navigator) {
                     const batt = await navigator.getBattery();
@@ -434,37 +411,23 @@
                         document.getElementById(`batt-fill-${id}`).style.width = lvl + '%';
                         document.getElementById(`batt-st-${id}`).innerText = batt.charging ? 'Charging ⚡' : 'On Battery';
                         document.getElementById(`batt-fill-${id}`).style.background = batt.charging ? 'var(--ios-green)' : (lvl<20?'var(--ios-red)':'var(--text-main)');
-                    };
-                    up();
-                    batt.addEventListener('levelchange', up);
-                    batt.addEventListener('chargingchange', up);
-                } else {
-                    document.getElementById(`batt-st-${id}`).innerText = "Not Supported";
-                }
+                    }; up(); batt.addEventListener('levelchange', up); batt.addEventListener('chargingchange', up);
+                } else { document.getElementById(`batt-st-${id}`).innerText = "Not Supported"; }
             },
-
-            // Password
             genPass: (id) => {
                 const len = document.getElementById(`rng-${id}`).value;
                 const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%^&*";
-                let pass = "";
-                for(let i=0; i<len; i++) pass += chars.charAt(Math.floor(Math.random() * chars.length));
+                let pass = ""; for(let i=0; i<len; i++) pass += chars.charAt(Math.floor(Math.random() * chars.length));
                 document.getElementById(`pass-${id}`).innerText = pass;
                 document.getElementById(`lbl-${id}`).innerText = `Length: ${len}`;
             },
-
-            // Clipboard
             saveClip: async (id) => {
                 try {
-                    const text = await navigator.clipboard.readText();
-                    if(!text) return;
+                    const text = await navigator.clipboard.readText(); if(!text) return;
                     const list = document.getElementById(`clip-${id}`);
-                    const item = document.createElement('div');
-                    item.className = 'clip-item';
-                    item.innerText = text;
+                    const item = document.createElement('div'); item.className = 'clip-item'; item.innerText = text;
                     item.onclick = () => { navigator.clipboard.writeText(text); alert("Copied!"); };
-                    list.prepend(item);
-                    if(list.children.length > 5) list.lastChild.remove();
+                    list.prepend(item); if(list.children.length > 5) list.lastChild.remove();
                     Core.saveLayout();
                 } catch(e) { alert("Clipboard permission required"); }
             }
@@ -474,32 +437,35 @@
             let grid = null, editing = false;
 
             const init = () => {
-                // FIXED: REMOVED HANDLE RESTRICTION
+                // FIXED: Drag Logic - Locked by default, unlocked in toggleEdit
                 grid = GridStack.init({ 
                     column: 12, 
                     cellHeight: '85px', 
                     margin: 12, 
                     float: true, 
                     animate: true,
-                    disableDrag: true, // Default to locked
+                    disableDrag: true, 
                     disableResize: true
-                    // draggable removed here to allow full drag
                 });
                 
-                loadData();
+                // Auth Monitor
+                if(auth) {
+                    auth.onAuthStateChanged(user => {
+                        Cloud.user = user;
+                        Cloud.updateUI();
+                        loadData(); // Will determine source
+                    });
+                } else {
+                    loadData(); // Fallback local
+                }
+
                 setInterval(UI.updateTime, 1000);
                 setInterval(() => document.querySelectorAll('.count-container').forEach(el => Utils.updateCountdown(el.id.replace('count-wrap-', ''))), 60000);
-                
-                // Timer Interval
-                setInterval(() => {
-                    document.querySelectorAll('.timer-container').forEach(el => Utils.updateTimer(el.id.replace('timer-wrap-','')));
-                }, 1000);
+                setInterval(() => { document.querySelectorAll('.timer-container').forEach(el => Utils.updateTimer(el.id.replace('timer-wrap-',''))); }, 1000);
 
-                // CLICK BACKGROUND LOGIC
+                // BACKGROUND CLICK EXIT EDIT
                 document.getElementById('dashboard-wrapper').addEventListener('click', (e) => {
-                    if (editing && !e.target.closest('.grid-stack-item')) {
-                        Core.toggleEdit();
-                    }
+                    if (editing && !e.target.closest('.grid-stack-item')) { Core.toggleEdit(); }
                 });
             };
 
@@ -509,13 +475,8 @@
                 document.body.classList.toggle('editing', editing);
                 
                 const btn = document.getElementById('edit-btn');
-                if(editing) {
-                    btn.innerHTML = '<i class="fa-solid fa-check"></i> Done';
-                    btn.classList.add('btn-primary'); 
-                } else {
-                    btn.innerHTML = '<i class="fa-solid fa-pen-nib"></i> Edit';
-                    btn.classList.remove('btn-primary');
-                }
+                if(editing) { btn.innerHTML = '<i class="fa-solid fa-check"></i> Done'; btn.classList.add('btn-primary'); } 
+                else { btn.innerHTML = '<i class="fa-solid fa-pen-nib"></i> Edit'; btn.classList.remove('btn-primary'); }
             };
 
             const createWidget = (type, w, h, x, y, savedData) => {
@@ -524,18 +485,13 @@
                 const el = grid.addWidget({ w, h, x, y, content, minW: 2, minH: 2 });
                 
                 const removeBtn = el.querySelector('.remove-widget');
-                if(removeBtn) {
-                    el.appendChild(removeBtn); 
-                    removeBtn.onclick = () => grid.removeWidget(el);
-                }
+                if(removeBtn) { el.appendChild(removeBtn); removeBtn.onclick = () => grid.removeWidget(el); }
                 
                 if (type === 'todo') UI.initTodo(id, savedData);
-                if (type === 'notes') UI.initNotes(id, savedData);
+                if (type === 'notes') document.getElementById(`nt-${id}`).value = savedData || "";
                 if (type === 'weather') UI.initWeather(id);
                 if (type === 'countdown' && savedData) Utils.updateCountdown(id);
                 if (type === 'calendar') Utils.initCalendar(id);
-                
-                // Init New Widgets
                 if (type === 'battery') Utils.updateBattery(id);
                 if (type === 'clipboard' && savedData) {
                     savedData.forEach(t => {
@@ -560,30 +516,41 @@
                     let data = null;
                     if (type === 'notes') data = el.querySelector('textarea').value;
                     if (type === 'todo') data = Array.from(el.querySelectorAll('.task-item')).map(i => ({t: i.querySelector('.task-text').innerText, d: i.classList.contains('done')}));
-                    if (type === 'links') {
-                        data = [];
-                        el.querySelectorAll('.deck-btn').forEach(btn => data.push(JSON.parse(btn.getAttribute('data-link') || 'null')));
-                    }
-                    if (type === 'countdown') {
-                        data = JSON.parse(el.querySelector('.count-container').getAttribute('data-target') || 'null');
-                    }
-                    // Save New Widgets
-                    if (type === 'clipboard') {
-                        data = Array.from(el.querySelectorAll('.clip-item')).map(i => i.innerText);
-                    }
-                    if (type === 'timer') {
-                        const wrap = el.querySelector('.timer-container');
-                        data = { end: wrap.getAttribute('data-end'), label: el.querySelector('.timer-label').innerText };
-                    }
+                    if (type === 'links') { data = []; el.querySelectorAll('.deck-btn').forEach(btn => data.push(JSON.parse(btn.getAttribute('data-link') || 'null'))); }
+                    if (type === 'countdown') { data = JSON.parse(el.querySelector('.count-container').getAttribute('data-target') || 'null'); }
+                    if (type === 'clipboard') { data = Array.from(el.querySelectorAll('.clip-item')).map(i => i.innerText); }
+                    if (type === 'timer') { const wrap = el.querySelector('.timer-container'); data = { end: wrap.getAttribute('data-end'), label: el.querySelector('.timer-label').innerText }; }
 
                     return { x: el.gridstackNode.x, y: el.gridstackNode.y, w: el.gridstackNode.w, h: el.gridstackNode.h, type, data };
                 });
-                localStorage.setItem('ss_drag_v1', JSON.stringify(items));
+                
+                // SAVE LOCAL + CLOUD
+                localStorage.setItem('ss_firebase_v1', JSON.stringify(items));
+                Cloud.save(items);
             };
 
             const loadData = () => {
-                let saved = JSON.parse(localStorage.getItem('ss_drag_v1'));
-                if(!saved) saved = JSON.parse(localStorage.getItem('ss_ultimate_v1'));
+                grid.removeAll();
+                
+                // If logged in, prioritize Cloud
+                if(Cloud.user && db) {
+                    db.collection('users').doc(Cloud.user.uid).get().then(doc => {
+                        if(doc.exists) {
+                            const cloudData = JSON.parse(doc.data().layout);
+                            cloudData.forEach(s => createWidget(s.type, s.w, s.h, s.x, s.y, s.data));
+                        } else {
+                            loadLocal(); // Fallback / First time
+                            saveLayout(); // Sync local to cloud
+                        }
+                    }).catch(() => loadLocal());
+                } else {
+                    loadLocal();
+                }
+            };
+
+            const loadLocal = () => {
+                let saved = JSON.parse(localStorage.getItem('ss_firebase_v1'));
+                if(!saved) saved = JSON.parse(localStorage.getItem('ss_drag_v1')); // Migration from prev version
 
                 if (saved) saved.forEach(s => createWidget(s.type, s.w, s.h, s.x, s.y, s.data));
                 else {
@@ -596,176 +563,53 @@
                 }
             };
 
-            return { init, toggleEdit, createWidget, saveLayout, reset: () => { localStorage.clear(); location.reload(); } };
+            return { init, toggleEdit, createWidget, saveLayout, reset: () => { localStorage.clear(); location.reload(); }, loadData };
         })();
 
         const UI = {
-            toggleAdd: (show) => {
-                const modal = document.getElementById('add-modal');
-                const overlay = document.getElementById('modal-overlay');
-                if(show) {
-                    modal.classList.add('show');
-                    overlay.classList.add('show');
-                } else {
-                    modal.classList.remove('show');
-                    overlay.classList.remove('show');
-                }
-            },
-            updateTime: () => {
-                const now = new Date();
-                document.querySelectorAll('.time-big').forEach(el => el.innerText = now.toLocaleTimeString([], {hour: 'numeric', minute:'2-digit', hour12: true}));
-                document.querySelectorAll('.date-sub').forEach(el => el.innerText = now.toLocaleDateString(undefined, {weekday:'long', month:'short', day:'numeric'}));
-            },
+            toggleAdd: (show) => { const m=document.getElementById('add-modal'), o=document.getElementById('modal-overlay'); if(show){m.classList.add('show');o.classList.add('show');}else{m.classList.remove('show');o.classList.remove('show');}},
+            updateTime: () => { const n=new Date(); document.querySelectorAll('.time-big').forEach(e=>e.innerText=n.toLocaleTimeString([],{hour:'numeric',minute:'2-digit',hour12:true})); document.querySelectorAll('.date-sub').forEach(e=>e.innerText=n.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'}));},
             initTodo: (id, data) => {
                 const list = document.getElementById(`list-${id}`);
                 const emptyMsg = document.getElementById(`empty-${id}`);
-                
-                const checkEmpty = () => {
-                    if(list.children.length === 0) emptyMsg.style.display = 'block';
-                    else emptyMsg.style.display = 'none';
-                };
-                
-                UI.checkEmpty = (i) => {
-                     const l = document.getElementById(`list-${i}`);
-                     const e = document.getElementById(`empty-${i}`);
-                     if(l && e) { if(l.children.length === 0) e.style.display = 'block'; else e.style.display = 'none'; }
-                };
-
+                const checkEmpty = () => { if(list.children.length === 0) emptyMsg.style.display = 'block'; else emptyMsg.style.display = 'none'; };
                 const add = (t, d) => {
-                    const i = document.createElement('div'); 
-                    i.className = `task-item ${d?'done':''}`; 
-                    i.innerHTML = `<div class="task-check"><i class="fa-solid fa-check"></i></div><span class="task-text">${t}</span><i class="fa-solid fa-xmark task-delete" onclick="event.stopPropagation(); this.parentElement.remove(); UI.checkEmpty('${id}'); Core.saveLayout()"></i>`;
-                    
+                    const i = document.createElement('div'); i.className=`task-item ${d?'done':''}`;
+                    i.innerHTML=`<div class="task-check"><i class="fa-solid fa-check"></i></div><span class="task-text">${t}</span><i class="fa-solid fa-xmark task-delete" onclick="event.stopPropagation(); this.parentElement.remove(); UI.checkEmpty('${id}'); Core.saveLayout()"></i>`;
                     i.onclick = (e) => { 
                         if(e.target.classList.contains('task-delete')) return;
-                        i.classList.add('done');
-                        setTimeout(() => {
-                            i.style.opacity = '0';
-                            i.style.transform = 'scale(0.95)';
-                            setTimeout(() => { i.remove(); UI.checkEmpty(id); Core.saveLayout(); }, 300);
-                        }, 800);
+                        i.classList.add('done'); setTimeout(() => { i.remove(); checkEmpty(); Core.saveLayout(); }, 800);
                     };
-                    
-                    list.prepend(i); 
-                    checkEmpty();
+                    list.prepend(i); checkEmpty();
                 };
-
-                document.getElementById(`in-${id}`).onkeypress = (e) => { 
-                    if(e.key === 'Enter' && e.target.value.trim()) { 
-                        add(e.target.value, false); e.target.value=''; Core.saveLayout(); 
-                    } 
-                };
-                
-                if(data && data.length > 0) { data.forEach(d => { if(!d.d) add(d.t, false); }); }
-                checkEmpty();
+                document.getElementById(`in-${id}`).onkeypress = (e) => { if(e.key==='Enter'&&e.target.value.trim()){ add(e.target.value,false); e.target.value=''; Core.saveLayout(); } };
+                if(data) data.forEach(d => { if(!d.d) add(d.t, false); }); checkEmpty();
             },
             initNotes: (id, data) => { const el = document.getElementById(`nt-${id}`); if(data) el.value = data; el.oninput = () => Core.saveLayout(); },
-            initWeather: (id) => {
-                navigator.geolocation.getCurrentPosition(pos => {
-                    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&current_weather=true`)
-                    .then(r=>r.json()).then(d => {
-                        const el = document.getElementById(`temp-${id}`); if(el) el.innerText = Math.round(d.current_weather.temperature) + '°';
-                    });
-                }, () => {}, {timeout:5000});
-            }
+            initWeather: (id) => { navigator.geolocation.getCurrentPosition(pos => { fetch(`https://api.open-meteo.com/v1/forecast?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&current_weather=true`).then(r=>r.json()).then(d => { const e = document.getElementById(`temp-${id}`); if(e) e.innerText = Math.round(d.current_weather.temperature) + '°'; }); }); }
         };
 
         const Templates = {
             get: (type, id, data) => {
                 const wrap = (l, c) => `<div class="remove-widget">✕</div><div class="w-header" data-type="${type}"><span class="w-label">${l}</span></div><div class="w-content" data-type="${type}">${c}</div>`;
-                
-                const getLinkBtn = (idx, saved) => {
-                    const hasData = saved && saved.url;
-                    let iconHtml = `<i class="fa-solid fa-plus deck-icon deck-unset"></i>`;
-                    
-                    if(hasData) {
-                        let domain = saved.domain;
-                        if(!domain) { try { domain = new URL(saved.url).hostname; } catch{ domain = saved.url; } }
-                        iconHtml = `<img src="https://www.google.com/s2/favicons?domain=${domain}&sz=64" class="deck-favicon"><span class="deck-label">${saved.name}</span>`;
-                    }
-
-                    return `<div class="deck-btn" onclick="Utils.linkAction('${id}', ${idx}, this)" oncontextmenu="event.preventDefault(); Utils.editLink('${id}', ${idx}, this)" data-link='${hasData ? JSON.stringify(saved) : ""}'>
-                        ${iconHtml}
-                    </div>`;
-                };
-
-                const hasCD = data && data.date;
-                const cdStr = hasCD ? JSON.stringify(data) : "";
+                const getLink = (idx, s) => { const h = s&&s.url; const icon = h ? `<img src="https://www.google.com/s2/favicons?domain=${s.domain}&sz=64" class="deck-favicon"><span class="deck-label">${s.name}</span>` : `<i class="fa-solid fa-plus deck-icon deck-unset"></i>`; return `<div class="deck-btn" onclick="Utils.linkAction('${id}', ${idx}, this)" oncontextmenu="event.preventDefault(); Utils.editLink('${id}', ${idx}, this)" data-link='${h?JSON.stringify(s):""}'>${icon}</div>`; };
 
                 const map = {
                     clock: `<div class="remove-widget">✕</div><div class="clock-container"><div class="time-big">00:00</div><div class="date-sub">Loading...</div></div>`,
-                    
-                    links: wrap('Quick Links', `<div class="deck-grid">${getLinkBtn(0, data?.[0])}${getLinkBtn(1, data?.[1])}${getLinkBtn(2, data?.[2])}</div>`),
-
-                    countdown: `<div class="remove-widget">✕</div><div class="count-container" id="count-wrap-${id}" onclick="Utils.setCountdown('${id}')" data-target='${cdStr}'><div class="count-days" id="cd-val-${id}">${hasCD ? '--' : '+'}</div><div class="count-label" id="cd-lbl-${id}">${hasCD ? 'Loading...' : 'Set Date'}</div><div class="count-progress"><div class="count-fill" id="cd-bar-${id}"></div></div></div>`,
-
+                    links: wrap('Quick Links', `<div class="deck-grid">${getLink(0,data?.[0])}${getLink(1,data?.[1])}${getLink(2,data?.[2])}</div>`),
+                    countdown: `<div class="remove-widget">✕</div><div class="count-container" id="count-wrap-${id}" onclick="Utils.setCountdown('${id}')" data-target='${data?JSON.stringify(data):""}'><div class="count-days" id="cd-val-${id}">${data?'--':'+'}</div><div class="count-label" id="cd-lbl-${id}">${data?'Loading...':'Set Date'}</div><div class="count-progress"><div class="count-fill" id="cd-bar-${id}"></div></div></div>`,
                     calc: wrap('Calculator', `<div id="scr-${id}" class="calc-screen">0</div><div class="calc-grid">${['C','÷','×','7','8','9','4','5','6','1','2','3','0','.','='].map(k=>`<button class="calc-btn ${['C','÷','×','='].includes(k)?'calc-orange':''}" onclick="Utils.calc('${id}','${k}')">${k}</button>`).join('')}</div>`),
-                    
                     weather: wrap('Weather', `<div style="display:flex;align-items:center;justify-content:center;gap:15px;height:100%"><i class="fa-solid fa-cloud-sun" style="font-size:32px;color:var(--text-main)"></i><div><div id="temp-${id}" style="font-size:28px;font-weight:400">--°</div><div style="font-size:11px;color:var(--text-sec)">Mostly Clear</div></div></div>`),
-                    
-                    todo: wrap('Reminders', `
-                        <div class="task-input-row">
-                            <input id="in-${id}" class="task-input" placeholder="Add a task...">
-                        </div>
-                        <div id="list-${id}" class="task-list"></div>
-                        <div id="empty-${id}" class="task-empty">No tasks</div>
-                    `),
-                    
+                    todo: wrap('Reminders', `<div class="task-input-row"><input id="in-${id}" class="task-input" placeholder="Add task..."></div><div id="list-${id}" class="task-list"></div><div id="empty-${id}" class="task-empty">No tasks</div>`),
+                    notes: wrap('Notes', `<textarea id="nt-${id}" style="flex:1;resize:none;background:transparent;border:none;padding:0;font-family:inherit;font-size:14px;line-height:1.4" placeholder="Type here..." oninput="Core.saveLayout()"></textarea>`),
+                    calendar: `<div class="remove-widget">✕</div><div class="cal-wrapper"><div class="cal-header"><i class="fa-solid fa-chevron-left cal-nav" onclick="Utils.changeMonth('${id}', -1)"></i><span id="cal-title-${id}" class="cal-title" onclick="Utils.resetCalendar('${id}')">Month Year</span><i class="fa-solid fa-chevron-right cal-nav" onclick="Utils.changeMonth('${id}', 1)"></i></div><div class="cal-weekdays"><span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span></div><div id="cal-grid-${id}" class="cal-grid"></div></div>`,
                     music: wrap('Music', `<div style="text-align:center;display:flex;flex-direction:column;justify-content:center;height:100%"><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="width:40px;height:40px;background:#333;border-radius:6px;display:flex;align-items:center;justify-content:center"><i class="fa-brands fa-spotify" style="color:#1DB954;font-size:24px"></i></div><div style="text-align:left"><div style="font-weight:600;font-size:12px">Not Playing</div><div style="font-size:10px;color:var(--text-sec)">iPhone</div></div></div><div style="display:flex;justify-content:center;gap:20px;font-size:20px;color:var(--text-main)"><i class="fa-solid fa-backward-step"></i><i class="fa-solid fa-play"></i><i class="fa-solid fa-forward-step"></i></div></div>`),
-                    notes: wrap('Notes', `<textarea id="nt-${id}" style="flex:1;resize:none;background:transparent;border:none;padding:0;font-family:inherit;font-size:14px;line-height:1.4" placeholder="New Note..."></textarea>`),
-                    
-                    calendar: `<div class="remove-widget">✕</div>
-                        <div class="cal-wrapper">
-                            <div class="cal-header">
-                                <i class="fa-solid fa-chevron-left cal-nav" onclick="Utils.changeMonth('${id}', -1)"></i>
-                                <span id="cal-title-${id}" class="cal-title" onclick="Utils.resetCalendar('${id}')">Month Year</span>
-                                <i class="fa-solid fa-chevron-right cal-nav" onclick="Utils.changeMonth('${id}', 1)"></i>
-                            </div>
-                            <div class="cal-weekdays">
-                                <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
-                            </div>
-                            <div id="cal-grid-${id}" class="cal-grid"></div>
-                        </div>`,
-
-                    // --- NEW WIDGETS ---
-                    
-                    // Timer
-                    timer: wrap('Event Timer', `
-                        <div class="timer-container" id="timer-wrap-${id}" onclick="Utils.setTimer('${id}')">
-                            <div id="timer-val-${id}" class="timer-big">--:--</div>
-                            <div id="timer-lbl-${id}" class="timer-label">Click to Set Time</div>
-                            <div class="timer-bar"><div id="timer-bar-${id}" class="timer-fill"></div></div>
-                        </div>
-                    `),
-
-                    // Battery
-                    battery: wrap('Battery', `
-                        <div class="batt-container">
-                            <div class="batt-icon-shell"><div class="batt-fill" id="batt-fill-${id}"></div></div>
-                            <div>
-                                <div id="batt-val-${id}" class="batt-text">--%</div>
-                                <div id="batt-st-${id}" class="batt-state">Reading...</div>
-                            </div>
-                        </div>
-                    `),
-
-                    // Password
-                    password: wrap('Passwords', `
-                        <div id="pass-${id}" class="pass-display">CLICK GEN</div>
-                        <div class="pass-controls">
-                            <span id="lbl-${id}" style="font-size:11px; color:var(--text-sec); width:60px">Length: 16</span>
-                            <input type="range" id="rng-${id}" min="8" max="32" value="16" style="flex:1" oninput="Utils.genPass('${id}')">
-                            <button class="btn" onclick="Utils.genPass('${id}')">Gen</button>
-                        </div>
-                    `),
-
-                    // Clipboard
-                    clipboard: wrap('Clipboard', `
-                        <button class="btn btn-primary" style="width:100%; justify-content:center" onclick="Utils.saveClip('${id}')"><i class="fa-solid fa-paste"></i> Save Recent</button>
-                        <div id="clip-${id}" class="clip-list"></div>
-                    `)
+                    timer: wrap('Event Timer', `<div class="timer-container" id="timer-wrap-${id}" onclick="Utils.setTimer('${id}')"><div id="timer-val-${id}" class="timer-big">--:--</div><div id="timer-lbl-${id}" class="timer-label">Click to Set</div><div class="timer-bar"><div id="timer-bar-${id}" class="timer-fill"></div></div></div>`),
+                    battery: wrap('Battery', `<div class="batt-container"><div class="batt-icon-shell"><div class="batt-fill" id="batt-fill-${id}"></div></div><div><div id="batt-val-${id}" class="batt-text">--%</div><div id="batt-st-${id}" class="batt-state">Reading...</div></div></div>`),
+                    password: wrap('Passwords', `<div id="pass-${id}" class="pass-display">CLICK GEN</div><div class="pass-controls"><span id="lbl-${id}" style="font-size:11px;color:var(--text-sec);width:60px">Length: 16</span><input type="range" id="rng-${id}" min="8" max="32" value="16" style="flex:1" oninput="Utils.genPass('${id}')"><button class="btn" onclick="Utils.genPass('${id}')">Gen</button></div>`),
+                    clipboard: wrap('Clipboard', `<button class="btn btn-primary" style="width:100%; justify-content:center" onclick="Utils.saveClip('${id}')"><i class="fa-solid fa-paste"></i> Save Recent</button><div id="clip-${id}" class="clip-list"></div>`)
                 };
-                return map[type] || `<div>Error: ${type}</div>`;
+                return map[type] || `<div>Error</div>`;
             }
         };
 
