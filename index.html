@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecondScreen | Cloud Sync</title>
+    <title>SecondScreen | Cloud Live</title>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -37,7 +37,7 @@
         /* --- LOGIN OVERLAY --- */
         #login-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); backdrop-filter: blur(20px);
+            background: rgba(0,0,0,0.9); backdrop-filter: blur(20px);
             z-index: 9999; display: flex; flex-direction: column;
             align-items: center; justify-content: center; gap: 20px;
             transition: opacity 0.5s ease;
@@ -47,9 +47,18 @@
             padding: 40px; border-radius: 24px; text-align: center;
             box-shadow: 0 20px 50px rgba(0,0,0,0.5);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
+            max-width: 400px; width: 90%;
         }
         .login-title { font-size: 24px; font-weight: 700; margin-bottom: 10px; }
-        .login-sub { color: var(--text-sec); font-size: 14px; margin-bottom: 25px; }
+        .login-sub { color: var(--text-sec); font-size: 14px; margin-bottom: 25px; line-height: 1.4; }
+        
+        /* Error Toast */
+        #error-toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background: rgba(255, 69, 58, 0.9); color: white; padding: 10px 20px;
+            border-radius: 50px; font-size: 13px; z-index: 10000;
+            display: none; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
 
         /* General UI */
         input, textarea { 
@@ -82,7 +91,6 @@
         .editing .grid-stack-item-content { cursor: grab; animation: jiggle 0.3s infinite ease-in-out; border-color: var(--ios-blue) !important; }
         .editing .grid-stack-item-content:active { cursor: grabbing; }
         .editing input, .editing textarea { cursor: text !important; }
-        
         .editing .weather-temp { cursor: pointer; color: var(--ios-blue) !important; text-decoration: underline; text-decoration-style: dotted; }
 
         @keyframes jiggle { 0% { transform: rotate(-0.8deg); } 50% { transform: rotate(0.8deg); } 100% { transform: rotate(-0.8deg); } }
@@ -181,11 +189,13 @@
 </head>
 <body>
 
+    <div id="error-toast"></div>
+
     <div id="login-overlay">
         <div class="login-card">
             <div class="login-title"><i class="fa-brands fa-apple"></i> SecondScreen Pro</div>
-            <div class="login-sub">Sign in to load your dashboard</div>
-            <button class="btn btn-primary" style="font-size:16px; padding:10px 20px" onclick="Cloud.login()">
+            <div class="login-sub">Sign in with Google to load your dashboard.</div>
+            <button class="btn btn-primary" style="font-size:16px; padding:12px 24px" onclick="Cloud.login()">
                 <i class="fa-brands fa-google"></i> Sign in with Google
             </button>
         </div>
@@ -232,6 +242,7 @@
     
     <script>
         // --- 1. FIREBASE CONFIGURATION (PASTE YOUR CONFIG HERE) ---
+        // ------------------------------------------------------------
 const firebaseConfig = {
   apiKey: "AIzaSyArqMp658OSK8u46cjCefyVKiDJe4oe8-g",
   authDomain: "secondscreen-f7cd9.firebaseapp.com",
@@ -254,7 +265,6 @@ const firebaseConfig = {
             }
         } catch(e) { console.warn("Firebase Error"); }
 
-        // --- 2. CLOUD LOGIC ---
         const Cloud = {
             user: null,
             login: () => {
@@ -285,7 +295,14 @@ const firebaseConfig = {
                     db.collection('users').doc(Cloud.user.uid).set({ 
                         layout: JSON.stringify(data), 
                         updated: Date.now() 
-                    }).catch(e => console.error("Cloud Save Failed", e));
+                    }).catch(e => {
+                        console.error(e);
+                        // Show visible error if permission denied
+                        const toast = document.getElementById('error-toast');
+                        toast.innerText = "Error Saving: " + e.message;
+                        toast.style.display = 'block';
+                        setTimeout(() => toast.style.display = 'none', 5000);
+                    });
                 }
             }
         };
@@ -586,6 +603,9 @@ const firebaseConfig = {
                     // Mark as loaded so saving is enabled
                     isLoaded = true;
                     grid.on('change added removed', saveLayout);
+                }).catch(e => {
+                    document.getElementById('error-toast').innerText = "Load Failed: " + e.message;
+                    document.getElementById('error-toast').style.display = 'block';
                 });
             };
 
