@@ -306,6 +306,15 @@
             }
         };
 
+        // Utility: Debounce saves so we don't spam database
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
         const Utils = {
             calc: (id, val) => {
                 const s = document.getElementById(`scr-${id}`);
@@ -482,17 +491,15 @@
 
         const Core = (() => {
             let grid = null, editing = false;
-            let isLoading = false; // Flag to prevent auto-save during load
+            let isLoading = true; // Lock to prevent empty saves on reload
 
             const init = () => {
                 grid = GridStack.init({ column: 12, cellHeight: '85px', margin: 12, float: true, animate: true, disableDrag: true, disableResize: true });
                 
-                // Only auto-save if NOT loading
-                grid.on('change added removed', () => {
-                    if(!isLoading) Core.saveLayout();
-                });
+                // Detach listeners initially to avoid race conditions
+                grid.off('change added removed');
 
-                // Load Data
+                // Load Initial Data
                 loadData(false);
 
                 if(typeof auth !== 'undefined') {
@@ -530,6 +537,7 @@
                 const removeBtn = el.querySelector('.remove-widget');
                 if(removeBtn) { el.appendChild(removeBtn); removeBtn.onclick = () => grid.removeWidget(el); }
                 
+                // Init Widgets
                 if (type === 'todo') UI.initTodo(id, savedData);
                 if (type === 'notes') document.getElementById(`nt-${id}`).value = savedData || "";
                 if (type === 'weather') Utils.initWeather(id, savedData);
@@ -561,9 +569,10 @@
                 }
 
                 UI.toggleAdd(false);
+                // No immediate save here to prevent recursion
             };
 
-            const saveLayout = () => {
+            const saveLayout = debounce(() => {
                 if(isLoading) return; // Prevent saving empty state during load
 
                 const items = grid.getGridItems().map(el => {
@@ -581,83 +590,75 @@
                     return { x: el.gridstackNode.x, y: el.gridstackNode.y, w: el.gridstackNode.w, h: el.gridstackNode.h, type, data };
                 });
                 
-                localStorage.setItem('ss_pro_v1', JSON.stringify(items));
+                localStorage.setItem('ss_stable_v1', JSON.stringify(items));
                 Cloud.save(items);
-            };
+            }, 1000);
 
             const loadData = (fromCloud = false) => {
-                isLoading = true; // Lock saving
+                isLoading = true; 
+                grid.off('change added removed'); // Stop listening
 
-                // Cloud Load
+                // 1. Cloud
                 if(fromCloud && Cloud.user && db) {
                     db.collection('users').doc(Cloud.user.uid).get().then(doc => {
                         if(doc.exists) {
                             try {
                                 const items = JSON.parse(doc.data().layout);
-                                if(items.length > 0) {
-                                    grid.removeAll();
-                                    items.forEach(s => createWidget(s.type, s.w, s.h, s.x, s.y, s.data));
-                                    localStorage.setItem('ss_pro_v1', JSON.stringify(items)); 
-                                }
-                            } catch(e) { console.log('Cloud error'); }
+                                if(items && items.length > 0) {
+                                    renderItems(items);
+                                    localStorage.setItem('ss_stable_v1', JSON.stringify(items)); 
+                                } else loadDefaults();
+                            } catch(e) { loadDefaults(); }
                         }
-                        isLoading = false; // Unlock
-                    });
+                    }).catch(e => {}); // Fallback handled by local logic below if cloud fails
                     return;
                 }
 
-                // Local Load
-                const local = localStorage.getItem('ss_pro_v1');
+                // 2. Local
+                const local = localStorage.getItem('ss_stable_v1');
                 if (local) {
                     const items = JSON.parse(local);
-                    if (items.length > 0) {
-                        grid.removeAll();
-                        items.forEach(s => createWidget(s.type, s.w, s.h, s.x, s.y, s.data));
-                        isLoading = false;
+                    if (items && items.length > 0) {
+                        renderItems(items);
                         return;
                     }
                 }
 
-                // Default
+                // 3. Defaults
                 loadDefaults();
-                isLoading = false;
+            };
+
+            const renderItems = (items) => {
+                grid.batchUpdate();
+                grid.removeAll(false); // remove from DOM
+                items.forEach(s => createWidget(s.type, s.w, s.h, s.x, s.y, s.data));
+                grid.commit();
+                
+                // Re-enable saving after delay
+                setTimeout(() => {
+                    isLoading = false;
+                    grid.on('change added removed', saveLayout);
+                }, 500);
             };
 
             const loadDefaults = () => {
-                grid.removeAll();
+                grid.batchUpdate();
+                grid.removeAll(false);
                 createWidget('clock', 4, 2, 0, 0);
                 createWidget('weather', 4, 2, 4, 0);
                 createWidget('todo', 4, 4, 0, 2);
                 createWidget('notes', 4, 4, 4, 2);
-                // Manually trigger save once defaults are loaded
-                setTimeout(() => Core.saveLayout(), 500);
+                grid.commit();
+                
+                setTimeout(() => {
+                    isLoading = false;
+                    grid.on('change added removed', saveLayout);
+                    saveLayout(); // Force save defaults
+                }, 500);
             };
 
             return { init, toggleEdit, createWidget, saveLayout, reset: () => { localStorage.clear(); location.reload(); }, loadData };
         })();
-
-        const UI = {
-            toggleAdd: (show) => { const m=document.getElementById('add-modal'), o=document.getElementById('modal-overlay'); if(show){m.classList.add('show');o.classList.add('show');}else{m.classList.remove('show');o.classList.remove('show');}},
-            updateTime: () => { const n=new Date(); document.querySelectorAll('.time-big').forEach(e=>e.innerText=n.toLocaleTimeString([],{hour:'numeric',minute:'2-digit',hour12:true})); document.querySelectorAll('.date-sub').forEach(e=>e.innerText=n.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'}));},
-            initTodo: (id, data) => {
-                const list = document.getElementById(`list-${id}`), em = document.getElementById(`empty-${id}`);
-                if (!list || !em) return;
-                const check = () => { em.style.display = list.children.length===0 ? 'block':'none'; };
-                const add = (t, d) => {
-                    const i = document.createElement('div'); i.className=`task-item ${d?'done':''}`;
-                    i.innerHTML=`<div class="task-check"><i class="fa-solid fa-check"></i></div><span class="task-text">${t}</span><i class="fa-solid fa-xmark task-delete" onclick="event.stopPropagation(); this.parentElement.remove(); UI.checkEmpty('${id}'); Core.saveLayout()"></i>`;
-                    i.onclick = (e) => {
-                        if(e.target.classList.contains('task-delete')) return;
-                        i.classList.add('done'); setTimeout(()=>{ i.remove(); check(); Core.saveLayout(); },800);
-                    };
-                    list.prepend(i); check();
-                };
-                const input = document.getElementById(`in-${id}`);
-                if(input) input.onkeypress = (e) => { if(e.key==='Enter'&&e.target.value.trim()){ add(e.target.value,false); e.target.value=''; Core.saveLayout(); } };
-                if(data) data.forEach(d => { if(!d.d) add(d.t, false); }); check();
-                UI.checkEmpty = check;
-            }
-        };
 
         const Templates = {
             get: (type, id, data) => {
