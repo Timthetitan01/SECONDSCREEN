@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecondScreen Pro | Fluid</title>
+    <title>SecondScreen Pro | Always Saved</title>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -19,13 +19,10 @@
             --ios-card: rgba(28, 28, 30, 0.65);
             --ios-card-border: rgba(255, 255, 255, 0.12);
             --ios-input: rgba(118, 118, 128, 0.24);
-            
             --ios-blue: #0A84FF; --ios-green: #30D158; --ios-red: #FF453A;
             --ios-orange: #FF9F0A; --ios-yellow: #FFD60A; --ios-purple: #BF5AF2;
             --ios-indigo: #5E5CE6; --ios-teal: #64D2FF;
-            
             --text-main: #FFFFFF; --text-sec: rgba(235, 235, 245, 0.6);
-            
             --blur: blur(50px) saturate(180%);
             --radius: 22px;
             --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
@@ -94,11 +91,10 @@
         .editing .remove-widget { display: flex; animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .editing .grid-stack-item-content { cursor: grab; animation: jiggle 0.3s infinite ease-in-out; border-color: var(--ios-blue) !important; }
         .editing .grid-stack-item-content:active { cursor: grabbing; }
-        .editing input, .editing textarea { cursor: text !important; } /* Keep inputs typable */
+        .editing input, .editing textarea { cursor: text !important; }
 
-        /* Weather Edit Mode Highlight */
+        /* Weather Temp Switcher */
         .editing .weather-temp { cursor: pointer; color: var(--ios-blue) !important; text-decoration: underline; text-decoration-style: dotted; }
-        .editing .weather-temp::after { content: ' (Click to Switch)'; font-size: 10px; display: block; opacity: 0.7; text-decoration: none; }
 
         @keyframes jiggle { 0% { transform: rotate(-0.8deg); } 50% { transform: rotate(0.8deg); } 100% { transform: rotate(-0.8deg); } }
         @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
@@ -109,7 +105,6 @@
 
         /* --- WIDGET STYLES --- */
         
-        /* Battery */
         .batt-container { display: flex; align-items: center; justify-content: center; height: 100%; gap: 15px; }
         .batt-icon-shell { width: 50px; height: 26px; border: 3px solid var(--text-sec); border-radius: 6px; padding: 2px; position: relative; }
         .batt-icon-shell::after { content:''; position: absolute; right: -6px; top: 6px; width: 3px; height: 8px; background: var(--text-sec); border-radius: 0 2px 2px 0; }
@@ -117,24 +112,20 @@
         .batt-text { font-size: 28px; font-weight: 600; }
         .batt-state { font-size: 11px; color: var(--text-sec); text-align: center; margin-top: 5px; }
 
-        /* Password */
         .pass-display { font-family: monospace; font-size: 16px; text-align: center; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-bottom: 10px; color: var(--ios-green); word-break: break-all; }
         .pass-controls { display: flex; gap: 10px; align-items: center; }
         
-        /* Clipboard History */
         .clip-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
         .clip-item { background: rgba(255,255,255,0.05); padding: 8px; border-radius: 8px; font-size: 11px; cursor: pointer; color: var(--text-sec); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .clip-item:hover { background: rgba(255,255,255,0.1); color: white; }
         .clip-item:active { transform: scale(0.98); }
 
-        /* Event Timer */
         .timer-container { display: flex; flex-direction: column; justify-content: center; height: 100%; cursor: pointer; }
         .timer-big { font-size: 36px; font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; line-height: 1; margin-bottom: 5px; }
         .timer-label { font-size: 12px; color: var(--text-sec); text-align: center; }
         .timer-bar { height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 10px; overflow: hidden; }
         .timer-fill { height: 100%; background: var(--ios-orange); width: 100%; transition: width 1s linear; }
 
-        /* Tasks */
         .task-input-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
         .task-list { flex: 1; overflow-y: auto; padding-right: 2px; }
         .task-item { display: flex; align-items: center; gap: 10px; padding: 10px 8px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1); border-radius: 8px; animation: slideIn 0.2s ease-out; }
@@ -148,14 +139,12 @@
         .task-delete:hover { color: var(--ios-red); transform: scale(1.1); }
         .task-empty { text-align: center; color: var(--text-sec); font-size: 12px; margin-top: 20px; font-style: italic; opacity: 0.7; }
 
-        /* Calculator */
         .calc-screen { text-align:right; font-size:42px; font-weight:200; margin-bottom:10px; height:50px; white-space:nowrap; overflow:hidden; }
         .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; flex: 1; }
         .calc-btn { background: rgba(255,255,255,0.1); border:none; color:white; border-radius:50px; font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
         .calc-btn:active { background: rgba(255,255,255,0.3); }
         .calc-orange { background: var(--ios-orange); font-weight: 600; }
         
-        /* Standard Widgets */
         .clock-container { display: flex; flex-direction: column; justify-content: center; height: 100%; text-align: center; }
         .time-big { font-size: 48px; font-weight: 200; letter-spacing: -1px; line-height: 1; margin-bottom: 5px; white-space: nowrap; }
         .date-sub { font-size: 15px; color: var(--ios-red); font-weight: 500; text-transform: uppercase; }
@@ -277,7 +266,7 @@
                 auth.signInWithPopup(provider).then(res => {
                     Cloud.user = res.user;
                     Cloud.updateUI();
-                    Core.loadData(true);
+                    Core.loadData();
                 }).catch(e => alert(e.message));
             },
             logout: () => {
@@ -486,19 +475,20 @@
             const init = () => {
                 grid = GridStack.init({ column: 12, cellHeight: '85px', margin: 12, float: true, animate: true, disableDrag: true, disableResize: true });
                 
-                // --- ADDED: Auto Save on Drag/Resize ---
-                grid.on('change added removed', function(event, items) {
-                    Core.saveLayout();
-                });
+                // --- AUTO SAVE ---
+                grid.on('change added removed', () => Core.saveLayout());
 
+                // --- PRIORITY LOAD ---
+                // 1. Load Local Storage IMMEDIATELY (offline support)
+                loadData(false);
+
+                // 2. Then Check Auth
                 if(typeof auth !== 'undefined') {
                     auth.onAuthStateChanged(user => {
                         Cloud.user = user;
                         Cloud.updateUI();
-                        loadData(); 
+                        if(user) loadData(true); // If logged in, fetch cloud
                     });
-                } else {
-                    loadData();
                 }
 
                 setInterval(UI.updateTime, 1000);
@@ -528,7 +518,6 @@
                 const removeBtn = el.querySelector('.remove-widget');
                 if(removeBtn) { el.appendChild(removeBtn); removeBtn.onclick = () => grid.removeWidget(el); }
                 
-                // Initialize specific widget logic
                 if (type === 'todo') UI.initTodo(id, savedData);
                 if (type === 'notes') document.getElementById(`nt-${id}`).value = savedData || "";
                 if (type === 'weather') Utils.initWeather(id, savedData);
@@ -560,7 +549,6 @@
                 }
 
                 UI.toggleAdd(false);
-                // No save here to prevent recursive loop on load
             };
 
             const saveLayout = () => {
@@ -579,38 +567,45 @@
                     return { x: el.gridstackNode.x, y: el.gridstackNode.y, w: el.gridstackNode.w, h: el.gridstackNode.h, type, data };
                 });
                 
-                // SAVE TO BOTH
-                localStorage.setItem('ss_fluid_v1', JSON.stringify(items));
+                localStorage.setItem('secondscreen_layout_v1', JSON.stringify(items));
                 Cloud.save(items);
             };
 
-            const loadData = () => {
-                grid.removeAll();
-                if(Cloud.user && db) {
+            const loadData = (fromCloud = false) => {
+                // If asking for Cloud Data
+                if(fromCloud && Cloud.user && db) {
                     db.collection('users').doc(Cloud.user.uid).get().then(doc => {
                         if(doc.exists) {
                             try {
-                                const cloudData = JSON.parse(doc.data().layout);
-                                if(cloudData.length > 0) cloudData.forEach(s => createWidget(s.type, s.w, s.h, s.x, s.y, s.data));
-                                else loadDefaults();
-                            } catch(e) { loadDefaults(); }
-                        } else {
-                            loadDefaults();
-                            saveLayout(); 
+                                const items = JSON.parse(doc.data().layout);
+                                if(items.length > 0) {
+                                    grid.removeAll();
+                                    items.forEach(s => createWidget(s.type, s.w, s.h, s.x, s.y, s.data));
+                                    localStorage.setItem('secondscreen_layout_v1', JSON.stringify(items)); // Sync down
+                                }
+                            } catch(e) { console.log('Cloud empty'); }
                         }
-                    }).catch(e => loadLocal());
-                } else {
-                    loadLocal();
+                    });
+                    return;
                 }
-            };
 
-            const loadLocal = () => {
-                let saved = JSON.parse(localStorage.getItem('ss_fluid_v1'));
-                if (saved && saved.length > 0) saved.forEach(s => createWidget(s.type, s.w, s.h, s.x, s.y, s.data));
-                else loadDefaults();
+                // Default Local Load
+                const local = localStorage.getItem('secondscreen_layout_v1');
+                if (local) {
+                    const items = JSON.parse(local);
+                    if (items.length > 0) {
+                        grid.removeAll();
+                        items.forEach(s => createWidget(s.type, s.w, s.h, s.x, s.y, s.data));
+                        return;
+                    }
+                }
+
+                // Only if Local is Empty
+                loadDefaults();
             };
 
             const loadDefaults = () => {
+                grid.removeAll();
                 createWidget('clock', 4, 2, 0, 0);
                 createWidget('weather', 4, 2, 4, 0);
                 createWidget('todo', 4, 4, 0, 2);
@@ -646,7 +641,6 @@
 
         const Templates = {
             get: (type, id, data) => {
-                // Safety check: if type is missing or unknown, return default
                 const validTypes = ['clock', 'links', 'countdown', 'calc', 'weather', 'todo', 'notes', 'calendar', 'music', 'timer', 'battery', 'password', 'clipboard'];
                 if(!validTypes.includes(type)) return `<div>Error</div>`;
 
