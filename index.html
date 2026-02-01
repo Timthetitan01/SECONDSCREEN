@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecondScreen Pro | Icon Links</title>
+    <title>SecondScreen Pro | Smart Background</title>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -55,41 +55,40 @@
         .btn-danger { background: rgba(255, 69, 58, 0.15); color: var(--ios-red); }
 
         /* Dashboard */
-        #dashboard-wrapper { flex: 1; padding: 20px; overflow-y: auto; overflow-x: hidden; }
+        #dashboard-wrapper { flex: 1; padding: 20px; overflow-y: auto; overflow-x: hidden; cursor: default; }
 
+        /* Grid Item Wrapper */
+        .grid-stack-item { overflow: visible !important; }
+
+        /* Card Content */
         .grid-stack-item-content {
             background: var(--ios-card) !important; backdrop-filter: var(--blur) !important;
             border: 1px solid var(--ios-card-border) !important; border-radius: var(--radius) !important;
             padding: 16px; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.2); overflow: hidden;
         }
 
+        /* Edit Mode X Button */
         .remove-widget {
-            position: absolute; top: -6px; left: -6px; width: 22px; height: 22px;
-            background: #8e8e93; border-radius: 50%; color: white; display: none; justify-content: center; align-items: center;
-            font-size: 10px; cursor: pointer; z-index: 1001;
+            position: absolute; top: -10px; right: -10px; width: 26px; height: 26px;
+            background: #8e8e93; border: 2px solid var(--bg-body); border-radius: 50%;
+            color: white; display: none; justify-content: center; align-items: center;
+            font-size: 12px; cursor: pointer; z-index: 9999; box-shadow: 0 2px 6px rgba(0,0,0,0.4);
         }
-        .editing .remove-widget { display: flex; }
+        .editing .remove-widget { display: flex; animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .editing .grid-stack-item-content { animation: jiggle 0.3s infinite ease-in-out; border-color: var(--ios-blue) !important; }
-        @keyframes jiggle { 0% { transform: rotate(-0.5deg); } 50% { transform: rotate(0.5deg); } 100% { transform: rotate(-0.5deg); } }
+        @keyframes jiggle { 0% { transform: rotate(-0.8deg); } 50% { transform: rotate(0.8deg); } 100% { transform: rotate(-0.8deg); } }
+        @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
 
         .w-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; height: 16px; flex-shrink: 0; }
         .w-label { font-size: 11px; font-weight: 600; color: var(--ios-blue); text-transform: uppercase; letter-spacing: 0.5px; }
         .w-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
 
-        /* --- Task Widget Styles --- */
+        /* --- Task Widget --- */
         .task-input-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-        .task-input { 
-            background: var(--ios-input); border: none; border-radius: 8px; padding: 8px 12px; 
-            color: white; flex: 1; font-size: 13px; transition: 0.2s; outline: none;
-        }
+        .task-input { background: var(--ios-input); border: none; border-radius: 8px; padding: 8px 12px; color: white; flex: 1; font-size: 13px; transition: 0.2s; outline: none; }
         .task-input:focus { background: rgba(118,118,128,0.4); }
         .task-list { flex: 1; overflow-y: auto; padding-right: 2px; }
-        .task-item { 
-            display: flex; align-items: center; gap: 10px; padding: 10px 8px; 
-            border-bottom: 1px solid rgba(255,255,255,0.05); 
-            cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
-            border-radius: 8px; animation: slideIn 0.2s ease-out;
-        }
+        .task-item { display: flex; align-items: center; gap: 10px; padding: 10px 8px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1); border-radius: 8px; animation: slideIn 0.2s ease-out; }
         @keyframes slideIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         .task-item:last-child { border-bottom: none; }
         .task-item:hover { background: rgba(255,255,255,0.08); }
@@ -103,7 +102,18 @@
         .task-delete:hover { color: var(--ios-red); transform: scale(1.1); }
         .task-empty { text-align: center; color: var(--text-sec); font-size: 12px; margin-top: 20px; font-style: italic; opacity: 0.7; }
 
-        /* --- Quick Links (Stream Deck) --- */
+        /* --- Calculator --- */
+        .calc-screen { text-align:right; font-size:42px; font-weight:200; margin-bottom:10px; height:50px; white-space:nowrap; overflow:hidden; }
+        .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; flex: 1; }
+        .calc-btn { background: rgba(255,255,255,0.1); border:none; color:white; border-radius:50px; font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+        .calc-btn:active { background: rgba(255,255,255,0.3); }
+        .calc-orange { background: var(--ios-orange); font-weight: 600; }
+        
+        /* --- Other Widgets --- */
+        .clock-container { display: flex; flex-direction: column; justify-content: center; height: 100%; text-align: center; }
+        .time-big { font-size: 48px; font-weight: 200; letter-spacing: -1px; line-height: 1; margin-bottom: 5px; white-space: nowrap; }
+        .date-sub { font-size: 15px; color: var(--ios-red); font-weight: 500; text-transform: uppercase; }
+
         .deck-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; height: 100%; }
         .deck-btn {
             background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
@@ -112,21 +122,9 @@
         }
         .deck-btn:active { transform: scale(0.95); background: rgba(255,255,255,0.15); box-shadow: 0 0 15px var(--ios-blue); border-color: var(--ios-blue); }
         .deck-icon { font-size: 24px; color: var(--text-main); }
-        /* NEW: Favicon Image Style */
         .deck-favicon { width: 32px; height: 32px; border-radius: 8px; margin-bottom: 2px; object-fit: contain; pointer-events: none; }
         .deck-label { font-size: 10px; font-weight: 600; color: var(--text-sec); text-align: center; width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .deck-unset { color: var(--text-sec); opacity: 0.5; font-size: 20px; }
-
-        /* --- Other Widgets --- */
-        .calc-screen { text-align:right; font-size:42px; font-weight:200; margin-bottom:10px; height:50px; white-space:nowrap; overflow:hidden; }
-        .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; flex: 1; }
-        .calc-btn { background: rgba(255,255,255,0.1); border:none; color:white; border-radius:50px; font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
-        .calc-btn:active { background: rgba(255,255,255,0.3); }
-        .calc-orange { background: var(--ios-orange); font-weight: 600; }
-        
-        .clock-container { display: flex; flex-direction: column; justify-content: center; height: 100%; text-align: center; }
-        .time-big { font-size: 48px; font-weight: 200; letter-spacing: -1px; line-height: 1; margin-bottom: 5px; white-space: nowrap; }
-        .date-sub { font-size: 15px; color: var(--ios-red); font-weight: 500; text-transform: uppercase; }
 
         .count-container { display: flex; flex-direction: column; justify-content: center; height: 100%; text-align: center; cursor: pointer; }
         .count-days { font-size: 42px; font-weight: 700; line-height: 1; margin-bottom: 4px; }
@@ -136,29 +134,88 @@
 
         input, textarea { background: var(--ios-input); border: none; color: white; padding: 8px 12px; border-radius: 10px; width: 100%; font-size: 13px; outline: none; }
 
-        /* Add Panel */
-        #add-panel {
-            position: fixed; bottom: -600px; left: 0; width: 100%;
-            background: rgba(28, 28, 30, 0.95); backdrop-filter: blur(40px);
-            border-top: 1px solid var(--ios-card-border); padding: 30px 20px;
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 15px;
-            transition: transform 0.5s cubic-bezier(0.19, 1, 0.22, 1);
-            z-index: 2000; border-radius: 24px 24px 0 0;
+        /* --- MODAL SYSTEM --- */
+        #modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            z-index: 1999;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
         }
-        #add-panel.show { transform: translateY(-600px); }
+        #modal-overlay.show { opacity: 1; pointer-events: all; }
+
+        #add-modal {
+            position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            width: 90%; max-width: 500px; max-height: 80vh;
+            background: rgba(28, 28, 30, 0.95);
+            border: 1px solid var(--ios-card-border);
+            border-radius: 24px;
+            padding: 24px;
+            z-index: 2000;
+            display: flex; flex-direction: column;
+            opacity: 0; pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+        }
+        #add-modal.show { opacity: 1; pointer-events: all; transform: translate(-50%, -50%) scale(1); }
+
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-title { font-size: 20px; font-weight: 700; color: white; }
         
-        .add-card {
-            background: rgba(255,255,255,0.05); padding: 15px 10px; border-radius: 18px; text-align: center; cursor: pointer;
-            transition: 0.2s; display:flex; flex-direction:column; align-items:center; gap:8px;
+        .modal-grid { 
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 15px; 
+            overflow-y: auto; padding: 2px;
         }
-        .add-card:active { transform: scale(0.95); background: rgba(255,255,255,0.1); }
-        .add-label { font-size: 11px; font-weight: 500; color: var(--text-sec); }
-        .add-icon { font-size: 24px; }
+
+        .add-card {
+            background: rgba(255,255,255,0.08); padding: 15px; border-radius: 18px; text-align: center; cursor: pointer;
+            transition: 0.2s; display:flex; flex-direction:column; align-items:center; gap:10px; height: 100px; justify-content: center;
+        }
+        .add-card:hover { background: rgba(255,255,255,0.12); transform: translateY(-2px); }
+        .add-card:active { transform: scale(0.96); }
+        .add-label { font-size: 11px; font-weight: 500; color: white; }
+        .add-icon { font-size: 28px; margin-bottom: 2px; }
 
         ::-webkit-scrollbar { width: 0px; } 
     </style>
 </head>
 <body>
+
+    <div id="modal-overlay" onclick="UI.toggleAdd(false)"></div>
+    
+    <div id="add-modal">
+        <div class="modal-header">
+            <div class="modal-title">Gallery</div>
+            <button class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;" onclick="UI.toggleAdd(false)">Close</button>
+        </div>
+        <div class="modal-grid">
+            <div class="add-card" onclick="Core.createWidget('links', 4, 2)">
+                <i class="fa-solid fa-gamepad add-icon" style="color:var(--ios-blue)"></i><span class="add-label">Quick Links</span>
+            </div>
+            <div class="add-card" onclick="Core.createWidget('countdown', 2, 2)">
+                <i class="fa-solid fa-hourglass-half add-icon" style="color:var(--ios-indigo)"></i><span class="add-label">Countdown</span>
+            </div>
+            <div class="add-card" onclick="Core.createWidget('clock', 4, 2)">
+                <i class="fa-regular fa-clock add-icon" style="color:white"></i><span class="add-label">Clock</span>
+            </div>
+            <div class="add-card" onclick="Core.createWidget('weather', 3, 2)">
+                <i class="fa-solid fa-cloud-sun add-icon" style="color:var(--ios-yellow)"></i><span class="add-label">Weather</span>
+            </div>
+            <div class="add-card" onclick="Core.createWidget('todo', 3, 4)">
+                <i class="fa-solid fa-check-circle add-icon" style="color:var(--ios-orange)"></i><span class="add-label">Reminders</span>
+            </div>
+            <div class="add-card" onclick="Core.createWidget('music', 3, 3)">
+                <i class="fa-brands fa-spotify add-icon" style="color:#1DB954"></i><span class="add-label">Music</span>
+            </div>
+            <div class="add-card" onclick="Core.createWidget('calc', 3, 5)">
+                <i class="fa-solid fa-calculator add-icon" style="color:var(--ios-green)"></i><span class="add-label">Calculator</span>
+            </div>
+            <div class="add-card" onclick="Core.createWidget('notes', 6, 3)">
+                <i class="fa-solid fa-note-sticky add-icon" style="color:var(--ios-yellow)"></i><span class="add-label">Notes</span>
+            </div>
+        </div>
+    </div>
 
     <nav>
         <div class="brand"><i class="fa-brands fa-apple"></i> SecondScreen Pro</div>
@@ -172,36 +229,6 @@
 
     <div id="dashboard-wrapper">
         <div class="grid-stack"></div>
-    </div>
-
-    <div id="add-panel">
-        <div class="add-card" onclick="Core.createWidget('links', 4, 2)">
-            <i class="fa-solid fa-gamepad add-icon" style="color:var(--ios-blue)"></i><span class="add-label">Quick Links</span>
-        </div>
-        <div class="add-card" onclick="Core.createWidget('countdown', 2, 2)">
-            <i class="fa-solid fa-hourglass-half add-icon" style="color:var(--ios-indigo)"></i><span class="add-label">Days Until</span>
-        </div>
-        <div class="add-card" onclick="Core.createWidget('clock', 4, 2)">
-            <i class="fa-regular fa-clock add-icon" style="color:white"></i><span class="add-label">Clock</span>
-        </div>
-        <div class="add-card" onclick="Core.createWidget('weather', 3, 2)">
-            <i class="fa-solid fa-cloud-sun add-icon" style="color:var(--ios-yellow)"></i><span class="add-label">Weather</span>
-        </div>
-        <div class="add-card" onclick="Core.createWidget('todo', 3, 4)">
-            <i class="fa-solid fa-check-circle add-icon" style="color:var(--ios-orange)"></i><span class="add-label">Tasks</span>
-        </div>
-        <div class="add-card" onclick="Core.createWidget('music', 3, 3)">
-            <i class="fa-brands fa-spotify add-icon" style="color:#1DB954"></i><span class="add-label">Music</span>
-        </div>
-        <div class="add-card" onclick="Core.createWidget('calc', 3, 5)">
-            <i class="fa-solid fa-calculator add-icon" style="color:var(--ios-green)"></i><span class="add-label">Calc</span>
-        </div>
-        <div class="add-card" onclick="Core.createWidget('notes', 6, 3)">
-            <i class="fa-solid fa-note-sticky add-icon" style="color:var(--ios-yellow)"></i><span class="add-label">Notes</span>
-        </div>
-        <div class="add-card" style="background:rgba(255,69,58,0.1)" onclick="UI.toggleAdd(false)">
-            <i class="fa-solid fa-xmark add-icon" style="color:var(--ios-red)"></i><span class="add-label" style="color:var(--ios-red)">Close</span>
-        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack-all.js"></script>
@@ -222,20 +249,11 @@
             editLink: (id, index, btn) => {
                 let url = prompt("Enter URL (e.g., google.com):", "");
                 if (url) {
-                    // Smart URL Handling: Add https:// if missing
-                    if (!url.startsWith('http://') && !url.startsWith('https://')) {
-                        url = 'https://' + url;
-                    }
-
-                    // Extract Domain for Favicon
-                    let domain;
-                    try { domain = new URL(url).hostname; } catch(e) { domain = url; }
-
+                    if (!url.startsWith('http://') && !url.startsWith('https://')) { url = 'https://' + url; }
+                    let domain; try { domain = new URL(url).hostname; } catch(e) { domain = url; }
                     const name = prompt("Label:", "Link");
                     const data = { url, name, domain };
-                    
                     btn.setAttribute('data-link', JSON.stringify(data));
-                    // USE IMAGE instead of Icon
                     btn.innerHTML = `<img src="https://www.google.com/s2/favicons?domain=${domain}&sz=64" class="deck-favicon"><span class="deck-label">${name}</span>`;
                     Core.saveLayout();
                 }
@@ -271,19 +289,42 @@
                 loadData();
                 setInterval(UI.updateTime, 1000);
                 setInterval(() => document.querySelectorAll('.count-container').forEach(el => Utils.updateCountdown(el.id.replace('count-wrap-', ''))), 60000);
+                
+                // CLICK BACKGROUND LOGIC
+                document.getElementById('dashboard-wrapper').addEventListener('click', (e) => {
+                    // Only exit edit mode if we are editing AND the click target is NOT a grid item (widget)
+                    if (editing && !e.target.closest('.grid-stack-item')) {
+                        Core.toggleEdit();
+                    }
+                });
             };
 
             const toggleEdit = () => {
                 editing = !editing;
                 grid.enableMove(editing); grid.enableResize(editing);
                 document.body.classList.toggle('editing', editing);
+                
+                const btn = document.getElementById('edit-btn');
+                if(editing) {
+                    btn.innerHTML = '<i class="fa-solid fa-check"></i> Done';
+                    btn.classList.add('btn-primary'); // Make Blue
+                } else {
+                    btn.innerHTML = '<i class="fa-solid fa-pen-nib"></i> Edit';
+                    btn.classList.remove('btn-primary'); // Remove Blue
+                }
             };
 
             const createWidget = (type, w, h, x, y, savedData) => {
                 const id = 'w-' + Math.random().toString(36).substr(2, 9);
                 const content = Templates.get(type, id, savedData);
                 const el = grid.addWidget({ w, h, x, y, content, minW: 2, minH: 2 });
-                el.querySelector('.remove-widget').onclick = () => grid.removeWidget(el);
+                
+                // Remove Button
+                const removeBtn = el.querySelector('.remove-widget');
+                if(removeBtn) {
+                    el.appendChild(removeBtn); 
+                    removeBtn.onclick = () => grid.removeWidget(el);
+                }
                 
                 if (type === 'todo') UI.initTodo(id, savedData);
                 if (type === 'notes') UI.initNotes(id, savedData);
@@ -309,12 +350,12 @@
                     }
                     return { x: el.gridstackNode.x, y: el.gridstackNode.y, w: el.gridstackNode.w, h: el.gridstackNode.h, type, data };
                 });
-                localStorage.setItem('ss_favicons_v1', JSON.stringify(items));
+                localStorage.setItem('ss_bgclick_v1', JSON.stringify(items));
             };
 
             const loadData = () => {
-                let saved = JSON.parse(localStorage.getItem('ss_favicons_v1'));
-                if(!saved) saved = JSON.parse(localStorage.getItem('ss_clear_v1'));
+                let saved = JSON.parse(localStorage.getItem('ss_bgclick_v1'));
+                if(!saved) saved = JSON.parse(localStorage.getItem('ss_polished_v2'));
 
                 if (saved) saved.forEach(s => createWidget(s.type, s.w, s.h, s.x, s.y, s.data));
                 else {
@@ -330,7 +371,17 @@
         })();
 
         const UI = {
-            toggleAdd: (show) => document.getElementById('add-panel').classList.toggle('show', show),
+            toggleAdd: (show) => {
+                const modal = document.getElementById('add-modal');
+                const overlay = document.getElementById('modal-overlay');
+                if(show) {
+                    modal.classList.add('show');
+                    overlay.classList.add('show');
+                } else {
+                    modal.classList.remove('show');
+                    overlay.classList.remove('show');
+                }
+            },
             updateTime: () => {
                 const now = new Date();
                 document.querySelectorAll('.time-big').forEach(el => el.innerText = now.toLocaleTimeString([], {hour: 'numeric', minute:'2-digit', hour12: true}));
