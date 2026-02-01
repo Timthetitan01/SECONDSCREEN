@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecondScreen Pro | Cloud</title>
+    <title>SecondScreen Pro | Cloud Fixed</title>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -14,18 +14,14 @@
 
     <style>
         :root {
-            /* iOS System Colors */
             --bg-body: #000000;
             --ios-card: rgba(28, 28, 30, 0.65);
             --ios-card-border: rgba(255, 255, 255, 0.12);
             --ios-input: rgba(118, 118, 128, 0.24);
-            
             --ios-blue: #0A84FF; --ios-green: #30D158; --ios-red: #FF453A;
             --ios-orange: #FF9F0A; --ios-yellow: #FFD60A; --ios-purple: #BF5AF2;
             --ios-indigo: #5E5CE6; --ios-teal: #64D2FF;
-            
             --text-main: #FFFFFF; --text-sec: rgba(235, 235, 245, 0.6);
-            
             --blur: blur(50px) saturate(180%);
             --radius: 22px;
             --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
@@ -51,50 +47,28 @@
         }
         input:focus, textarea:focus { background: rgba(118, 118, 128, 0.4); }
 
-        /* Navbar */
-        nav {
-            height: 50px; display: flex; justify-content: space-between; align-items: center; padding: 0 20px;
-            background: rgba(20, 20, 20, 0.4); backdrop-filter: blur(20px); border-bottom: 1px solid var(--ios-card-border); z-index: 1000;
-        }
+        nav { height: 50px; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; background: rgba(20, 20, 20, 0.4); backdrop-filter: blur(20px); border-bottom: 1px solid var(--ios-card-border); z-index: 1000; }
         .brand { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
         .nav-actions { display: flex; gap: 10px; align-items: center; }
 
-        .btn {
-            background: rgba(255, 255, 255, 0.1); border: none; color: white; padding: 6px 14px; border-radius: 99px;
-            font-size: 13px; font-weight: 500; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px;
-        }
+        .btn { background: rgba(255, 255, 255, 0.1); border: none; color: white; padding: 6px 14px; border-radius: 99px; font-size: 13px; font-weight: 500; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px; }
         .btn:hover { background: rgba(255, 255, 255, 0.2); }
-        .btn:active { transform: scale(0.95); opacity: 0.8; }
         .btn-primary { background: var(--ios-blue); }
         .btn-danger { background: rgba(255, 69, 58, 0.15); color: var(--ios-red); }
 
-        /* Auth Profile */
         .user-pill { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.3); padding: 4px 12px 4px 4px; border-radius: 99px; cursor: pointer; }
         .user-avatar { width: 24px; height: 24px; border-radius: 50%; background: #555; }
         .user-name { font-size: 12px; font-weight: 500; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-        /* Dashboard */
         #dashboard-wrapper { flex: 1; padding: 20px; overflow-y: auto; overflow-x: hidden; cursor: default; }
-
-        /* Grid Items */
         .grid-stack-item { overflow: visible !important; }
-        .grid-stack-item-content {
-            background: var(--ios-card) !important; backdrop-filter: var(--blur) !important;
-            border: 1px solid var(--ios-card-border) !important; border-radius: var(--radius) !important;
-            padding: 16px; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.2); overflow: hidden;
-        }
+        .grid-stack-item-content { background: var(--ios-card) !important; backdrop-filter: var(--blur) !important; border: 1px solid var(--ios-card-border) !important; border-radius: var(--radius) !important; padding: 16px; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.2); overflow: hidden; }
 
-        /* Edit Mode Styles */
-        .remove-widget {
-            position: absolute; top: -10px; right: -10px; width: 26px; height: 26px;
-            background: #8e8e93; border: 2px solid var(--bg-body); border-radius: 50%;
-            color: white; display: none; justify-content: center; align-items: center;
-            font-size: 12px; cursor: pointer; z-index: 9999; box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-        }
+        .remove-widget { position: absolute; top: -10px; right: -10px; width: 26px; height: 26px; background: #8e8e93; border: 2px solid var(--bg-body); border-radius: 50%; color: white; display: none; justify-content: center; align-items: center; font-size: 12px; cursor: pointer; z-index: 9999; box-shadow: 0 2px 6px rgba(0,0,0,0.4); }
         .editing .remove-widget { display: flex; animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .editing .grid-stack-item-content { cursor: grab; animation: jiggle 0.3s infinite ease-in-out; border-color: var(--ios-blue) !important; }
         .editing .grid-stack-item-content:active { cursor: grabbing; }
-        .editing input, .editing textarea { cursor: text !important; } /* Keep inputs typable */
+        .editing input, .editing textarea { cursor: text !important; }
 
         @keyframes jiggle { 0% { transform: rotate(-0.8deg); } 50% { transform: rotate(0.8deg); } 100% { transform: rotate(-0.8deg); } }
         @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
@@ -103,9 +77,7 @@
         .w-label { font-size: 11px; font-weight: 600; color: var(--ios-blue); text-transform: uppercase; letter-spacing: 0.5px; }
         .w-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
 
-        /* --- WIDGET STYLES --- */
-        
-        /* Battery */
+        /* Widget CSS */
         .batt-container { display: flex; align-items: center; justify-content: center; height: 100%; gap: 15px; }
         .batt-icon-shell { width: 50px; height: 26px; border: 3px solid var(--text-sec); border-radius: 6px; padding: 2px; position: relative; }
         .batt-icon-shell::after { content:''; position: absolute; right: -6px; top: 6px; width: 3px; height: 8px; background: var(--text-sec); border-radius: 0 2px 2px 0; }
@@ -113,24 +85,20 @@
         .batt-text { font-size: 28px; font-weight: 600; }
         .batt-state { font-size: 11px; color: var(--text-sec); text-align: center; margin-top: 5px; }
 
-        /* Password */
         .pass-display { font-family: monospace; font-size: 16px; text-align: center; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-bottom: 10px; color: var(--ios-green); word-break: break-all; }
         .pass-controls { display: flex; gap: 10px; align-items: center; }
         
-        /* Clipboard History */
         .clip-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
         .clip-item { background: rgba(255,255,255,0.05); padding: 8px; border-radius: 8px; font-size: 11px; cursor: pointer; color: var(--text-sec); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .clip-item:hover { background: rgba(255,255,255,0.1); color: white; }
         .clip-item:active { transform: scale(0.98); }
 
-        /* Event Timer */
         .timer-container { display: flex; flex-direction: column; justify-content: center; height: 100%; cursor: pointer; }
         .timer-big { font-size: 36px; font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; line-height: 1; margin-bottom: 5px; }
         .timer-label { font-size: 12px; color: var(--text-sec); text-align: center; }
         .timer-bar { height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 10px; overflow: hidden; }
         .timer-fill { height: 100%; background: var(--ios-orange); width: 100%; transition: width 1s linear; }
 
-        /* Tasks */
         .task-input-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
         .task-list { flex: 1; overflow-y: auto; padding-right: 2px; }
         .task-item { display: flex; align-items: center; gap: 10px; padding: 10px 8px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1); border-radius: 8px; animation: slideIn 0.2s ease-out; }
@@ -143,14 +111,12 @@
         .task-item:hover .task-delete { opacity: 1; }
         .task-empty { text-align: center; color: var(--text-sec); font-size: 12px; margin-top: 20px; font-style: italic; opacity: 0.7; }
 
-        /* Calculator */
         .calc-screen { text-align:right; font-size:42px; font-weight:200; margin-bottom:10px; height:50px; white-space:nowrap; overflow:hidden; }
         .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; flex: 1; }
         .calc-btn { background: rgba(255,255,255,0.1); border:none; color:white; border-radius:50px; font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
         .calc-btn:active { background: rgba(255,255,255,0.3); }
         .calc-orange { background: var(--ios-orange); font-weight: 600; }
         
-        /* Standard Widgets */
         .clock-container { display: flex; flex-direction: column; justify-content: center; height: 100%; text-align: center; }
         .time-big { font-size: 48px; font-weight: 200; letter-spacing: -1px; line-height: 1; margin-bottom: 5px; white-space: nowrap; }
         .date-sub { font-size: 15px; color: var(--ios-red); font-weight: 500; text-transform: uppercase; }
@@ -244,32 +210,32 @@
     <script src="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack-all.js"></script>
     
     <script>
-        // --- 1. FIREBASE CONFIGURATION (PASTE YOUR CONFIG HERE) ---
-        // ------------------------------------------------------------
-const firebaseConfig = {
-  apiKey: "AIzaSyArqMp658OSK8u46cjCefyVKiDJe4oe8-g",
-  authDomain: "secondscreen-f7cd9.firebaseapp.com",
-  projectId: "secondscreen-f7cd9",
-  storageBucket: "secondscreen-f7cd9.firebasestorage.app",
-  messagingSenderId: "233696091813",
-  appId: "1:233696091813:web:734ed34d527ba05dbbf74c",
-  measurementId: "G-QTQZ0ET1KJ"
-};
-        // ------------------------------------------------------------
+        // --- 1. FIREBASE CONFIGURATION ---
+        const firebaseConfig = {
+            // PASTE YOUR FIREBASE CONFIG HERE
+            apiKey: "YOUR_API_KEY_HERE",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "SENDER_ID",
+            appId: "APP_ID"
+        };
 
+        // Initialize Firebase Safely
         try {
-            firebase.initializeApp(firebaseConfig);
-            var db = firebase.firestore();
-            var auth = firebase.auth();
-            var provider = new firebase.auth.GoogleAuthProvider();
-        } catch(e) {
-            console.warn("Firebase not configured.");
-        }
+            if(firebaseConfig.apiKey !== "YOUR_API_KEY_HERE") {
+                firebase.initializeApp(firebaseConfig);
+                var db = firebase.firestore();
+                var auth = firebase.auth();
+                var provider = new firebase.auth.GoogleAuthProvider();
+            }
+        } catch(e) { console.warn("Firebase not configured."); }
 
+        // --- 2. CLOUD LOGIC ---
         const Cloud = {
             user: null,
             login: () => {
-                if(!auth) return alert("Firebase not configured.");
+                if(!auth) return alert("Please configure Firebase in the code first.");
                 auth.signInWithPopup(provider).then(res => {
                     Cloud.user = res.user;
                     Cloud.updateUI();
@@ -445,10 +411,18 @@ const firebaseConfig = {
             let grid = null, editing = false;
 
             const init = () => {
-                grid = GridStack.init({ column: 12, cellHeight: '85px', margin: 12, float: true, animate: true, disableDrag: true, disableResize: true });
+                grid = GridStack.init({ 
+                    column: 12, 
+                    cellHeight: '85px', 
+                    margin: 12, 
+                    float: true, 
+                    animate: true,
+                    disableDrag: true, 
+                    disableResize: true
+                });
                 
                 // Auth Check
-                if(auth) {
+                if(typeof auth !== 'undefined') {
                     auth.onAuthStateChanged(user => {
                         Cloud.user = user;
                         Cloud.updateUI();
@@ -479,6 +453,9 @@ const firebaseConfig = {
             const createWidget = (type, w, h, x, y, savedData) => {
                 const id = 'w-' + Math.random().toString(36).substr(2, 9);
                 const content = Templates.get(type, id, savedData);
+                // Fail-safe for invalid/missing widgets
+                if (content === '<div>Error</div>') return;
+
                 const el = grid.addWidget({ w, h, x, y, content, minW: 2, minH: 2 });
                 const removeBtn = el.querySelector('.remove-widget');
                 if(removeBtn) { el.appendChild(removeBtn); removeBtn.onclick = () => grid.removeWidget(el); }
@@ -503,12 +480,14 @@ const firebaseConfig = {
                 }
                 if (type === 'music' && savedData) {
                     const select = document.getElementById(`ms-sel-${id}`);
-                    savedData.library.forEach(item => {
-                        const opt = document.createElement('option'); opt.value = item.url; opt.innerText = item.name;
-                        if(item.url === savedData.current) opt.selected = true;
-                        select.appendChild(opt);
-                    });
-                    Utils.changeMusic(id);
+                    if(savedData.library) {
+                        savedData.library.forEach(item => {
+                            const opt = document.createElement('option'); opt.value = item.url; opt.innerText = item.name;
+                            if(item.url === savedData.current) opt.selected = true;
+                            select.appendChild(opt);
+                        });
+                        Utils.changeMusic(id);
+                    }
                 }
 
                 UI.toggleAdd(false);
@@ -529,7 +508,7 @@ const firebaseConfig = {
 
                     return { x: el.gridstackNode.x, y: el.gridstackNode.y, w: el.gridstackNode.w, h: el.gridstackNode.h, type, data };
                 });
-                localStorage.setItem('ss_final_v1', JSON.stringify(items));
+                localStorage.setItem('ss_fixed_v2', JSON.stringify(items));
                 Cloud.save(items);
             };
 
@@ -538,8 +517,10 @@ const firebaseConfig = {
                 if(Cloud.user && db) {
                     db.collection('users').doc(Cloud.user.uid).get().then(doc => {
                         if(doc.exists) {
-                            const cloudData = JSON.parse(doc.data().layout);
-                            cloudData.forEach(s => createWidget(s.type, s.w, s.h, s.x, s.y, s.data));
+                            try {
+                                const cloudData = JSON.parse(doc.data().layout);
+                                cloudData.forEach(s => createWidget(s.type, s.w, s.h, s.x, s.y, s.data));
+                            } catch(e) { loadDefaults(); } // Corrupt data fallback
                         } else {
                             loadDefaults();
                             saveLayout(); 
@@ -551,7 +532,7 @@ const firebaseConfig = {
             };
 
             const loadLocal = () => {
-                let saved = JSON.parse(localStorage.getItem('ss_final_v1'));
+                let saved = JSON.parse(localStorage.getItem('ss_fixed_v2'));
                 if (saved) saved.forEach(s => createWidget(s.type, s.w, s.h, s.x, s.y, s.data));
                 else loadDefaults();
             };
@@ -571,6 +552,7 @@ const firebaseConfig = {
             updateTime: () => { const n=new Date(); document.querySelectorAll('.time-big').forEach(e=>e.innerText=n.toLocaleTimeString([],{hour:'numeric',minute:'2-digit',hour12:true})); document.querySelectorAll('.date-sub').forEach(e=>e.innerText=n.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'}));},
             initTodo: (id, data) => {
                 const list = document.getElementById(`list-${id}`), em = document.getElementById(`empty-${id}`);
+                if (!list || !em) return;
                 const check = () => { em.style.display = list.children.length===0 ? 'block':'none'; };
                 const add = (t, d) => {
                     const i = document.createElement('div'); i.className=`task-item ${d?'done':''}`;
@@ -581,18 +563,19 @@ const firebaseConfig = {
                     };
                     list.prepend(i); check();
                 };
-                document.getElementById(`in-${id}`).onkeypress = (e) => { if(e.key==='Enter'&&e.target.value.trim()){ add(e.target.value,false); e.target.value=''; Core.saveLayout(); } };
+                const input = document.getElementById(`in-${id}`);
+                if(input) input.onkeypress = (e) => { if(e.key==='Enter'&&e.target.value.trim()){ add(e.target.value,false); e.target.value=''; Core.saveLayout(); } };
                 if(data) data.forEach(d => { if(!d.d) add(d.t, false); }); check();
                 UI.checkEmpty = check;
             },
-            initNotes: (id, data) => { const el = document.getElementById(`nt-${id}`); if(data) el.value = data; el.oninput = () => Core.saveLayout(); },
+            initNotes: (id, data) => { const el = document.getElementById(`nt-${id}`); if(el) { if(data) el.value = data; el.oninput = () => Core.saveLayout(); } },
             initWeather: (id) => { navigator.geolocation.getCurrentPosition(pos => { fetch(`https://api.open-meteo.com/v1/forecast?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&current_weather=true`).then(r=>r.json()).then(d => { const e = document.getElementById(`temp-${id}`); if(e) e.innerText = Math.round(d.current_weather.temperature) + '°'; }); }); }
         };
 
         const Templates = {
             get: (type, id, data) => {
                 const wrap = (l, c) => `<div class="remove-widget">✕</div><div class="w-header" data-type="${type}"><span class="w-label">${l}</span></div><div class="w-content" data-type="${type}">${c}</div>`;
-                const getLink = (idx, s) => { const h = s&&s.url; const icon = h ? `<img src="https://www.google.com/s2/favicons?domain=${s.domain}&sz=64" class="deck-favicon"><span class="deck-label">${s.name}</span>` : `<i class="fa-solid fa-plus deck-icon deck-unset"></i>`; return `<div class="deck-btn" onclick="Utils.linkAction('${id}',${idx},this)" oncontextmenu="event.preventDefault();Utils.editLink('${id}',${idx},this)" data-link='${h?JSON.stringify(s):""}'>${icon}</div>`; };
+                const getLink = (idx, s) => { const h = s&&s.url; const icon = h ? `<img src="https://www.google.com/s2/favicons?domain=${s.domain}&sz=64" class="deck-favicon"><span class="deck-label">${s.name}</span>` : `<i class="fa-solid fa-plus deck-icon deck-unset"></i>`; return `<div class="deck-btn" onclick="Utils.linkAction('${id}', ${idx}, this)" oncontextmenu="event.preventDefault(); Utils.editLink('${id}', ${idx}, this)" data-link='${h?JSON.stringify(s):""}'>${icon}</div>`; };
 
                 const map = {
                     clock: `<div class="remove-widget">✕</div><div class="clock-container"><div class="time-big">00:00</div><div class="date-sub">Loading...</div></div>`,
