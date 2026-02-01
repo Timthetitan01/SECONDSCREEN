@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecondScreen | Cloud Live</title>
+    <title>SecondScreen | Bulletproof Sync</title>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -37,7 +37,7 @@
         /* --- LOGIN OVERLAY --- */
         #login-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); backdrop-filter: blur(20px);
+            background: rgba(0,0,0,0.95); backdrop-filter: blur(20px);
             z-index: 9999; display: flex; flex-direction: column;
             align-items: center; justify-content: center; gap: 20px;
             transition: opacity 0.5s ease;
@@ -52,15 +52,13 @@
         .login-title { font-size: 24px; font-weight: 700; margin-bottom: 10px; }
         .login-sub { color: var(--text-sec); font-size: 14px; margin-bottom: 25px; line-height: 1.4; }
         
-        /* Error Toast */
-        #error-toast {
-            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-            background: rgba(255, 69, 58, 0.9); color: white; padding: 10px 20px;
-            border-radius: 50px; font-size: 13px; z-index: 10000;
-            display: none; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        #status-bar {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.8); color: white; padding: 8px 16px;
+            border-radius: 20px; font-size: 12px; border: 1px solid var(--ios-card-border);
+            display: none; z-index: 5000; pointer-events: none;
         }
 
-        /* General UI */
         input, textarea { 
             user-select: text !important; -webkit-user-select: text !important; cursor: text; 
             background: var(--ios-input); border: none; border-radius: 8px; 
@@ -91,6 +89,7 @@
         .editing .grid-stack-item-content { cursor: grab; animation: jiggle 0.3s infinite ease-in-out; border-color: var(--ios-blue) !important; }
         .editing .grid-stack-item-content:active { cursor: grabbing; }
         .editing input, .editing textarea { cursor: text !important; }
+        
         .editing .weather-temp { cursor: pointer; color: var(--ios-blue) !important; text-decoration: underline; text-decoration-style: dotted; }
 
         @keyframes jiggle { 0% { transform: rotate(-0.8deg); } 50% { transform: rotate(0.8deg); } 100% { transform: rotate(-0.8deg); } }
@@ -189,7 +188,7 @@
 </head>
 <body>
 
-    <div id="error-toast"></div>
+    <div id="status-bar">Saving...</div>
 
     <div id="login-overlay">
         <div class="login-card">
@@ -229,7 +228,7 @@
         <div class="nav-actions">
             <button class="btn btn-primary" onclick="UI.toggleAdd(true)"><i class="fa-solid fa-plus"></i> Add</button>
             <button id="edit-btn" class="btn" onclick="Core.toggleEdit()"><i class="fa-solid fa-pen-nib"></i> Edit</button>
-            <button class="btn" onclick="Cloud.logout()"><i class="fa-solid fa-power-off"></i></button>
+            <button class="btn btn-danger" onclick="Core.reset()"><i class="fa-solid fa-power-off"></i></button>
             <div id="user-info"></div>
         </div>
     </nav>
@@ -241,34 +240,27 @@
     <script src="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack-all.js"></script>
     
     <script>
-        // --- 1. FIREBASE CONFIGURATION (PASTE YOUR CONFIG HERE) ---
-        // ------------------------------------------------------------
-const firebaseConfig = {
-  apiKey: "AIzaSyArqMp658OSK8u46cjCefyVKiDJe4oe8-g",
-  authDomain: "secondscreen-f7cd9.firebaseapp.com",
-  projectId: "secondscreen-f7cd9",
-  storageBucket: "secondscreen-f7cd9.firebasestorage.app",
-  messagingSenderId: "233696091813",
-  appId: "1:233696091813:web:734ed34d527ba05dbbf74c",
-  measurementId: "G-QTQZ0ET1KJ"
-};
-        // ------------------------------------------------------------
+        const firebaseConfig = {
+            apiKey: "AIzaSyArqMp658OSK8u46cjCefyVKiDJe4oe8-g",
+            authDomain: "secondscreen-f7cd9.firebaseapp.com",
+            projectId: "secondscreen-f7cd9",
+            storageBucket: "secondscreen-f7cd9.firebasestorage.app",
+            messagingSenderId: "233696091813",
+            appId: "1:233696091813:web:734ed34d527ba05dbbf74c",
+            measurementId: "G-QTQZ0ET1KJ"
+        };
 
         try {
-            if(firebaseConfig.apiKey !== "YOUR_API_KEY_HERE") {
-                firebase.initializeApp(firebaseConfig);
-                var db = firebase.firestore();
-                var auth = firebase.auth();
-                var provider = new firebase.auth.GoogleAuthProvider();
-            } else {
-                console.error("Firebase config missing!");
-            }
+            firebase.initializeApp(firebaseConfig);
+            var db = firebase.firestore();
+            var auth = firebase.auth();
+            var provider = new firebase.auth.GoogleAuthProvider();
         } catch(e) { console.warn("Firebase Error"); }
 
         const Cloud = {
             user: null,
             login: () => {
-                if(!auth) return alert("Please add Firebase Config to the code.");
+                if(!auth) return;
                 auth.signInWithPopup(provider).catch(e => alert(e.message));
             },
             logout: () => {
@@ -292,16 +284,19 @@ const firebaseConfig = {
             },
             save: (data) => {
                 if(Cloud.user && db) {
+                    const status = document.getElementById('status-bar');
+                    status.style.display = 'block';
+                    status.innerText = "Saving...";
+                    
                     db.collection('users').doc(Cloud.user.uid).set({ 
                         layout: JSON.stringify(data), 
                         updated: Date.now() 
+                    }).then(() => {
+                        status.innerText = "Saved";
+                        setTimeout(() => status.style.display = 'none', 1500);
                     }).catch(e => {
+                        status.innerText = "Error Saving";
                         console.error(e);
-                        // Show visible error if permission denied
-                        const toast = document.getElementById('error-toast');
-                        toast.innerText = "Error Saving: " + e.message;
-                        toast.style.display = 'block';
-                        setTimeout(() => toast.style.display = 'none', 5000);
                     });
                 }
             }
@@ -492,13 +487,11 @@ const firebaseConfig = {
 
         const Core = (() => {
             let grid = null, editing = false;
-            let isLoaded = false; // Prevents saving empty data before loading is complete
+            let isLoaded = false; // Lock saving until load complete
 
             const init = () => {
                 grid = GridStack.init({ column: 12, cellHeight: '85px', margin: 12, float: true, animate: true, disableDrag: true, disableResize: true });
-                
-                // Detach auto-save initially
-                grid.off('change added removed');
+                grid.off('change added removed'); // No saving during init
 
                 Cloud.initAuth();
 
@@ -527,7 +520,7 @@ const firebaseConfig = {
 
                 const el = grid.addWidget({ w, h, x, y, content, minW: 2, minH: 2 });
                 const removeBtn = el.querySelector('.remove-widget');
-                if(removeBtn) { el.appendChild(removeBtn); removeBtn.onclick = () => grid.removeWidget(el); }
+                if(removeBtn) { el.appendChild(removeBtn); removeBtn.onclick = () => { grid.removeWidget(el); Core.saveLayout(); }; }
                 
                 if (type === 'todo') UI.initTodo(id, savedData);
                 if (type === 'notes') document.getElementById(`nt-${id}`).value = savedData || "";
@@ -563,7 +556,7 @@ const firebaseConfig = {
             };
 
             const saveLayout = debounce(() => {
-                if(!isLoaded) return; // Prevent overwrites if not fully loaded
+                if(!isLoaded) return; // Prevent empty override
 
                 const items = grid.getGridItems().map(el => {
                     const type = el.getAttribute('data-type');
@@ -587,25 +580,22 @@ const firebaseConfig = {
                 if(!Cloud.user || !db) return;
 
                 db.collection('users').doc(Cloud.user.uid).get().then(doc => {
-                    grid.removeAll(); // Clear current
+                    grid.removeAll(); 
                     if(doc.exists) {
                         try {
                             const items = JSON.parse(doc.data().layout);
                             if(items && items.length > 0) {
                                 items.forEach(s => createWidget(s.type, s.w, s.h, s.x, s.y, s.data));
                             } else {
-                                loadDefaults();
+                                loadDefaults(); // DB exists but empty
                             }
                         } catch(e) { loadDefaults(); }
                     } else {
-                        loadDefaults();
+                        loadDefaults(); // No DB entry
                     }
-                    // Mark as loaded so saving is enabled
                     isLoaded = true;
+                    // Enable Auto-Save ONLY after loading is done
                     grid.on('change added removed', saveLayout);
-                }).catch(e => {
-                    document.getElementById('error-toast').innerText = "Load Failed: " + e.message;
-                    document.getElementById('error-toast').style.display = 'block';
                 });
             };
 
@@ -614,10 +604,16 @@ const firebaseConfig = {
                 createWidget('weather', 4, 2, 4, 0);
                 createWidget('todo', 4, 4, 0, 2);
                 createWidget('notes', 4, 4, 4, 2);
-                saveLayout();
+                setTimeout(saveLayout, 1000); // Save defaults immediately
             };
 
-            return { init, toggleEdit, createWidget, saveLayout, reset: () => { Cloud.logout(); }, loadData };
+            const reset = () => {
+                if(confirm("Are you sure? This will delete your dashboard.")) {
+                    db.collection('users').doc(Cloud.user.uid).delete().then(() => location.reload());
+                }
+            };
+
+            return { init, toggleEdit, createWidget, saveLayout, reset, loadData };
         })();
 
         const UI = {
