@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecondScreen Pro | Stream Deck Edition</title>
+    <title>SecondScreen Pro | 12h Format</title>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -105,9 +105,9 @@
 
         /* --- Custom Widget Styles --- */
 
-        /* 1. Fixed Clock */
+        /* 1. Fixed Clock (12h) */
         .clock-container { display: flex; flex-direction: column; justify-content: center; height: 100%; text-align: center; }
-        .time-big { font-size: 52px; font-weight: 200; letter-spacing: -1px; line-height: 1; margin-bottom: 5px; font-variant-numeric: tabular-nums; }
+        .time-big { font-size: 48px; font-weight: 200; letter-spacing: -1px; line-height: 1; margin-bottom: 5px; font-variant-numeric: tabular-nums; white-space: nowrap;}
         .date-sub { font-size: 15px; color: var(--ios-red); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
 
         /* 2. Stream Deck (Quick Links) */
@@ -356,8 +356,8 @@
             toggleAdd: (show) => document.getElementById('add-panel').classList.toggle('show', show),
             updateTime: () => {
                 const now = new Date();
-                // Clock Update - Short Time, Long Date
-                document.querySelectorAll('.time-big').forEach(el => el.innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false}));
+                // Clock Update - 12 Hour Format
+                document.querySelectorAll('.time-big').forEach(el => el.innerText = now.toLocaleTimeString([], {hour: 'numeric', minute:'2-digit', hour12: true}));
                 document.querySelectorAll('.date-sub').forEach(el => el.innerText = now.toLocaleDateString(undefined, {weekday:'long', month:'short', day:'numeric'}));
             },
             initTodo: (id, data) => {
@@ -399,17 +399,17 @@
                 const cdStr = hasCD ? JSON.stringify(data) : "";
 
                 const map = {
-                    // NEW: Clock (Fixed Layout)
+                    // Fixed Clock (12h)
                     clock: `<div class="remove-widget">✕</div><div class="clock-container"><div class="time-big">00:00</div><div class="date-sub">Loading...</div></div>`,
                     
-                    // NEW: Stream Deck Links
+                    // Stream Deck Links
                     links: wrap('Quick Links', `<div class="deck-grid">
                         ${getLinkBtn(0, data?.[0])}
                         ${getLinkBtn(1, data?.[1])}
                         ${getLinkBtn(2, data?.[2])}
                     </div>`),
 
-                    // NEW: Countdown
+                    // Countdown
                     countdown: `<div class="remove-widget">✕</div>
                     <div class="count-container" id="count-wrap-${id}" onclick="Utils.setCountdown('${id}')" data-target='${cdStr}'>
                         <div class="count-days" id="cd-val-${id}">${hasCD ? '--' : '+'}</div>
