@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecondScreen | Cloud Final</title>
+    <title>SecondScreen | Cloud Fixed</title>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -34,7 +34,7 @@
             color: var(--text-main); font-family: var(--font); height: 100vh; overflow: hidden; display: flex; flex-direction: column;
         }
 
-        /* STATUS BAR - Shows what the system is doing */
+        /* STATUS BAR */
         #status-bar {
             position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
             background: rgba(0,0,0,0.8); color: white; padding: 8px 16px;
@@ -59,8 +59,14 @@
         }
         .login-title { font-size: 24px; font-weight: 700; margin-bottom: 10px; }
         .login-sub { color: var(--text-sec); font-size: 14px; margin-bottom: 25px; line-height: 1.4; }
+        
+        #error-toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background: rgba(255, 69, 58, 0.9); color: white; padding: 10px 20px;
+            border-radius: 50px; font-size: 13px; z-index: 10000;
+            display: none; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
 
-        /* General UI */
         input, textarea { 
             user-select: text !important; -webkit-user-select: text !important; cursor: text; 
             background: var(--ios-input); border: none; border-radius: 8px; 
@@ -191,6 +197,8 @@
 
     <div id="status-bar">Syncing...</div>
 
+    <div id="error-toast"></div>
+
     <div id="login-overlay">
         <div class="login-card">
             <div class="login-title"><i class="fa-brands fa-apple"></i> SecondScreen Pro</div>
@@ -229,7 +237,7 @@
         <div class="nav-actions">
             <button class="btn btn-primary" onclick="UI.toggleAdd(true)"><i class="fa-solid fa-plus"></i> Add</button>
             <button id="edit-btn" class="btn" onclick="Core.toggleEdit()"><i class="fa-solid fa-pen-nib"></i> Edit</button>
-            <button class="btn btn-danger" onclick="Core.reset()"><i class="fa-solid fa-power-off"></i></button>
+            <button class="btn" onclick="Cloud.logout()"><i class="fa-solid fa-power-off"></i></button>
             <div id="user-info"></div>
         </div>
     </nav>
@@ -251,14 +259,15 @@
             measurementId: "G-QTQZ0ET1KJ"
         };
 
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const auth = firebase.auth();
-        const provider = new firebase.auth.GoogleAuthProvider();
+        try {
+            firebase.initializeApp(firebaseConfig);
+            var db = firebase.firestore();
+            var auth = firebase.auth();
+            var provider = new firebase.auth.GoogleAuthProvider();
+        } catch(e) { console.warn("Firebase Error: " + e.message); }
 
-        // --- GLOBAL STATE ---
-        let isDashboardLoaded = false; // CRITICAL: PREVENTS SAVING WHILE LOADING
+        // GLOBAL LOADING LOCK
+        let isDashboardLoaded = false;
 
         const Cloud = {
             user: null,
@@ -283,7 +292,7 @@
                 });
             },
             save: (data) => {
-                if(Cloud.user) {
+                if(Cloud.user && db) {
                     const status = document.getElementById('status-bar');
                     status.style.display = 'block';
                     status.innerText = "Saving...";
@@ -294,12 +303,14 @@
                     }).then(() => {
                         status.innerText = "Saved";
                         setTimeout(() => status.style.display = 'none', 1500);
-                    }).catch(e => console.error("Save Failed:", e));
+                    }).catch(e => {
+                        console.error(e);
+                        status.innerText = "Error Saving";
+                    });
                 }
             }
         };
 
-        // Utility: Debounce saves
         function debounce(func, wait) {
             let timeout;
             return function(...args) {
@@ -487,9 +498,8 @@
 
             const init = () => {
                 grid = GridStack.init({ column: 12, cellHeight: '85px', margin: 12, float: true, animate: true, disableDrag: true, disableResize: true });
-                
-                // NO EVENTS ATTACHED YET. PREVENTS RACE CONDITION.
-                
+                grid.off('change added removed'); // IMPORTANT: No saving during init
+
                 Cloud.initAuth();
 
                 setInterval(UI.updateTime, 1000);
@@ -516,6 +526,9 @@
                 if (content === '<div>Error</div>') return;
 
                 const el = grid.addWidget({ w, h, x, y, content, minW: 2, minH: 2 });
+                // FIX: TAG THE WIDGET WITH TYPE
+                el.setAttribute('data-type', type); 
+
                 const removeBtn = el.querySelector('.remove-widget');
                 if(removeBtn) { el.appendChild(removeBtn); removeBtn.onclick = () => { grid.removeWidget(el); Core.saveLayout(); }; }
                 
@@ -553,11 +566,10 @@
             };
 
             const saveLayout = debounce(() => {
-                // THE LOCK: Only save if dashboard is confirmed loaded
-                if(!isDashboardLoaded) return; 
+                if(!isDashboardLoaded) return; // THE LOCK
 
                 const items = grid.getGridItems().map(el => {
-                    const type = el.getAttribute('data-type');
+                    const type = el.getAttribute('data-type'); // Now this finds the type!
                     let data = null;
                     if (type === 'notes') data = el.querySelector('textarea').value;
                     if (type === 'todo') data = Array.from(el.querySelectorAll('.task-item')).map(i => ({t: i.querySelector('.task-text').innerText, d: i.classList.contains('done')}));
@@ -577,14 +589,11 @@
             const loadData = () => {
                 if(!Cloud.user || !db) return;
 
-                // LOCK: Prevent saves while loading
-                isDashboardLoaded = false;
+                isDashboardLoaded = false; // LOCK
                 grid.off('change added removed');
 
                 db.collection('users').doc(Cloud.user.uid).get().then(doc => {
-                    // CLEAR GRID
                     grid.removeAll(); 
-
                     if(doc.exists) {
                         try {
                             const items = JSON.parse(doc.data().layout);
@@ -599,12 +608,16 @@
                     } else {
                         loadDefaults();
                     }
-
-                    // UNLOCK: Allow saving after 1 second buffer
+                    
+                    // UNLOCK after delay
                     setTimeout(() => {
                         isDashboardLoaded = true;
                         grid.on('change added removed', saveLayout);
                     }, 1000);
+                }).catch(e => {
+                    console.error("Load failed", e);
+                    document.getElementById('error-toast').innerText = "Load Failed: " + e.message;
+                    document.getElementById('error-toast').style.display = 'block';
                 });
             };
 
@@ -616,10 +629,9 @@
                 createWidget('notes', 4, 4, 4, 2);
                 grid.commit();
                 
-                // Force a save of defaults once loaded
                 setTimeout(() => {
                     isDashboardLoaded = true;
-                    saveLayout();
+                    saveLayout(); // Force save to fix the DB
                     grid.on('change added removed', saveLayout);
                 }, 1000);
             };
@@ -659,9 +671,6 @@
 
         const Templates = {
             get: (type, id, data) => {
-                const validTypes = ['clock', 'links', 'countdown', 'calc', 'weather', 'todo', 'notes', 'calendar', 'music', 'timer', 'battery', 'password', 'clipboard'];
-                if(!validTypes.includes(type)) return `<div>Error</div>`;
-
                 const wrap = (l, c) => `<div class="remove-widget">✕</div><div class="w-header" data-type="${type}"><span class="w-label">${l}</span></div><div class="w-content" data-type="${type}">${c}</div>`;
                 const getLink = (idx, s) => { const h = s&&s.url; const icon = h ? `<img src="https://www.google.com/s2/favicons?domain=${s.domain}&sz=64" class="deck-favicon"><span class="deck-label">${s.name}</span>` : `<i class="fa-solid fa-plus deck-icon deck-unset"></i>`; return `<div class="deck-btn" onclick="Utils.linkAction('${id}', ${idx}, this)" oncontextmenu="event.preventDefault(); Utils.editLink('${id}', ${idx}, this)" data-link='${h?JSON.stringify(s):""}'>${icon}</div>`; };
 
