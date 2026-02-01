@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecondScreen Pro | Stable</title>
+    <title>SecondScreen | Cloud Only</title>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -14,19 +14,12 @@
 
     <style>
         :root {
-            /* iOS System Colors */
             --bg-body: #000000;
             --ios-card: rgba(28, 28, 30, 0.65);
             --ios-card-border: rgba(255, 255, 255, 0.12);
             --ios-input: rgba(118, 118, 128, 0.24);
-            
             --ios-blue: #0A84FF; --ios-green: #30D158; --ios-red: #FF453A;
-            --ios-orange: #FF9F0A; --ios-yellow: #FFD60A; --ios-purple: #BF5AF2;
-            --ios-indigo: #5E5CE6; --ios-teal: #64D2FF;
-            
             --text-main: #FFFFFF; --text-sec: rgba(235, 235, 245, 0.6);
-            
-            --blur: blur(50px) saturate(180%);
             --radius: 22px;
             --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
         }
@@ -41,64 +34,54 @@
             color: var(--text-main); font-family: var(--font); height: 100vh; overflow: hidden; display: flex; flex-direction: column;
         }
 
-        /* Input Text Selection Fix */
+        /* --- LOGIN OVERLAY --- */
+        #login-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(20px);
+            z-index: 9999; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 20px;
+            transition: opacity 0.5s ease;
+        }
+        .login-card {
+            background: #1c1c1e; border: 1px solid var(--ios-card-border);
+            padding: 40px; border-radius: 24px; text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+        .login-title { font-size: 24px; font-weight: 700; margin-bottom: 10px; }
+        .login-sub { color: var(--text-sec); font-size: 14px; margin-bottom: 25px; }
+
+        /* General UI */
         input, textarea { 
-            user-select: text !important; 
-            -webkit-user-select: text !important; 
-            cursor: text; 
+            user-select: text !important; -webkit-user-select: text !important; cursor: text; 
             background: var(--ios-input); border: none; border-radius: 8px; 
             padding: 8px 12px; color: white; width: 100%; font-size: 13px; outline: none;
         }
         input:focus, textarea:focus { background: rgba(118, 118, 128, 0.4); }
 
-        /* Navbar */
-        nav {
-            height: 50px; display: flex; justify-content: space-between; align-items: center; padding: 0 20px;
-            background: rgba(20, 20, 20, 0.4); backdrop-filter: blur(20px); border-bottom: 1px solid var(--ios-card-border); z-index: 1000;
-        }
+        nav { height: 50px; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; background: rgba(20, 20, 20, 0.4); backdrop-filter: blur(20px); border-bottom: 1px solid var(--ios-card-border); z-index: 1000; }
         .brand { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
         .nav-actions { display: flex; gap: 10px; align-items: center; }
 
-        .btn {
-            background: rgba(255, 255, 255, 0.1); border: none; color: white; padding: 6px 14px; border-radius: 99px;
-            font-size: 13px; font-weight: 500; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px;
-        }
+        .btn { background: rgba(255, 255, 255, 0.1); border: none; color: white; padding: 6px 14px; border-radius: 99px; font-size: 13px; font-weight: 500; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px; }
         .btn:hover { background: rgba(255, 255, 255, 0.2); }
-        .btn:active { transform: scale(0.95); opacity: 0.8; }
         .btn-primary { background: var(--ios-blue); }
         .btn-danger { background: rgba(255, 69, 58, 0.15); color: var(--ios-red); }
 
-        /* Auth Profile */
-        .user-pill { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.3); padding: 4px 12px 4px 4px; border-radius: 99px; cursor: pointer; }
+        .user-pill { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.3); padding: 4px 12px 4px 4px; border-radius: 99px; }
         .user-avatar { width: 24px; height: 24px; border-radius: 50%; background: #555; }
-        .user-name { font-size: 12px; font-weight: 500; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .user-name { font-size: 12px; font-weight: 500; }
 
-        /* Dashboard */
         #dashboard-wrapper { flex: 1; padding: 20px; overflow-y: auto; overflow-x: hidden; cursor: default; }
-
-        /* Grid Items */
         .grid-stack-item { overflow: visible !important; }
-        .grid-stack-item-content {
-            background: var(--ios-card) !important; backdrop-filter: var(--blur) !important;
-            border: 1px solid var(--ios-card-border) !important; border-radius: var(--radius) !important;
-            padding: 16px; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.2); overflow: hidden;
-        }
+        .grid-stack-item-content { background: var(--ios-card) !important; backdrop-filter: var(--blur) !important; border: 1px solid var(--ios-card-border) !important; border-radius: var(--radius) !important; padding: 16px; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.2); overflow: hidden; }
 
-        /* Edit Mode Styles */
-        .remove-widget {
-            position: absolute; top: -10px; right: -10px; width: 26px; height: 26px;
-            background: #8e8e93; border: 2px solid var(--bg-body); border-radius: 50%;
-            color: white; display: none; justify-content: center; align-items: center;
-            font-size: 12px; cursor: pointer; z-index: 9999; box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-        }
-        .editing .remove-widget { display: flex; animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .remove-widget { position: absolute; top: -10px; right: -10px; width: 26px; height: 26px; background: #8e8e93; border: 2px solid var(--bg-body); border-radius: 50%; color: white; display: none; justify-content: center; align-items: center; font-size: 12px; cursor: pointer; z-index: 9999; box-shadow: 0 2px 6px rgba(0,0,0,0.4); }
+        .editing .remove-widget { display: flex; animation: popIn 0.2s; }
         .editing .grid-stack-item-content { cursor: grab; animation: jiggle 0.3s infinite ease-in-out; border-color: var(--ios-blue) !important; }
         .editing .grid-stack-item-content:active { cursor: grabbing; }
-        .editing input, .editing textarea { cursor: text !important; } /* Keep inputs typable */
-
-        /* Weather Edit Mode Highlight */
+        .editing input, .editing textarea { cursor: text !important; }
+        
         .editing .weather-temp { cursor: pointer; color: var(--ios-blue) !important; text-decoration: underline; text-decoration-style: dotted; }
-        .editing .weather-temp::after { content: ' (Click to Switch)'; font-size: 10px; display: block; opacity: 0.7; text-decoration: none; }
 
         @keyframes jiggle { 0% { transform: rotate(-0.8deg); } 50% { transform: rotate(0.8deg); } 100% { transform: rotate(-0.8deg); } }
         @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
@@ -107,9 +90,7 @@
         .w-label { font-size: 11px; font-weight: 600; color: var(--ios-blue); text-transform: uppercase; letter-spacing: 0.5px; }
         .w-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
 
-        /* --- WIDGET STYLES --- */
-        
-        /* Battery */
+        /* Widget Styles */
         .batt-container { display: flex; align-items: center; justify-content: center; height: 100%; gap: 15px; }
         .batt-icon-shell { width: 50px; height: 26px; border: 3px solid var(--text-sec); border-radius: 6px; padding: 2px; position: relative; }
         .batt-icon-shell::after { content:''; position: absolute; right: -6px; top: 6px; width: 3px; height: 8px; background: var(--text-sec); border-radius: 0 2px 2px 0; }
@@ -117,45 +98,37 @@
         .batt-text { font-size: 28px; font-weight: 600; }
         .batt-state { font-size: 11px; color: var(--text-sec); text-align: center; margin-top: 5px; }
 
-        /* Password */
         .pass-display { font-family: monospace; font-size: 16px; text-align: center; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-bottom: 10px; color: var(--ios-green); word-break: break-all; }
         .pass-controls { display: flex; gap: 10px; align-items: center; }
         
-        /* Clipboard History */
         .clip-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
         .clip-item { background: rgba(255,255,255,0.05); padding: 8px; border-radius: 8px; font-size: 11px; cursor: pointer; color: var(--text-sec); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .clip-item:hover { background: rgba(255,255,255,0.1); color: white; }
         .clip-item:active { transform: scale(0.98); }
 
-        /* Event Timer */
         .timer-container { display: flex; flex-direction: column; justify-content: center; height: 100%; cursor: pointer; }
         .timer-big { font-size: 36px; font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; line-height: 1; margin-bottom: 5px; }
         .timer-label { font-size: 12px; color: var(--text-sec); text-align: center; }
         .timer-bar { height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 10px; overflow: hidden; }
         .timer-fill { height: 100%; background: var(--ios-orange); width: 100%; transition: width 1s linear; }
 
-        /* Tasks */
         .task-input-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
         .task-list { flex: 1; overflow-y: auto; padding-right: 2px; }
-        .task-item { display: flex; align-items: center; gap: 10px; padding: 10px 8px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1); border-radius: 8px; animation: slideIn 0.2s ease-out; }
-        @keyframes slideIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .task-item { display: flex; align-items: center; gap: 10px; padding: 10px 8px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: 0.3s; }
         .task-item.done .task-check { background: var(--ios-blue); border-color: var(--ios-blue); color: white; }
         .task-item.done .task-text { text-decoration: line-through; color: var(--text-sec); }
         .task-text { font-size: 13px; flex: 1; pointer-events: none; transition: color 0.2s; }
-        .task-check { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #636366; display: flex; align-items: center; justify-content: center; transition: 0.2s; flex-shrink: 0; color: transparent; font-size: 10px; }
+        .task-check { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #636366; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: transparent; font-size: 10px; }
         .task-delete { color: var(--text-sec); opacity: 0; transition: 0.2s; font-size: 12px; padding: 4px; }
         .task-item:hover .task-delete { opacity: 1; }
-        .task-delete:hover { color: var(--ios-red); transform: scale(1.1); }
         .task-empty { text-align: center; color: var(--text-sec); font-size: 12px; margin-top: 20px; font-style: italic; opacity: 0.7; }
 
-        /* Calculator */
         .calc-screen { text-align:right; font-size:42px; font-weight:200; margin-bottom:10px; height:50px; white-space:nowrap; overflow:hidden; }
         .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; flex: 1; }
         .calc-btn { background: rgba(255,255,255,0.1); border:none; color:white; border-radius:50px; font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
         .calc-btn:active { background: rgba(255,255,255,0.3); }
         .calc-orange { background: var(--ios-orange); font-weight: 600; }
         
-        /* Standard Widgets */
         .clock-container { display: flex; flex-direction: column; justify-content: center; height: 100%; text-align: center; }
         .time-big { font-size: 48px; font-weight: 200; letter-spacing: -1px; line-height: 1; margin-bottom: 5px; white-space: nowrap; }
         .date-sub { font-size: 15px; color: var(--ios-red); font-weight: 500; text-transform: uppercase; }
@@ -206,6 +179,16 @@
 </head>
 <body>
 
+    <div id="login-overlay">
+        <div class="login-card">
+            <div class="login-title"><i class="fa-brands fa-apple"></i> SecondScreen Pro</div>
+            <div class="login-sub">Sign in to load your dashboard</div>
+            <button class="btn btn-primary" style="font-size:16px; padding:10px 20px" onclick="Cloud.login()">
+                <i class="fa-brands fa-google"></i> Sign in with Google
+            </button>
+        </div>
+    </div>
+
     <div id="modal-overlay" onclick="UI.toggleAdd(false)"></div>
     <div id="add-modal">
         <div class="modal-header">
@@ -234,11 +217,8 @@
         <div class="nav-actions">
             <button class="btn btn-primary" onclick="UI.toggleAdd(true)"><i class="fa-solid fa-plus"></i> Add</button>
             <button id="edit-btn" class="btn" onclick="Core.toggleEdit()"><i class="fa-solid fa-pen-nib"></i> Edit</button>
-            <button class="btn" onclick="Core.saveLayout()"><i class="fa-solid fa-cloud"></i></button>
-            <button class="btn btn-danger" onclick="Core.reset()"><i class="fa-solid fa-power-off"></i></button>
-            <div id="auth-section">
-                <button class="btn" onclick="Cloud.login()"><i class="fa-brands fa-google"></i> Login</button>
-            </div>
+            <button class="btn btn-danger" onclick="Cloud.logout()"><i class="fa-solid fa-power-off"></i></button>
+            <div id="user-info"></div>
         </div>
     </nav>
 
@@ -249,17 +229,16 @@
     <script src="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack-all.js"></script>
     
     <script>
-        // --- 1. FIREBASE CONFIGURATION (PASTE YOUR CONFIG HERE) ---
-        // ------------------------------------------------------------
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY_HERE",
-            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT_ID.appspot.com",
-            messagingSenderId: "SENDER_ID",
-            appId: "APP_ID"
-        };
-        // ------------------------------------------------------------
+        // --- 1. FIREBASE CONFIGURATION ---
+const firebaseConfig = {
+  apiKey: "AIzaSyArqMp658OSK8u46cjCefyVKiDJe4oe8-g",
+  authDomain: "secondscreen-f7cd9.firebaseapp.com",
+  projectId: "secondscreen-f7cd9",
+  storageBucket: "secondscreen-f7cd9.firebasestorage.app",
+  messagingSenderId: "233696091813",
+  appId: "1:233696091813:web:734ed34d527ba05dbbf74c",
+  measurementId: "G-QTQZ0ET1KJ"
+};
 
         try {
             if(firebaseConfig.apiKey !== "YOUR_API_KEY_HERE") {
@@ -267,46 +246,40 @@
                 var db = firebase.firestore();
                 var auth = firebase.auth();
                 var provider = new firebase.auth.GoogleAuthProvider();
+            } else {
+                console.error("Firebase config missing!");
             }
-        } catch(e) { console.warn("Firebase not configured."); }
+        } catch(e) { console.warn("Firebase Error"); }
 
+        // --- 2. CLOUD LOGIC ---
         const Cloud = {
             user: null,
             login: () => {
-                if(!auth) return alert("Firebase not configured.");
-                auth.signInWithPopup(provider).then(res => {
-                    Cloud.user = res.user;
-                    Cloud.updateUI();
-                    Core.loadData(true);
-                }).catch(e => alert(e.message));
+                if(!auth) return alert("Please add Firebase Config to the code.");
+                auth.signInWithPopup(provider).catch(e => alert(e.message));
             },
             logout: () => {
                 if(!auth) return;
-                auth.signOut().then(() => {
-                    Cloud.user = null;
-                    Cloud.updateUI();
-                    location.reload();
+                auth.signOut().then(() => location.reload());
+            },
+            initAuth: () => {
+                if(!auth) return;
+                auth.onAuthStateChanged(user => {
+                    if (user) {
+                        Cloud.user = user;
+                        document.getElementById('login-overlay').style.opacity = '0';
+                        setTimeout(() => document.getElementById('login-overlay').style.display = 'none', 500);
+                        document.getElementById('user-info').innerHTML = `<div class="user-pill"><img src="${user.photoURL}" class="user-avatar"><span class="user-name">${user.displayName}</span></div>`;
+                        Core.loadData();
+                    } else {
+                        document.getElementById('login-overlay').style.display = 'flex';
+                        document.getElementById('login-overlay').style.opacity = '1';
+                    }
                 });
-            },
-            updateUI: () => {
-                const sec = document.getElementById('auth-section');
-                if(Cloud.user) {
-                    sec.innerHTML = `<div class="user-pill" onclick="Cloud.logout()" title="Logout"><img src="${Cloud.user.photoURL}" class="user-avatar"><span class="user-name">${Cloud.user.displayName}</span></div>`;
-                } else {
-                    sec.innerHTML = `<button class="btn" onclick="Cloud.login()"><i class="fa-brands fa-google"></i> Login</button>`;
-                }
-            },
-            save: (data) => {
-                if(Cloud.user && db) {
-                    db.collection('users').doc(Cloud.user.uid).set({ 
-                        layout: JSON.stringify(data), 
-                        updated: Date.now() 
-                    }).catch(e => console.error("Cloud Save Failed", e));
-                }
             }
         };
 
-        // Utility: Debounce saves so we don't spam database
+        // Utility: Debounce saves
         function debounce(func, wait) {
             let timeout;
             return function(...args) {
@@ -491,24 +464,15 @@
 
         const Core = (() => {
             let grid = null, editing = false;
-            let isLoading = true; // Lock to prevent empty saves on reload
+            let isLoaded = false; // Prevents saving empty data before loading is complete
 
             const init = () => {
                 grid = GridStack.init({ column: 12, cellHeight: '85px', margin: 12, float: true, animate: true, disableDrag: true, disableResize: true });
                 
-                // Detach listeners initially to avoid race conditions
+                // Detach auto-save initially
                 grid.off('change added removed');
 
-                // Load Initial Data
-                loadData(false);
-
-                if(typeof auth !== 'undefined') {
-                    auth.onAuthStateChanged(user => {
-                        Cloud.user = user;
-                        Cloud.updateUI();
-                        if(user) loadData(true);
-                    });
-                }
+                Cloud.initAuth();
 
                 setInterval(UI.updateTime, 1000);
                 setInterval(() => document.querySelectorAll('.count-container').forEach(el => Utils.updateCountdown(el.id.replace('count-wrap-', ''))), 60000);
@@ -537,7 +501,6 @@
                 const removeBtn = el.querySelector('.remove-widget');
                 if(removeBtn) { el.appendChild(removeBtn); removeBtn.onclick = () => grid.removeWidget(el); }
                 
-                // Init Widgets
                 if (type === 'todo') UI.initTodo(id, savedData);
                 if (type === 'notes') document.getElementById(`nt-${id}`).value = savedData || "";
                 if (type === 'weather') Utils.initWeather(id, savedData);
@@ -569,11 +532,10 @@
                 }
 
                 UI.toggleAdd(false);
-                // No immediate save here to prevent recursion
             };
 
             const saveLayout = debounce(() => {
-                if(isLoading) return; // Prevent saving empty state during load
+                if(!isLoaded) return; // Prevent overwrites if not fully loaded
 
                 const items = grid.getGridItems().map(el => {
                     const type = el.getAttribute('data-type');
@@ -590,75 +552,65 @@
                     return { x: el.gridstackNode.x, y: el.gridstackNode.y, w: el.gridstackNode.w, h: el.gridstackNode.h, type, data };
                 });
                 
-                localStorage.setItem('ss_stable_v1', JSON.stringify(items));
                 Cloud.save(items);
             }, 1000);
 
-            const loadData = (fromCloud = false) => {
-                isLoading = true; 
-                grid.off('change added removed'); // Stop listening
+            const loadData = () => {
+                if(!Cloud.user || !db) return;
 
-                // 1. Cloud
-                if(fromCloud && Cloud.user && db) {
-                    db.collection('users').doc(Cloud.user.uid).get().then(doc => {
-                        if(doc.exists) {
-                            try {
-                                const items = JSON.parse(doc.data().layout);
-                                if(items && items.length > 0) {
-                                    renderItems(items);
-                                    localStorage.setItem('ss_stable_v1', JSON.stringify(items)); 
-                                } else loadDefaults();
-                            } catch(e) { loadDefaults(); }
-                        }
-                    }).catch(e => {}); // Fallback handled by local logic below if cloud fails
-                    return;
-                }
-
-                // 2. Local
-                const local = localStorage.getItem('ss_stable_v1');
-                if (local) {
-                    const items = JSON.parse(local);
-                    if (items && items.length > 0) {
-                        renderItems(items);
-                        return;
+                db.collection('users').doc(Cloud.user.uid).get().then(doc => {
+                    grid.removeAll(); // Clear current
+                    if(doc.exists) {
+                        try {
+                            const items = JSON.parse(doc.data().layout);
+                            if(items && items.length > 0) {
+                                items.forEach(s => createWidget(s.type, s.w, s.h, s.x, s.y, s.data));
+                            } else {
+                                loadDefaults();
+                            }
+                        } catch(e) { loadDefaults(); }
+                    } else {
+                        loadDefaults();
                     }
-                }
-
-                // 3. Defaults
-                loadDefaults();
-            };
-
-            const renderItems = (items) => {
-                grid.batchUpdate();
-                grid.removeAll(false); // remove from DOM
-                items.forEach(s => createWidget(s.type, s.w, s.h, s.x, s.y, s.data));
-                grid.commit();
-                
-                // Re-enable saving after delay
-                setTimeout(() => {
-                    isLoading = false;
+                    // Mark as loaded so saving is enabled
+                    isLoaded = true;
                     grid.on('change added removed', saveLayout);
-                }, 500);
+                });
             };
 
             const loadDefaults = () => {
-                grid.batchUpdate();
-                grid.removeAll(false);
                 createWidget('clock', 4, 2, 0, 0);
                 createWidget('weather', 4, 2, 4, 0);
                 createWidget('todo', 4, 4, 0, 2);
                 createWidget('notes', 4, 4, 4, 2);
-                grid.commit();
-                
-                setTimeout(() => {
-                    isLoading = false;
-                    grid.on('change added removed', saveLayout);
-                    saveLayout(); // Force save defaults
-                }, 500);
+                saveLayout();
             };
 
-            return { init, toggleEdit, createWidget, saveLayout, reset: () => { localStorage.clear(); location.reload(); }, loadData };
+            return { init, toggleEdit, createWidget, saveLayout, reset: () => { Cloud.logout(); }, loadData };
         })();
+
+        const UI = {
+            toggleAdd: (show) => { const m=document.getElementById('add-modal'), o=document.getElementById('modal-overlay'); if(show){m.classList.add('show');o.classList.add('show');}else{m.classList.remove('show');o.classList.remove('show');}},
+            updateTime: () => { const n=new Date(); document.querySelectorAll('.time-big').forEach(e=>e.innerText=n.toLocaleTimeString([],{hour:'numeric',minute:'2-digit',hour12:true})); document.querySelectorAll('.date-sub').forEach(e=>e.innerText=n.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'}));},
+            initTodo: (id, data) => {
+                const list = document.getElementById(`list-${id}`), em = document.getElementById(`empty-${id}`);
+                if (!list || !em) return;
+                const check = () => { em.style.display = list.children.length===0 ? 'block':'none'; };
+                const add = (t, d) => {
+                    const i = document.createElement('div'); i.className=`task-item ${d?'done':''}`;
+                    i.innerHTML=`<div class="task-check"><i class="fa-solid fa-check"></i></div><span class="task-text">${t}</span><i class="fa-solid fa-xmark task-delete" onclick="event.stopPropagation(); this.parentElement.remove(); UI.checkEmpty('${id}'); Core.saveLayout()"></i>`;
+                    i.onclick = (e) => {
+                        if(e.target.classList.contains('task-delete')) return;
+                        i.classList.add('done'); setTimeout(()=>{ i.remove(); check(); Core.saveLayout(); },800);
+                    };
+                    list.prepend(i); check();
+                };
+                const input = document.getElementById(`in-${id}`);
+                if(input) input.onkeypress = (e) => { if(e.key==='Enter'&&e.target.value.trim()){ add(e.target.value,false); e.target.value=''; Core.saveLayout(); } };
+                if(data) data.forEach(d => { if(!d.d) add(d.t, false); }); check();
+                UI.checkEmpty = check;
+            }
+        };
 
         const Templates = {
             get: (type, id, data) => {
