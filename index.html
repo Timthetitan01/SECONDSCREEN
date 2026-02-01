@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecondScreen | Cloud Only</title>
+    <title>SecondScreen | Cloud Sync</title>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -46,6 +46,7 @@
             background: #1c1c1e; border: 1px solid var(--ios-card-border);
             padding: 40px; border-radius: 24px; text-align: center;
             box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
         .login-title { font-size: 24px; font-weight: 700; margin-bottom: 10px; }
         .login-sub { color: var(--text-sec); font-size: 14px; margin-bottom: 25px; }
@@ -64,6 +65,7 @@
 
         .btn { background: rgba(255, 255, 255, 0.1); border: none; color: white; padding: 6px 14px; border-radius: 99px; font-size: 13px; font-weight: 500; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px; }
         .btn:hover { background: rgba(255, 255, 255, 0.2); }
+        .btn:active { transform: scale(0.95); opacity: 0.8; }
         .btn-primary { background: var(--ios-blue); }
         .btn-danger { background: rgba(255, 69, 58, 0.15); color: var(--ios-red); }
 
@@ -217,7 +219,7 @@
         <div class="nav-actions">
             <button class="btn btn-primary" onclick="UI.toggleAdd(true)"><i class="fa-solid fa-plus"></i> Add</button>
             <button id="edit-btn" class="btn" onclick="Core.toggleEdit()"><i class="fa-solid fa-pen-nib"></i> Edit</button>
-            <button class="btn btn-danger" onclick="Cloud.logout()"><i class="fa-solid fa-power-off"></i></button>
+            <button class="btn" onclick="Cloud.logout()"><i class="fa-solid fa-power-off"></i></button>
             <div id="user-info"></div>
         </div>
     </nav>
@@ -229,7 +231,7 @@
     <script src="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack-all.js"></script>
     
     <script>
-        // --- 1. FIREBASE CONFIGURATION ---
+        // --- 1. FIREBASE CONFIGURATION (PASTE YOUR CONFIG HERE) ---
 const firebaseConfig = {
   apiKey: "AIzaSyArqMp658OSK8u46cjCefyVKiDJe4oe8-g",
   authDomain: "secondscreen-f7cd9.firebaseapp.com",
@@ -239,6 +241,7 @@ const firebaseConfig = {
   appId: "1:233696091813:web:734ed34d527ba05dbbf74c",
   measurementId: "G-QTQZ0ET1KJ"
 };
+        // ------------------------------------------------------------
 
         try {
             if(firebaseConfig.apiKey !== "YOUR_API_KEY_HERE") {
@@ -276,6 +279,14 @@ const firebaseConfig = {
                         document.getElementById('login-overlay').style.opacity = '1';
                     }
                 });
+            },
+            save: (data) => {
+                if(Cloud.user && db) {
+                    db.collection('users').doc(Cloud.user.uid).set({ 
+                        layout: JSON.stringify(data), 
+                        updated: Date.now() 
+                    }).catch(e => console.error("Cloud Save Failed", e));
+                }
             }
         };
 
