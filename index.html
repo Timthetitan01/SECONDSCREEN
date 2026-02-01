@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecondScreen Pro | Cloud Fixed</title>
+    <title>SecondScreen Pro | Weather Units</title>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -14,14 +14,18 @@
 
     <style>
         :root {
+            /* iOS System Colors */
             --bg-body: #000000;
             --ios-card: rgba(28, 28, 30, 0.65);
             --ios-card-border: rgba(255, 255, 255, 0.12);
             --ios-input: rgba(118, 118, 128, 0.24);
+            
             --ios-blue: #0A84FF; --ios-green: #30D158; --ios-red: #FF453A;
             --ios-orange: #FF9F0A; --ios-yellow: #FFD60A; --ios-purple: #BF5AF2;
             --ios-indigo: #5E5CE6; --ios-teal: #64D2FF;
+            
             --text-main: #FFFFFF; --text-sec: rgba(235, 235, 245, 0.6);
+            
             --blur: blur(50px) saturate(180%);
             --radius: 22px;
             --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
@@ -47,28 +51,54 @@
         }
         input:focus, textarea:focus { background: rgba(118, 118, 128, 0.4); }
 
-        nav { height: 50px; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; background: rgba(20, 20, 20, 0.4); backdrop-filter: blur(20px); border-bottom: 1px solid var(--ios-card-border); z-index: 1000; }
+        /* Navbar */
+        nav {
+            height: 50px; display: flex; justify-content: space-between; align-items: center; padding: 0 20px;
+            background: rgba(20, 20, 20, 0.4); backdrop-filter: blur(20px); border-bottom: 1px solid var(--ios-card-border); z-index: 1000;
+        }
         .brand { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
         .nav-actions { display: flex; gap: 10px; align-items: center; }
 
-        .btn { background: rgba(255, 255, 255, 0.1); border: none; color: white; padding: 6px 14px; border-radius: 99px; font-size: 13px; font-weight: 500; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px; }
+        .btn {
+            background: rgba(255, 255, 255, 0.1); border: none; color: white; padding: 6px 14px; border-radius: 99px;
+            font-size: 13px; font-weight: 500; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px;
+        }
         .btn:hover { background: rgba(255, 255, 255, 0.2); }
+        .btn:active { transform: scale(0.95); opacity: 0.8; }
         .btn-primary { background: var(--ios-blue); }
         .btn-danger { background: rgba(255, 69, 58, 0.15); color: var(--ios-red); }
 
+        /* Auth Profile */
         .user-pill { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.3); padding: 4px 12px 4px 4px; border-radius: 99px; cursor: pointer; }
         .user-avatar { width: 24px; height: 24px; border-radius: 50%; background: #555; }
         .user-name { font-size: 12px; font-weight: 500; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+        /* Dashboard */
         #dashboard-wrapper { flex: 1; padding: 20px; overflow-y: auto; overflow-x: hidden; cursor: default; }
-        .grid-stack-item { overflow: visible !important; }
-        .grid-stack-item-content { background: var(--ios-card) !important; backdrop-filter: var(--blur) !important; border: 1px solid var(--ios-card-border) !important; border-radius: var(--radius) !important; padding: 16px; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.2); overflow: hidden; }
 
-        .remove-widget { position: absolute; top: -10px; right: -10px; width: 26px; height: 26px; background: #8e8e93; border: 2px solid var(--bg-body); border-radius: 50%; color: white; display: none; justify-content: center; align-items: center; font-size: 12px; cursor: pointer; z-index: 9999; box-shadow: 0 2px 6px rgba(0,0,0,0.4); }
+        /* Grid Items */
+        .grid-stack-item { overflow: visible !important; }
+        .grid-stack-item-content {
+            background: var(--ios-card) !important; backdrop-filter: var(--blur) !important;
+            border: 1px solid var(--ios-card-border) !important; border-radius: var(--radius) !important;
+            padding: 16px; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.2); overflow: hidden;
+        }
+
+        /* Edit Mode Styles */
+        .remove-widget {
+            position: absolute; top: -10px; right: -10px; width: 26px; height: 26px;
+            background: #8e8e93; border: 2px solid var(--bg-body); border-radius: 50%;
+            color: white; display: none; justify-content: center; align-items: center;
+            font-size: 12px; cursor: pointer; z-index: 9999; box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+        }
         .editing .remove-widget { display: flex; animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .editing .grid-stack-item-content { cursor: grab; animation: jiggle 0.3s infinite ease-in-out; border-color: var(--ios-blue) !important; }
         .editing .grid-stack-item-content:active { cursor: grabbing; }
-        .editing input, .editing textarea { cursor: text !important; }
+        .editing input, .editing textarea { cursor: text !important; } /* Keep inputs typable */
+
+        /* Weather Edit Mode Highlight */
+        .editing .weather-temp { cursor: pointer; color: var(--ios-blue) !important; text-decoration: underline; text-decoration-style: dotted; }
+        .editing .weather-temp::after { content: ' (Click to Switch)'; font-size: 10px; display: block; opacity: 0.7; text-decoration: none; }
 
         @keyframes jiggle { 0% { transform: rotate(-0.8deg); } 50% { transform: rotate(0.8deg); } 100% { transform: rotate(-0.8deg); } }
         @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
@@ -77,7 +107,9 @@
         .w-label { font-size: 11px; font-weight: 600; color: var(--ios-blue); text-transform: uppercase; letter-spacing: 0.5px; }
         .w-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
 
-        /* Widget CSS */
+        /* --- WIDGET STYLES --- */
+        
+        /* Battery */
         .batt-container { display: flex; align-items: center; justify-content: center; height: 100%; gap: 15px; }
         .batt-icon-shell { width: 50px; height: 26px; border: 3px solid var(--text-sec); border-radius: 6px; padding: 2px; position: relative; }
         .batt-icon-shell::after { content:''; position: absolute; right: -6px; top: 6px; width: 3px; height: 8px; background: var(--text-sec); border-radius: 0 2px 2px 0; }
@@ -85,20 +117,24 @@
         .batt-text { font-size: 28px; font-weight: 600; }
         .batt-state { font-size: 11px; color: var(--text-sec); text-align: center; margin-top: 5px; }
 
+        /* Password */
         .pass-display { font-family: monospace; font-size: 16px; text-align: center; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-bottom: 10px; color: var(--ios-green); word-break: break-all; }
         .pass-controls { display: flex; gap: 10px; align-items: center; }
         
+        /* Clipboard History */
         .clip-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
         .clip-item { background: rgba(255,255,255,0.05); padding: 8px; border-radius: 8px; font-size: 11px; cursor: pointer; color: var(--text-sec); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .clip-item:hover { background: rgba(255,255,255,0.1); color: white; }
         .clip-item:active { transform: scale(0.98); }
 
+        /* Event Timer */
         .timer-container { display: flex; flex-direction: column; justify-content: center; height: 100%; cursor: pointer; }
         .timer-big { font-size: 36px; font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; line-height: 1; margin-bottom: 5px; }
         .timer-label { font-size: 12px; color: var(--text-sec); text-align: center; }
         .timer-bar { height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 10px; overflow: hidden; }
         .timer-fill { height: 100%; background: var(--ios-orange); width: 100%; transition: width 1s linear; }
 
+        /* Tasks */
         .task-input-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
         .task-list { flex: 1; overflow-y: auto; padding-right: 2px; }
         .task-item { display: flex; align-items: center; gap: 10px; padding: 10px 8px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1); border-radius: 8px; animation: slideIn 0.2s ease-out; }
@@ -109,14 +145,17 @@
         .task-check { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #636366; display: flex; align-items: center; justify-content: center; transition: 0.2s; flex-shrink: 0; color: transparent; font-size: 10px; }
         .task-delete { color: var(--text-sec); opacity: 0; transition: 0.2s; font-size: 12px; padding: 4px; }
         .task-item:hover .task-delete { opacity: 1; }
+        .task-delete:hover { color: var(--ios-red); transform: scale(1.1); }
         .task-empty { text-align: center; color: var(--text-sec); font-size: 12px; margin-top: 20px; font-style: italic; opacity: 0.7; }
 
+        /* Calculator */
         .calc-screen { text-align:right; font-size:42px; font-weight:200; margin-bottom:10px; height:50px; white-space:nowrap; overflow:hidden; }
         .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; flex: 1; }
         .calc-btn { background: rgba(255,255,255,0.1); border:none; color:white; border-radius:50px; font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
         .calc-btn:active { background: rgba(255,255,255,0.3); }
         .calc-orange { background: var(--ios-orange); font-weight: 600; }
         
+        /* Standard Widgets */
         .clock-container { display: flex; flex-direction: column; justify-content: center; height: 100%; text-align: center; }
         .time-big { font-size: 48px; font-weight: 200; letter-spacing: -1px; line-height: 1; margin-bottom: 5px; white-space: nowrap; }
         .date-sub { font-size: 15px; color: var(--ios-red); font-weight: 500; text-transform: uppercase; }
@@ -210,9 +249,9 @@
     <script src="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack-all.js"></script>
     
     <script>
-        // --- 1. FIREBASE CONFIGURATION ---
+        // --- 1. FIREBASE CONFIGURATION (PASTE YOUR CONFIG HERE) ---
+        // ------------------------------------------------------------
         const firebaseConfig = {
-            // PASTE YOUR FIREBASE CONFIG HERE
             apiKey: "YOUR_API_KEY_HERE",
             authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
             projectId: "YOUR_PROJECT_ID",
@@ -220,8 +259,8 @@
             messagingSenderId: "SENDER_ID",
             appId: "APP_ID"
         };
+        // ------------------------------------------------------------
 
-        // Initialize Firebase Safely
         try {
             if(firebaseConfig.apiKey !== "YOUR_API_KEY_HERE") {
                 firebase.initializeApp(firebaseConfig);
@@ -231,11 +270,10 @@
             }
         } catch(e) { console.warn("Firebase not configured."); }
 
-        // --- 2. CLOUD LOGIC ---
         const Cloud = {
             user: null,
             login: () => {
-                if(!auth) return alert("Please configure Firebase in the code first.");
+                if(!auth) return alert("Firebase not configured.");
                 auth.signInWithPopup(provider).then(res => {
                     Cloud.user = res.user;
                     Cloud.updateUI();
@@ -382,7 +420,6 @@
                     Core.saveLayout();
                 } catch(e) { alert("Clipboard permission required"); }
             },
-            // Music Library Logic
             addMusic: (id) => {
                 let url = prompt("Paste YouTube Music Link (Song or Playlist):");
                 if(!url) return;
@@ -404,24 +441,52 @@
                 else { iframe.style.display = 'none'; setup.style.display = 'flex'; }
                 Core.saveLayout();
             },
-            deleteMusic: (id) => { const select = document.getElementById(`ms-sel-${id}`); if(select.selectedIndex > 0) { select.remove(select.selectedIndex); Utils.changeMusic(id); Core.saveLayout(); } }
+            deleteMusic: (id) => { const select = document.getElementById(`ms-sel-${id}`); if(select.selectedIndex > 0) { select.remove(select.selectedIndex); Utils.changeMusic(id); Core.saveLayout(); } },
+            
+            // --- UPDATED WEATHER LOGIC (F default, Toggle in Edit) ---
+            initWeather: (id, savedData) => {
+                const el = document.getElementById(`temp-${id}`);
+                const widget = el.closest('.grid-stack-item');
+                let unit = savedData && savedData.unit ? savedData.unit : 'F';
+                widget.setAttribute('data-unit', unit);
+
+                navigator.geolocation.getCurrentPosition(pos => {
+                    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&current_weather=true`)
+                    .then(r=>r.json()).then(d => {
+                        const raw = d.current_weather.temperature;
+                        widget.setAttribute('data-raw-temp', raw);
+                        Utils.renderWeather(id);
+                    });
+                });
+
+                el.onclick = () => {
+                    if(document.body.classList.contains('editing')) {
+                        let u = widget.getAttribute('data-unit');
+                        u = u === 'F' ? 'C' : 'F';
+                        widget.setAttribute('data-unit', u);
+                        Utils.renderWeather(id);
+                        Core.saveLayout();
+                    }
+                };
+            },
+            renderWeather: (id) => {
+                const el = document.getElementById(`temp-${id}`);
+                const widget = el.closest('.grid-stack-item');
+                const raw = parseFloat(widget.getAttribute('data-raw-temp'));
+                const unit = widget.getAttribute('data-unit');
+                if(isNaN(raw)) return;
+                let val = raw;
+                if(unit === 'F') val = (raw * 9/5) + 32;
+                el.innerText = Math.round(val) + '°' + unit;
+            }
         };
 
         const Core = (() => {
             let grid = null, editing = false;
 
             const init = () => {
-                grid = GridStack.init({ 
-                    column: 12, 
-                    cellHeight: '85px', 
-                    margin: 12, 
-                    float: true, 
-                    animate: true,
-                    disableDrag: true, 
-                    disableResize: true
-                });
+                grid = GridStack.init({ column: 12, cellHeight: '85px', margin: 12, float: true, animate: true, disableDrag: true, disableResize: true });
                 
-                // Auth Check
                 if(typeof auth !== 'undefined') {
                     auth.onAuthStateChanged(user => {
                         Cloud.user = user;
@@ -453,7 +518,6 @@
             const createWidget = (type, w, h, x, y, savedData) => {
                 const id = 'w-' + Math.random().toString(36).substr(2, 9);
                 const content = Templates.get(type, id, savedData);
-                // Fail-safe for invalid/missing widgets
                 if (content === '<div>Error</div>') return;
 
                 const el = grid.addWidget({ w, h, x, y, content, minW: 2, minH: 2 });
@@ -462,7 +526,7 @@
                 
                 if (type === 'todo') UI.initTodo(id, savedData);
                 if (type === 'notes') document.getElementById(`nt-${id}`).value = savedData || "";
-                if (type === 'weather') UI.initWeather(id);
+                if (type === 'weather') Utils.initWeather(id, savedData);
                 if (type === 'countdown' && savedData) Utils.updateCountdown(id);
                 if (type === 'calendar') Utils.initCalendar(id);
                 if (type === 'battery') Utils.updateBattery(id);
@@ -505,10 +569,16 @@
                     if (type === 'clipboard') { data = Array.from(el.querySelectorAll('.clip-item')).map(i => i.innerText); }
                     if (type === 'timer') { const wrap = el.querySelector('.timer-container'); data = { end: wrap.getAttribute('data-end'), label: el.querySelector('.timer-label').innerText }; }
                     if (type === 'music') { const select = el.querySelector('select'); const library = Array.from(select.options).slice(1).map(opt => ({name: opt.text, url: opt.value})); data = { library, current: select.value }; }
+                    
+                    // Save Weather Unit
+                    if (type === 'weather') {
+                        const unit = el.getAttribute('data-unit') || 'F';
+                        data = { unit };
+                    }
 
                     return { x: el.gridstackNode.x, y: el.gridstackNode.y, w: el.gridstackNode.w, h: el.gridstackNode.h, type, data };
                 });
-                localStorage.setItem('ss_fixed_v2', JSON.stringify(items));
+                localStorage.setItem('ss_fixed_v3', JSON.stringify(items));
                 Cloud.save(items);
             };
 
@@ -519,8 +589,9 @@
                         if(doc.exists) {
                             try {
                                 const cloudData = JSON.parse(doc.data().layout);
-                                cloudData.forEach(s => createWidget(s.type, s.w, s.h, s.x, s.y, s.data));
-                            } catch(e) { loadDefaults(); } // Corrupt data fallback
+                                if(cloudData.length > 0) cloudData.forEach(s => createWidget(s.type, s.w, s.h, s.x, s.y, s.data));
+                                else loadDefaults();
+                            } catch(e) { loadDefaults(); }
                         } else {
                             loadDefaults();
                             saveLayout(); 
@@ -532,8 +603,8 @@
             };
 
             const loadLocal = () => {
-                let saved = JSON.parse(localStorage.getItem('ss_fixed_v2'));
-                if (saved) saved.forEach(s => createWidget(s.type, s.w, s.h, s.x, s.y, s.data));
+                let saved = JSON.parse(localStorage.getItem('ss_fixed_v3'));
+                if (saved && saved.length > 0) saved.forEach(s => createWidget(s.type, s.w, s.h, s.x, s.y, s.data));
                 else loadDefaults();
             };
 
@@ -567,9 +638,7 @@
                 if(input) input.onkeypress = (e) => { if(e.key==='Enter'&&e.target.value.trim()){ add(e.target.value,false); e.target.value=''; Core.saveLayout(); } };
                 if(data) data.forEach(d => { if(!d.d) add(d.t, false); }); check();
                 UI.checkEmpty = check;
-            },
-            initNotes: (id, data) => { const el = document.getElementById(`nt-${id}`); if(el) { if(data) el.value = data; el.oninput = () => Core.saveLayout(); } },
-            initWeather: (id) => { navigator.geolocation.getCurrentPosition(pos => { fetch(`https://api.open-meteo.com/v1/forecast?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&current_weather=true`).then(r=>r.json()).then(d => { const e = document.getElementById(`temp-${id}`); if(e) e.innerText = Math.round(d.current_weather.temperature) + '°'; }); }); }
+            }
         };
 
         const Templates = {
@@ -582,7 +651,7 @@
                     links: wrap('Quick Links', `<div class="deck-grid">${getLink(0,data?.[0])}${getLink(1,data?.[1])}${getLink(2,data?.[2])}</div>`),
                     countdown: `<div class="remove-widget">✕</div><div class="count-container" id="count-wrap-${id}" onclick="Utils.setCountdown('${id}')" data-target='${data?JSON.stringify(data):""}'><div class="count-days" id="cd-val-${id}">${data?'--':'+'}</div><div class="count-label" id="cd-lbl-${id}">${data?'Loading...':'Set Date'}</div><div class="count-progress"><div class="count-fill" id="cd-bar-${id}"></div></div></div>`,
                     calc: wrap('Calculator', `<div id="scr-${id}" class="calc-screen">0</div><div class="calc-grid">${['C','÷','×','7','8','9','4','5','6','1','2','3','0','.','='].map(k=>`<button class="calc-btn ${['C','÷','×','='].includes(k)?'calc-orange':''}" onclick="Utils.calc('${id}','${k}')">${k}</button>`).join('')}</div>`),
-                    weather: wrap('Weather', `<div style="display:flex;align-items:center;justify-content:center;gap:15px;height:100%"><i class="fa-solid fa-cloud-sun" style="font-size:32px;color:var(--text-main)"></i><div><div id="temp-${id}" style="font-size:28px;font-weight:400">--°</div><div style="font-size:11px;color:var(--text-sec)">Mostly Clear</div></div></div>`),
+                    weather: wrap('Weather', `<div style="display:flex;align-items:center;justify-content:center;gap:15px;height:100%"><i class="fa-solid fa-cloud-sun" style="font-size:32px;color:var(--text-main)"></i><div><div id="temp-${id}" class="weather-temp" style="font-size:28px;font-weight:400">--°</div><div style="font-size:11px;color:var(--text-sec)">Mostly Clear</div></div></div>`),
                     todo: wrap('Reminders', `<div class="task-input-row"><input id="in-${id}" class="task-input" placeholder="Add task..."></div><div id="list-${id}" class="task-list"></div><div id="empty-${id}" class="task-empty">No tasks</div>`),
                     notes: wrap('Notes', `<textarea id="nt-${id}" style="flex:1;resize:none;background:transparent;border:none;padding:0;font-family:inherit;font-size:14px;line-height:1.4" placeholder="Type here..." oninput="Core.saveLayout()"></textarea>`),
                     calendar: `<div class="remove-widget">✕</div><div class="cal-wrapper"><div class="cal-header"><i class="fa-solid fa-chevron-left cal-nav" onclick="Utils.changeMonth('${id}', -1)"></i><span id="cal-title-${id}" class="cal-title" onclick="Utils.resetCalendar('${id}')">Month Year</span><i class="fa-solid fa-chevron-right cal-nav" onclick="Utils.changeMonth('${id}', 1)"></i></div><div class="cal-weekdays"><span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span></div><div id="cal-grid-${id}" class="cal-grid"></div></div>`,
