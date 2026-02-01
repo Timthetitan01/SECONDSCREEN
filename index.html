@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecondScreen Pro | Calendar Added</title>
+    <title>SecondScreen Pro | Text Edit Fix</title>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -18,7 +18,7 @@
             
             --ios-blue: #0A84FF; --ios-green: #30D158; --ios-red: #FF453A;
             --ios-orange: #FF9F0A; --ios-yellow: #FFD60A; --ios-purple: #BF5AF2;
-            --ios-indigo: #5E5CE6;
+            --ios-indigo: #5E5CE6; --ios-teal: #64D2FF;
             
             --text-main: #FFFFFF; --text-sec: rgba(235, 235, 245, 0.6);
             
@@ -36,6 +36,17 @@
                 radial-gradient(circle at 80% 100%, rgba(10, 132, 255, 0.2) 0%, transparent 50%);
             color: var(--text-main); font-family: var(--font); height: 100vh; overflow: hidden; display: flex; flex-direction: column;
         }
+
+        /* --- CRITICAL FIX: Enable Text Selection --- */
+        /* Forces inputs to accept text commands (Ctrl+C/V/A) */
+        input, textarea { 
+            user-select: text !important; 
+            -webkit-user-select: text !important; 
+            cursor: text; 
+            background: var(--ios-input); border: none; border-radius: 8px; 
+            padding: 8px 12px; color: white; width: 100%; font-size: 13px; outline: none;
+        }
+        input:focus, textarea:focus { background: rgba(118, 118, 128, 0.4); }
 
         /* Navbar */
         nav {
@@ -76,17 +87,48 @@
         }
         .editing .remove-widget { display: flex; animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .editing .grid-stack-item-content { animation: jiggle 0.3s infinite ease-in-out; border-color: var(--ios-blue) !important; }
+        
+        /* Drag Handle Indicator */
+        .editing .w-header { cursor: grab; background: rgba(255,255,255,0.05); border-radius: 4px; padding-left: 4px; padding-right: 4px; }
+        .editing .w-header:active { cursor: grabbing; }
+
         @keyframes jiggle { 0% { transform: rotate(-0.8deg); } 50% { transform: rotate(0.8deg); } 100% { transform: rotate(-0.8deg); } }
         @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
 
-        .w-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; height: 16px; flex-shrink: 0; }
+        .w-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; height: 16px; flex-shrink: 0; transition: 0.2s; }
         .w-label { font-size: 11px; font-weight: 600; color: var(--ios-blue); text-transform: uppercase; letter-spacing: 0.5px; }
         .w-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
 
-        /* --- Task Widget --- */
+        /* --- NEW WIDGET CSS --- */
+        
+        /* Battery */
+        .batt-container { display: flex; align-items: center; justify-content: center; height: 100%; gap: 15px; }
+        .batt-icon-shell { width: 50px; height: 26px; border: 3px solid var(--text-sec); border-radius: 6px; padding: 2px; position: relative; }
+        .batt-icon-shell::after { content:''; position: absolute; right: -6px; top: 6px; width: 3px; height: 8px; background: var(--text-sec); border-radius: 0 2px 2px 0; }
+        .batt-fill { height: 100%; background: var(--ios-green); border-radius: 2px; width: 0%; transition: width 0.5s; }
+        .batt-text { font-size: 28px; font-weight: 600; }
+        .batt-state { font-size: 11px; color: var(--text-sec); text-align: center; margin-top: 5px; }
+
+        /* Password */
+        .pass-display { font-family: monospace; font-size: 16px; text-align: center; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-bottom: 10px; user-select: text !important; cursor: text; letter-spacing: 1px; color: var(--ios-green); }
+        .pass-controls { display: flex; gap: 10px; align-items: center; }
+        
+        /* Clipboard History */
+        .clip-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+        .clip-item { background: rgba(255,255,255,0.05); padding: 8px; border-radius: 8px; font-size: 11px; cursor: pointer; color: var(--text-sec); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .clip-item:hover { background: rgba(255,255,255,0.1); color: white; }
+        .clip-item:active { transform: scale(0.98); }
+
+        /* Event Timer */
+        .timer-container { display: flex; flex-direction: column; justify-content: center; height: 100%; cursor: pointer; }
+        .timer-big { font-size: 36px; font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; line-height: 1; margin-bottom: 5px; }
+        .timer-label { font-size: 12px; color: var(--text-sec); text-align: center; }
+        .timer-bar { height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 10px; overflow: hidden; }
+        .timer-fill { height: 100%; background: var(--ios-orange); width: 100%; transition: width 1s linear; }
+
+        /* --- EXISTING WIDGETS --- */
         .task-input-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-        .task-input { background: var(--ios-input); border: none; border-radius: 8px; padding: 8px 12px; color: white; flex: 1; font-size: 13px; transition: 0.2s; outline: none; }
-        .task-input:focus { background: rgba(118,118,128,0.4); }
+        /* task-input handled by global input rule */
         .task-list { flex: 1; overflow-y: auto; padding-right: 2px; }
         .task-item { display: flex; align-items: center; gap: 10px; padding: 10px 8px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1); border-radius: 8px; animation: slideIn 0.2s ease-out; }
         @keyframes slideIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
@@ -131,8 +173,6 @@
         .count-label { font-size: 12px; color: var(--text-sec); font-weight: 500; }
         .count-progress { height: 4px; background: rgba(255,255,255,0.1); margin-top: 10px; border-radius: 2px; width: 80%; margin-left: auto; margin-right: auto; overflow: hidden; }
         .count-fill { height: 100%; background: var(--ios-indigo); width: 0%; transition: width 1s ease; }
-
-        input, textarea { background: var(--ios-input); border: none; color: white; padding: 8px 12px; border-radius: 10px; width: 100%; font-size: 13px; outline: none; }
 
         /* --- CALENDAR WIDGET --- */
         .cal-wrapper { height: 100%; display: flex; flex-direction: column; }
@@ -207,6 +247,19 @@
             <button class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;" onclick="UI.toggleAdd(false)">Close</button>
         </div>
         <div class="modal-grid">
+            <div class="add-card" onclick="Core.createWidget('timer', 3, 2)">
+                <i class="fa-solid fa-hourglass-end add-icon" style="color:var(--ios-orange)"></i><span class="add-label">Timer</span>
+            </div>
+            <div class="add-card" onclick="Core.createWidget('battery', 3, 2)">
+                <i class="fa-solid fa-battery-half add-icon" style="color:var(--ios-green)"></i><span class="add-label">Battery</span>
+            </div>
+            <div class="add-card" onclick="Core.createWidget('password', 4, 3)">
+                <i class="fa-solid fa-key add-icon" style="color:var(--ios-purple)"></i><span class="add-label">Passwords</span>
+            </div>
+            <div class="add-card" onclick="Core.createWidget('clipboard', 3, 4)">
+                <i class="fa-solid fa-clipboard add-icon" style="color:var(--ios-teal)"></i><span class="add-label">Clipboard</span>
+            </div>
+
             <div class="add-card" onclick="Core.createWidget('calendar', 4, 4)">
                 <i class="fa-regular fa-calendar add-icon" style="color:var(--ios-red)"></i><span class="add-label">Calendar</span>
             </div>
@@ -302,62 +355,113 @@
             
             // --- CALENDAR LOGIC ---
             initCalendar: (id) => {
-                // Initialize state for this specific calendar instance
-                if(!window[`cal_date_${id}`]) {
-                    window[`cal_date_${id}`] = new Date();
-                }
+                if(!window[`cal_date_${id}`]) { window[`cal_date_${id}`] = new Date(); }
                 Utils.renderCalendar(id);
             },
-            
             changeMonth: (id, offset) => {
                 const currentDate = window[`cal_date_${id}`];
-                // Update the month
                 currentDate.setMonth(currentDate.getMonth() + offset);
-                // Handle "Return to Today" logic separately if needed, but this just shifts view
                 Utils.renderCalendar(id);
             },
-            
             resetCalendar: (id) => {
-                window[`cal_date_${id}`] = new Date(); // Reset to today
+                window[`cal_date_${id}`] = new Date(); 
                 Utils.renderCalendar(id);
             },
-
             renderCalendar: (id) => {
                 const date = window[`cal_date_${id}`];
                 const year = date.getFullYear();
                 const month = date.getMonth();
-                
-                // Update Header
                 document.getElementById(`cal-title-${id}`).innerText = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-                
                 const daysContainer = document.getElementById(`cal-grid-${id}`);
                 daysContainer.innerHTML = '';
-                
                 const firstDayIndex = new Date(year, month, 1).getDay();
                 const lastDay = new Date(year, month + 1, 0).getDate();
-                
                 const today = new Date();
-                
-                // Empty slots for prev month
                 for (let i = 0; i < firstDayIndex; i++) {
-                    const empty = document.createElement('div');
-                    empty.classList.add('cal-day', 'empty');
-                    daysContainer.appendChild(empty);
+                    const empty = document.createElement('div'); empty.classList.add('cal-day', 'empty'); daysContainer.appendChild(empty);
                 }
-                
-                // Days
                 for (let i = 1; i <= lastDay; i++) {
-                    const dayEl = document.createElement('div');
-                    dayEl.classList.add('cal-day');
-                    dayEl.innerText = i;
-                    
-                    // Check if it's today
-                    if (i === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
-                        dayEl.classList.add('today');
-                    }
-                    
+                    const dayEl = document.createElement('div'); dayEl.classList.add('cal-day'); dayEl.innerText = i;
+                    if (i === today.getDate() && month === today.getMonth() && year === today.getFullYear()) { dayEl.classList.add('today'); }
                     daysContainer.appendChild(dayEl);
                 }
+            },
+
+            // --- NEW WIDGET UTILS ---
+            
+            // Timer
+            setTimer: (id) => {
+                const time = prompt("Enter Time (e.g. 5:00 PM or 17:00):");
+                if(!time) return;
+                const d = new Date();
+                const [timeStr, mod] = time.split(' ');
+                let [h, m] = timeStr.split(':');
+                if (h === '12') h = '00';
+                if (mod && (mod.toLowerCase() === 'pm')) h = parseInt(h, 10) + 12;
+                d.setHours(h, m, 0, 0);
+                if(d < new Date()) { alert("Time passed!"); return; }
+                
+                document.getElementById(`timer-wrap-${id}`).setAttribute('data-end', d.getTime());
+                document.getElementById(`timer-lbl-${id}`).innerText = `Until ${time}`;
+                Utils.updateTimer(id);
+                Core.saveLayout();
+            },
+            updateTimer: (id) => {
+                const el = document.getElementById(`timer-wrap-${id}`);
+                if(!el) return;
+                const end = parseInt(el.getAttribute('data-end'));
+                if(!end) return;
+                const diff = end - Date.now();
+                if(diff <= 0) { document.getElementById(`timer-val-${id}`).innerText = "Done"; return; }
+                
+                const hr = Math.floor((diff % (86400000)) / (3600000));
+                const mn = Math.floor((diff % (3600000)) / 60000);
+                document.getElementById(`timer-val-${id}`).innerText = `${hr}h ${mn}m`;
+            },
+
+            // Battery
+            updateBattery: async (id) => {
+                if('getBattery' in navigator) {
+                    const batt = await navigator.getBattery();
+                    const up = () => {
+                        const lvl = Math.round(batt.level * 100);
+                        document.getElementById(`batt-val-${id}`).innerText = lvl + '%';
+                        document.getElementById(`batt-fill-${id}`).style.width = lvl + '%';
+                        document.getElementById(`batt-st-${id}`).innerText = batt.charging ? 'Charging ⚡' : 'On Battery';
+                        document.getElementById(`batt-fill-${id}`).style.background = batt.charging ? 'var(--ios-green)' : (lvl<20?'var(--ios-red)':'var(--text-main)');
+                    };
+                    up();
+                    batt.addEventListener('levelchange', up);
+                    batt.addEventListener('chargingchange', up);
+                } else {
+                    document.getElementById(`batt-st-${id}`).innerText = "Not Supported";
+                }
+            },
+
+            // Password
+            genPass: (id) => {
+                const len = document.getElementById(`rng-${id}`).value;
+                const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%^&*";
+                let pass = "";
+                for(let i=0; i<len; i++) pass += chars.charAt(Math.floor(Math.random() * chars.length));
+                document.getElementById(`pass-${id}`).innerText = pass;
+                document.getElementById(`lbl-${id}`).innerText = `Length: ${len}`;
+            },
+
+            // Clipboard
+            saveClip: async (id) => {
+                try {
+                    const text = await navigator.clipboard.readText();
+                    if(!text) return;
+                    const list = document.getElementById(`clip-${id}`);
+                    const item = document.createElement('div');
+                    item.className = 'clip-item';
+                    item.innerText = text;
+                    item.onclick = () => { navigator.clipboard.writeText(text); alert("Copied!"); };
+                    list.prepend(item);
+                    if(list.children.length > 5) list.lastChild.remove();
+                    Core.saveLayout();
+                } catch(e) { alert("Clipboard permission required"); }
             }
         };
 
@@ -365,14 +469,29 @@
             let grid = null, editing = false;
 
             const init = () => {
-                grid = GridStack.init({ column: 12, cellHeight: '85px', margin: 12, float: true, animate: true });
+                // FIXED: Draggable handle to prevent conflict with inputs
+                grid = GridStack.init({ 
+                    column: 12, 
+                    cellHeight: '85px', 
+                    margin: 12, 
+                    float: true, 
+                    animate: true,
+                    disableDrag: true, // Default to locked
+                    disableResize: true,
+                    draggable: { handle: '.w-header' } // ONLY drag by header
+                });
+                
                 loadData();
                 setInterval(UI.updateTime, 1000);
                 setInterval(() => document.querySelectorAll('.count-container').forEach(el => Utils.updateCountdown(el.id.replace('count-wrap-', ''))), 60000);
                 
+                // Timer Interval
+                setInterval(() => {
+                    document.querySelectorAll('.timer-container').forEach(el => Utils.updateTimer(el.id.replace('timer-wrap-','')));
+                }, 1000);
+
                 // CLICK BACKGROUND LOGIC
                 document.getElementById('dashboard-wrapper').addEventListener('click', (e) => {
-                    // Only exit edit mode if we are editing AND the click target is NOT a grid item (widget)
                     if (editing && !e.target.closest('.grid-stack-item')) {
                         Core.toggleEdit();
                     }
@@ -399,7 +518,6 @@
                 const content = Templates.get(type, id, savedData);
                 const el = grid.addWidget({ w, h, x, y, content, minW: 2, minH: 2 });
                 
-                // Remove Button
                 const removeBtn = el.querySelector('.remove-widget');
                 if(removeBtn) {
                     el.appendChild(removeBtn); 
@@ -410,8 +528,22 @@
                 if (type === 'notes') UI.initNotes(id, savedData);
                 if (type === 'weather') UI.initWeather(id);
                 if (type === 'countdown' && savedData) Utils.updateCountdown(id);
-                // Initialize Calendar
                 if (type === 'calendar') Utils.initCalendar(id);
+                
+                // Init New Widgets
+                if (type === 'battery') Utils.updateBattery(id);
+                if (type === 'clipboard' && savedData) {
+                    savedData.forEach(t => {
+                        const i = document.createElement('div'); i.className='clip-item'; i.innerText=t;
+                        i.onclick = () => { navigator.clipboard.writeText(t); alert("Copied!"); };
+                        document.getElementById(`clip-${id}`).appendChild(i);
+                    });
+                }
+                if (type === 'timer' && savedData) {
+                    const wrap = document.getElementById(`timer-wrap-${id}`);
+                    wrap.setAttribute('data-end', savedData.end);
+                    document.getElementById(`timer-lbl-${id}`).innerText = savedData.label;
+                }
 
                 UI.toggleAdd(false);
                 saveLayout();
@@ -430,23 +562,32 @@
                     if (type === 'countdown') {
                         data = JSON.parse(el.querySelector('.count-container').getAttribute('data-target') || 'null');
                     }
+                    // Save New Widgets
+                    if (type === 'clipboard') {
+                        data = Array.from(el.querySelectorAll('.clip-item')).map(i => i.innerText);
+                    }
+                    if (type === 'timer') {
+                        const wrap = el.querySelector('.timer-container');
+                        data = { end: wrap.getAttribute('data-end'), label: el.querySelector('.timer-label').innerText };
+                    }
+
                     return { x: el.gridstackNode.x, y: el.gridstackNode.y, w: el.gridstackNode.w, h: el.gridstackNode.h, type, data };
                 });
-                localStorage.setItem('ss_cal_v1', JSON.stringify(items));
+                localStorage.setItem('ss_ultimate_v1', JSON.stringify(items));
             };
 
             const loadData = () => {
-                let saved = JSON.parse(localStorage.getItem('ss_cal_v1'));
-                if(!saved) saved = JSON.parse(localStorage.getItem('ss_smart_v1'));
+                let saved = JSON.parse(localStorage.getItem('ss_ultimate_v1'));
+                if(!saved) saved = JSON.parse(localStorage.getItem('ss_cal_v1'));
 
                 if (saved) saved.forEach(s => createWidget(s.type, s.w, s.h, s.x, s.y, s.data));
                 else {
-                    createWidget('calendar', 4, 4, 0, 0);
-                    createWidget('links', 4, 2, 4, 0);
-                    createWidget('clock', 4, 2, 4, 2);
-                    createWidget('weather', 4, 2, 8, 0);
+                    createWidget('clock', 4, 2, 4, 0);
+                    createWidget('links', 4, 2, 0, 0);
+                    createWidget('battery', 4, 2, 8, 0);
+                    createWidget('todo', 4, 4, 0, 2);
+                    createWidget('calendar', 4, 4, 4, 2);
                     createWidget('music', 4, 2, 8, 2);
-                    createWidget('todo', 4, 4, 0, 4);
                 }
             };
 
@@ -568,7 +709,6 @@
                     music: wrap('Music', `<div style="text-align:center;display:flex;flex-direction:column;justify-content:center;height:100%"><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="width:40px;height:40px;background:#333;border-radius:6px;display:flex;align-items:center;justify-content:center"><i class="fa-brands fa-spotify" style="color:#1DB954;font-size:24px"></i></div><div style="text-align:left"><div style="font-weight:600;font-size:12px">Not Playing</div><div style="font-size:10px;color:var(--text-sec)">iPhone</div></div></div><div style="display:flex;justify-content:center;gap:20px;font-size:20px;color:var(--text-main)"><i class="fa-solid fa-backward-step"></i><i class="fa-solid fa-play"></i><i class="fa-solid fa-forward-step"></i></div></div>`),
                     notes: wrap('Notes', `<textarea id="nt-${id}" style="flex:1;resize:none;background:transparent;border:none;padding:0;font-family:inherit;font-size:14px;line-height:1.4" placeholder="New Note..."></textarea>`),
                     
-                    // CALENDAR WIDGET HTML
                     calendar: `<div class="remove-widget">✕</div>
                         <div class="cal-wrapper">
                             <div class="cal-header">
@@ -580,7 +720,45 @@
                                 <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
                             </div>
                             <div id="cal-grid-${id}" class="cal-grid"></div>
-                        </div>`
+                        </div>`,
+
+                    // --- NEW WIDGETS ---
+                    
+                    // Timer
+                    timer: wrap('Event Timer', `
+                        <div class="timer-container" id="timer-wrap-${id}" onclick="Utils.setTimer('${id}')">
+                            <div id="timer-val-${id}" class="timer-big">--:--</div>
+                            <div id="timer-lbl-${id}" class="timer-label">Click to Set Time</div>
+                            <div class="timer-bar"><div id="timer-bar-${id}" class="timer-fill"></div></div>
+                        </div>
+                    `),
+
+                    // Battery
+                    battery: wrap('Battery', `
+                        <div class="batt-container">
+                            <div class="batt-icon-shell"><div class="batt-fill" id="batt-fill-${id}"></div></div>
+                            <div>
+                                <div id="batt-val-${id}" class="batt-text">--%</div>
+                                <div id="batt-st-${id}" class="batt-state">Reading...</div>
+                            </div>
+                        </div>
+                    `),
+
+                    // Password
+                    password: wrap('Passwords', `
+                        <div id="pass-${id}" class="pass-display">CLICK GEN</div>
+                        <div class="pass-controls">
+                            <span id="lbl-${id}" style="font-size:11px; color:var(--text-sec); width:60px">Length: 16</span>
+                            <input type="range" id="rng-${id}" min="8" max="32" value="16" style="flex:1" oninput="Utils.genPass('${id}')">
+                            <button class="btn" onclick="Utils.genPass('${id}')">Gen</button>
+                        </div>
+                    `),
+
+                    // Clipboard
+                    clipboard: wrap('Clipboard', `
+                        <button class="btn btn-primary" style="width:100%; justify-content:center" onclick="Utils.saveClip('${id}')"><i class="fa-solid fa-paste"></i> Save Recent</button>
+                        <div id="clip-${id}" class="clip-list"></div>
+                    `)
                 };
                 return map[type] || `<div>Error: ${type}</div>`;
             }
