@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecondScreen Pro | Text Edit Fix</title>
+    <title>SecondScreen Pro | Free Drag</title>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -38,7 +38,6 @@
         }
 
         /* --- CRITICAL FIX: Enable Text Selection --- */
-        /* Forces inputs to accept text commands (Ctrl+C/V/A) */
         input, textarea { 
             user-select: text !important; 
             -webkit-user-select: text !important; 
@@ -78,7 +77,19 @@
             padding: 16px; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.2); overflow: hidden;
         }
 
-        /* Edit Mode X Button */
+        /* --- DRAG LOGIC CSS --- */
+        
+        /* When editing, the whole card shows the grab cursor */
+        .editing .grid-stack-item-content { 
+            cursor: grab; 
+            animation: jiggle 0.3s infinite ease-in-out; 
+            border-color: var(--ios-blue) !important; 
+        }
+        .editing .grid-stack-item-content:active { cursor: grabbing; }
+
+        /* Inputs should still use text cursor even in edit mode */
+        .editing input, .editing textarea { cursor: text !important; }
+
         .remove-widget {
             position: absolute; top: -10px; right: -10px; width: 26px; height: 26px;
             background: #8e8e93; border: 2px solid var(--bg-body); border-radius: 50%;
@@ -86,12 +97,7 @@
             font-size: 12px; cursor: pointer; z-index: 9999; box-shadow: 0 2px 6px rgba(0,0,0,0.4);
         }
         .editing .remove-widget { display: flex; animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .editing .grid-stack-item-content { animation: jiggle 0.3s infinite ease-in-out; border-color: var(--ios-blue) !important; }
         
-        /* Drag Handle Indicator */
-        .editing .w-header { cursor: grab; background: rgba(255,255,255,0.05); border-radius: 4px; padding-left: 4px; padding-right: 4px; }
-        .editing .w-header:active { cursor: grabbing; }
-
         @keyframes jiggle { 0% { transform: rotate(-0.8deg); } 50% { transform: rotate(0.8deg); } 100% { transform: rotate(-0.8deg); } }
         @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
 
@@ -128,7 +134,6 @@
 
         /* --- EXISTING WIDGETS --- */
         .task-input-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-        /* task-input handled by global input rule */
         .task-list { flex: 1; overflow-y: auto; padding-right: 2px; }
         .task-item { display: flex; align-items: center; gap: 10px; padding: 10px 8px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1); border-radius: 8px; animation: slideIn 0.2s ease-out; }
         @keyframes slideIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
@@ -469,7 +474,7 @@
             let grid = null, editing = false;
 
             const init = () => {
-                // FIXED: Draggable handle to prevent conflict with inputs
+                // FIXED: REMOVED HANDLE RESTRICTION
                 grid = GridStack.init({ 
                     column: 12, 
                     cellHeight: '85px', 
@@ -477,8 +482,8 @@
                     float: true, 
                     animate: true,
                     disableDrag: true, // Default to locked
-                    disableResize: true,
-                    draggable: { handle: '.w-header' } // ONLY drag by header
+                    disableResize: true
+                    // draggable removed here to allow full drag
                 });
                 
                 loadData();
@@ -506,10 +511,10 @@
                 const btn = document.getElementById('edit-btn');
                 if(editing) {
                     btn.innerHTML = '<i class="fa-solid fa-check"></i> Done';
-                    btn.classList.add('btn-primary'); // Make Blue
+                    btn.classList.add('btn-primary'); 
                 } else {
                     btn.innerHTML = '<i class="fa-solid fa-pen-nib"></i> Edit';
-                    btn.classList.remove('btn-primary'); // Remove Blue
+                    btn.classList.remove('btn-primary');
                 }
             };
 
@@ -573,12 +578,12 @@
 
                     return { x: el.gridstackNode.x, y: el.gridstackNode.y, w: el.gridstackNode.w, h: el.gridstackNode.h, type, data };
                 });
-                localStorage.setItem('ss_ultimate_v1', JSON.stringify(items));
+                localStorage.setItem('ss_drag_v1', JSON.stringify(items));
             };
 
             const loadData = () => {
-                let saved = JSON.parse(localStorage.getItem('ss_ultimate_v1'));
-                if(!saved) saved = JSON.parse(localStorage.getItem('ss_cal_v1'));
+                let saved = JSON.parse(localStorage.getItem('ss_drag_v1'));
+                if(!saved) saved = JSON.parse(localStorage.getItem('ss_ultimate_v1'));
 
                 if (saved) saved.forEach(s => createWidget(s.type, s.w, s.h, s.x, s.y, s.data));
                 else {
