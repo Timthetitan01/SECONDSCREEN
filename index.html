@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecondScreen Pro | Weather Units</title>
+    <title>SecondScreen Pro | Fluid</title>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -443,7 +443,6 @@
             },
             deleteMusic: (id) => { const select = document.getElementById(`ms-sel-${id}`); if(select.selectedIndex > 0) { select.remove(select.selectedIndex); Utils.changeMusic(id); Core.saveLayout(); } },
             
-            // --- UPDATED WEATHER LOGIC (F default, Toggle in Edit) ---
             initWeather: (id, savedData) => {
                 const el = document.getElementById(`temp-${id}`);
                 const widget = el.closest('.grid-stack-item');
@@ -487,6 +486,11 @@
             const init = () => {
                 grid = GridStack.init({ column: 12, cellHeight: '85px', margin: 12, float: true, animate: true, disableDrag: true, disableResize: true });
                 
+                // --- ADDED: Auto Save on Drag/Resize ---
+                grid.on('change added removed', function(event, items) {
+                    Core.saveLayout();
+                });
+
                 if(typeof auth !== 'undefined') {
                     auth.onAuthStateChanged(user => {
                         Cloud.user = user;
@@ -524,6 +528,7 @@
                 const removeBtn = el.querySelector('.remove-widget');
                 if(removeBtn) { el.appendChild(removeBtn); removeBtn.onclick = () => grid.removeWidget(el); }
                 
+                // Initialize specific widget logic
                 if (type === 'todo') UI.initTodo(id, savedData);
                 if (type === 'notes') document.getElementById(`nt-${id}`).value = savedData || "";
                 if (type === 'weather') Utils.initWeather(id, savedData);
@@ -555,7 +560,7 @@
                 }
 
                 UI.toggleAdd(false);
-                saveLayout();
+                // No save here to prevent recursive loop on load
             };
 
             const saveLayout = () => {
@@ -569,16 +574,13 @@
                     if (type === 'clipboard') { data = Array.from(el.querySelectorAll('.clip-item')).map(i => i.innerText); }
                     if (type === 'timer') { const wrap = el.querySelector('.timer-container'); data = { end: wrap.getAttribute('data-end'), label: el.querySelector('.timer-label').innerText }; }
                     if (type === 'music') { const select = el.querySelector('select'); const library = Array.from(select.options).slice(1).map(opt => ({name: opt.text, url: opt.value})); data = { library, current: select.value }; }
-                    
-                    // Save Weather Unit
-                    if (type === 'weather') {
-                        const unit = el.getAttribute('data-unit') || 'F';
-                        data = { unit };
-                    }
+                    if (type === 'weather') { const unit = el.getAttribute('data-unit') || 'F'; data = { unit }; }
 
                     return { x: el.gridstackNode.x, y: el.gridstackNode.y, w: el.gridstackNode.w, h: el.gridstackNode.h, type, data };
                 });
-                localStorage.setItem('ss_fixed_v3', JSON.stringify(items));
+                
+                // SAVE TO BOTH
+                localStorage.setItem('ss_fluid_v1', JSON.stringify(items));
                 Cloud.save(items);
             };
 
@@ -603,7 +605,7 @@
             };
 
             const loadLocal = () => {
-                let saved = JSON.parse(localStorage.getItem('ss_fixed_v3'));
+                let saved = JSON.parse(localStorage.getItem('ss_fluid_v1'));
                 if (saved && saved.length > 0) saved.forEach(s => createWidget(s.type, s.w, s.h, s.x, s.y, s.data));
                 else loadDefaults();
             };
@@ -613,6 +615,7 @@
                 createWidget('weather', 4, 2, 4, 0);
                 createWidget('todo', 4, 4, 0, 2);
                 createWidget('notes', 4, 4, 4, 2);
+                saveLayout();
             };
 
             return { init, toggleEdit, createWidget, saveLayout, reset: () => { localStorage.clear(); location.reload(); }, loadData };
@@ -643,6 +646,10 @@
 
         const Templates = {
             get: (type, id, data) => {
+                // Safety check: if type is missing or unknown, return default
+                const validTypes = ['clock', 'links', 'countdown', 'calc', 'weather', 'todo', 'notes', 'calendar', 'music', 'timer', 'battery', 'password', 'clipboard'];
+                if(!validTypes.includes(type)) return `<div>Error</div>`;
+
                 const wrap = (l, c) => `<div class="remove-widget">✕</div><div class="w-header" data-type="${type}"><span class="w-label">${l}</span></div><div class="w-content" data-type="${type}">${c}</div>`;
                 const getLink = (idx, s) => { const h = s&&s.url; const icon = h ? `<img src="https://www.google.com/s2/favicons?domain=${s.domain}&sz=64" class="deck-favicon"><span class="deck-label">${s.name}</span>` : `<i class="fa-solid fa-plus deck-icon deck-unset"></i>`; return `<div class="deck-btn" onclick="Utils.linkAction('${id}', ${idx}, this)" oncontextmenu="event.preventDefault(); Utils.editLink('${id}', ${idx}, this)" data-link='${h?JSON.stringify(s):""}'>${icon}</div>`; };
 
