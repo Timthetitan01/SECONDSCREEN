@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecondScreen | Cloud Fixed</title>
+    <title>SecondScreen | Cloud</title>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -34,12 +34,31 @@
             color: var(--text-main); font-family: var(--font); height: 100vh; overflow: hidden; display: flex; flex-direction: column;
         }
 
-        /* STATUS BAR */
+        /* STATUS BAR (Top Sync Indicator) */
         #status-bar {
             position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
             background: rgba(0,0,0,0.8); color: white; padding: 8px 16px;
             border-radius: 20px; font-size: 12px; border: 1px solid var(--ios-card-border);
             display: none; z-index: 5000; pointer-events: none; transition: opacity 0.3s;
+        }
+
+        /* ACTION TOAST (Copied! etc) */
+        #action-toast {
+            position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%);
+            background: rgba(48, 209, 88, 0.9); /* iOS Green tint */
+            color: white; padding: 10px 24px;
+            border-radius: 50px; font-size: 14px; font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: none; z-index: 6000; pointer-events: none;
+            backdrop-filter: blur(10px);
+            animation: popUpFade 2s ease forwards;
+        }
+
+        @keyframes popUpFade {
+            0% { opacity: 0; transform: translate(-50%, 10px); }
+            10% { opacity: 1; transform: translate(-50%, 0); }
+            80% { opacity: 1; transform: translate(-50%, 0); }
+            100% { opacity: 0; transform: translate(-50%, -10px); }
         }
 
         /* --- LOGIN OVERLAY --- */
@@ -114,16 +133,9 @@
         .batt-text { font-size: 28px; font-weight: 600; }
         .batt-state { font-size: 11px; color: var(--text-sec); text-align: center; margin-top: 5px; }
 
-        /* PASSWORD WIDGET COPY FIX */
-        .pass-display { 
-            font-family: monospace; font-size: 16px; text-align: center; 
-            background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-bottom: 10px; 
-            color: var(--ios-green); word-break: break-all;
-            cursor: pointer; transition: background 0.2s;
-        }
-        .pass-display:hover { background: rgba(0,0,0,0.5); }
+        .pass-display { font-family: monospace; font-size: 16px; text-align: center; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-bottom: 10px; color: var(--ios-green); word-break: break-all; }
+        .pass-display:hover { background: rgba(0,0,0,0.5); cursor: pointer; }
         .pass-display:active { transform: scale(0.98); }
-
         .pass-controls { display: flex; gap: 10px; align-items: center; }
         
         .clip-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
@@ -204,6 +216,22 @@
 </head>
 <body>
 
+    <div id="status-bar">Syncing...</div>
+
+    <div id="action-toast">Copied!</div>
+
+    <div id="error-toast"></div>
+
+    <div id="login-overlay">
+        <div class="login-card">
+            <div class="login-title"><i class="fa-brands fa-apple"></i> SecondScreen Pro</div>
+            <div class="login-sub">Sign in with Google to load your dashboard.</div>
+            <button class="btn btn-primary" style="font-size:16px; padding:12px 24px" onclick="Cloud.login()">
+                <i class="fa-brands fa-google"></i> Sign in with Google
+            </button>
+        </div>
+    </div>
+
     <div id="modal-overlay" onclick="UI.toggleAdd(false)"></div>
     <div id="add-modal">
         <div class="modal-header">
@@ -239,20 +267,6 @@
 
     <div id="dashboard-wrapper">
         <div class="grid-stack"></div>
-    </div>
-
-    <div id="status-bar">Saving...</div>
-
-    <div id="error-toast"></div>
-
-    <div id="login-overlay">
-        <div class="login-card">
-            <div class="login-title"><i class="fa-brands fa-apple"></i> SecondScreen Pro</div>
-            <div class="login-sub">Sign in with Google to load your dashboard.</div>
-            <button class="btn btn-primary" style="font-size:16px; padding:12px 24px" onclick="Cloud.login()">
-                <i class="fa-brands fa-google"></i> Sign in with Google
-            </button>
-        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack-all.js"></script>
@@ -439,7 +453,7 @@
                     const text = await navigator.clipboard.readText(); if(!text) return;
                     const list = document.getElementById(`clip-${id}`);
                     const item = document.createElement('div'); item.className = 'clip-item'; item.innerText = text;
-                    item.onclick = () => { navigator.clipboard.writeText(text); alert("Copied!"); };
+                    item.onclick = () => { navigator.clipboard.writeText(text); UI.showToast("Copied to Clipboard!"); };
                     list.prepend(item); if(list.children.length > 5) list.lastChild.remove();
                     Core.saveLayout();
                 } catch(e) { alert("Clipboard permission required"); }
@@ -448,7 +462,7 @@
                 const text = document.getElementById(`pass-${id}`).innerText;
                 if(text && text !== "CLICK GEN") {
                     navigator.clipboard.writeText(text);
-                    alert("Password Copied!");
+                    UI.showToast("Password Copied!");
                 }
             },
             addMusic: (id) => {
@@ -559,7 +573,7 @@
                 if (type === 'clipboard' && savedData) {
                     savedData.forEach(t => {
                         const i = document.createElement('div'); i.className='clip-item'; i.innerText=t;
-                        i.onclick = () => { navigator.clipboard.writeText(t); alert("Copied!"); };
+                        i.onclick = () => { navigator.clipboard.writeText(t); UI.showToast("Copied to Clipboard!"); };
                         document.getElementById(`clip-${id}`).appendChild(i);
                     });
                 }
@@ -684,6 +698,15 @@
                 if(input) input.onkeypress = (e) => { if(e.key==='Enter'&&e.target.value.trim()){ add(e.target.value,false); e.target.value=''; Core.saveLayout(); } };
                 if(data) data.forEach(d => { if(!d.d) add(d.t, false); }); check();
                 UI.checkEmpty = check;
+            },
+            showToast: (msg) => {
+                const el = document.getElementById('action-toast');
+                el.innerText = msg;
+                el.style.display = 'block';
+                el.style.animation = 'none';
+                el.offsetHeight; /* trigger reflow */
+                el.style.animation = 'popUpFade 2s ease forwards';
+                setTimeout(() => { el.style.display = 'none'; }, 2000);
             }
         };
 
