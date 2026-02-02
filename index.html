@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecondScreen</title>
+    <title>SecondScreen | Cloud + YouTube</title>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -34,7 +34,7 @@
             color: var(--text-main); font-family: var(--font); height: 100vh; overflow: hidden; display: flex; flex-direction: column;
         }
 
-        /* STATUS BAR (Top Sync Indicator) */
+        /* STATUS BAR */
         #status-bar {
             position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
             background: rgba(0,0,0,0.8); color: white; padding: 8px 16px;
@@ -42,7 +42,7 @@
             display: none; z-index: 5000; pointer-events: none; transition: opacity 0.3s;
         }
 
-        /* ACTION TOAST (Copied! etc) */
+        /* ACTION TOAST */
         #action-toast {
             position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%);
             background: rgba(48, 209, 88, 0.9); /* iOS Green tint */
@@ -196,6 +196,14 @@
         .cal-day:hover:not(.empty) { background: rgba(255,255,255,0.1); }
         .cal-day.today { background: var(--ios-red); color: white; font-weight: 700; }
         .cal-day.empty { pointer-events: none; }
+        
+        /* YouTube Widget */
+        .yt-container { height: 100%; display: flex; flex-direction: column; position: relative; }
+        .yt-setup { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+        .yt-frame { flex: 1; width: 100%; border: none; border-radius: 12px; }
+        .yt-input { background: var(--ios-input); border: none; color: white; padding: 8px; border-radius: 8px; width: 80%; text-align: center; }
+        .yt-controls { position: absolute; top: 5px; right: 5px; z-index: 10; opacity: 0; transition: 0.2s; }
+        .grid-stack-item:hover .yt-controls { opacity: 1; }
 
         /* Modal */
         #modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); z-index: 1999; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
@@ -224,7 +232,7 @@
 
     <div id="login-overlay">
         <div class="login-card">
-            <div class="login-title"><i class="fa-brands fa-apple"></i> SecondScreen</div>
+            <div class="login-title"><i class="fa-brands fa-apple"></i> SecondScreen Pro</div>
             <div class="login-sub">Sign in with Google to load your dashboard.</div>
             <button class="btn btn-primary" style="font-size:16px; padding:12px 24px" onclick="Cloud.login()">
                 <i class="fa-brands fa-google"></i> Sign in with Google
@@ -239,6 +247,7 @@
             <button class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;" onclick="UI.toggleAdd(false)">Close</button>
         </div>
         <div class="modal-grid">
+            <div class="add-card" onclick="Core.createWidget('youtube', 4, 3)"><i class="fa-brands fa-youtube add-icon" style="color:#FF0000"></i><span class="add-label">YouTube</span></div>
             <div class="add-card" onclick="Core.createWidget('timer', 3, 2)"><i class="fa-solid fa-hourglass-end add-icon" style="color:var(--ios-orange)"></i><span class="add-label">Timer</span></div>
             <div class="add-card" onclick="Core.createWidget('battery', 3, 2)"><i class="fa-solid fa-battery-half add-icon" style="color:var(--ios-green)"></i><span class="add-label">Battery</span></div>
             <div class="add-card" onclick="Core.createWidget('password', 4, 3)"><i class="fa-solid fa-key add-icon" style="color:var(--ios-purple)"></i><span class="add-label">Passwords</span></div>
@@ -256,7 +265,7 @@
     </div>
 
     <nav>
-        <div class="brand"><i class="fa-brands fa-apple"></i> SecondScreen</div>
+        <div class="brand"><i class="fa-brands fa-apple"></i> SecondScreen Pro</div>
         <div class="nav-actions">
             <button class="btn btn-primary" onclick="UI.toggleAdd(true)"><i class="fa-solid fa-plus"></i> Add</button>
             <button id="edit-btn" class="btn" onclick="Core.toggleEdit()"><i class="fa-solid fa-pen-nib"></i> Edit</button>
@@ -488,6 +497,41 @@
             },
             deleteMusic: (id) => { const select = document.getElementById(`ms-sel-${id}`); if(select.selectedIndex > 0) { select.remove(select.selectedIndex); Utils.changeMusic(id); Core.saveLayout(); } },
             
+            // --- YOUTUBE WIDGET UTILS ---
+            loadYT: (id) => {
+                const input = document.getElementById(`yt-input-${id}`);
+                const frame = document.getElementById(`yt-frame-${id}`);
+                const setup = document.getElementById(`yt-setup-${id}`);
+                const controls = document.getElementById(`yt-controls-${id}`);
+                let url = input.value;
+                let embedUrl = "";
+
+                if(url.includes('list=')) { 
+                    const listId = url.split('list=')[1].split('&')[0]; 
+                    embedUrl = `https://www.youtube.com/embed/videoseries?list=${listId}`; 
+                } else if(url.includes('v=')) { 
+                    const vidId = url.split('v=')[1].split('&')[0]; 
+                    embedUrl = `https://www.youtube.com/embed/${vidId}`; 
+                } else if(url.includes('youtu.be/')) { 
+                    const vidId = url.split('youtu.be/')[1].split('?')[0]; 
+                    embedUrl = `https://www.youtube.com/embed/${vidId}`; 
+                } else { return; }
+
+                frame.src = embedUrl;
+                setup.style.display = 'none';
+                frame.style.display = 'block';
+                controls.style.display = 'block';
+                Core.saveLayout();
+            },
+            resetYT: (id) => {
+                document.getElementById(`yt-frame-${id}`).src = "";
+                document.getElementById(`yt-frame-${id}`).style.display = "none";
+                document.getElementById(`yt-controls-${id}`).style.display = "none";
+                document.getElementById(`yt-setup-${id}`).style.display = "flex";
+                document.getElementById(`yt-input-${id}`).value = "";
+                Core.saveLayout();
+            },
+
             initWeather: (id, savedData) => {
                 const el = document.getElementById(`temp-${id}`);
                 const widget = el.closest('.grid-stack-item');
@@ -593,6 +637,16 @@
                         Utils.changeMusic(id);
                     }
                 }
+                // LOAD YOUTUBE STATE
+                if (type === 'youtube' && savedData && savedData.url) {
+                    const frame = document.getElementById(`yt-frame-${id}`);
+                    const setup = document.getElementById(`yt-setup-${id}`);
+                    const controls = document.getElementById(`yt-controls-${id}`);
+                    frame.src = savedData.url;
+                    frame.style.display = 'block';
+                    controls.style.display = 'block';
+                    setup.style.display = 'none';
+                }
 
                 UI.toggleAdd(false);
             };
@@ -611,6 +665,14 @@
                     if (type === 'timer') { const wrap = el.querySelector('.timer-container'); data = { end: wrap.getAttribute('data-end'), label: el.querySelector('.timer-label').innerText }; }
                     if (type === 'music') { const select = el.querySelector('select'); const library = Array.from(select.options).slice(1).map(opt => ({name: opt.text, url: opt.value})); data = { library, current: select.value }; }
                     if (type === 'weather') { const unit = el.getAttribute('data-unit') || 'F'; data = { unit }; }
+                    
+                    // SAVE YOUTUBE STATE
+                    if (type === 'youtube') {
+                        const frame = el.querySelector('iframe');
+                        if(frame && frame.src && frame.style.display !== 'none') {
+                            data = { url: frame.src };
+                        }
+                    }
 
                     return { x: el.gridstackNode.x, y: el.gridstackNode.y, w: el.gridstackNode.w, h: el.gridstackNode.h, type, data };
                 });
@@ -712,6 +774,9 @@
 
         const Templates = {
             get: (type, id, data) => {
+                const validTypes = ['clock', 'links', 'countdown', 'calc', 'weather', 'todo', 'notes', 'calendar', 'music', 'timer', 'battery', 'password', 'clipboard', 'youtube'];
+                if(!validTypes.includes(type)) return `<div>Error</div>`;
+
                 const wrap = (l, c) => `<div class="remove-widget">✕</div><div class="w-header" data-type="${type}"><span class="w-label">${l}</span></div><div class="w-content" data-type="${type}">${c}</div>`;
                 const getLink = (idx, s) => { const h = s&&s.url; const icon = h ? `<img src="https://www.google.com/s2/favicons?domain=${s.domain}&sz=64" class="deck-favicon"><span class="deck-label">${s.name}</span>` : `<i class="fa-solid fa-plus deck-icon deck-unset"></i>`; return `<div class="deck-btn" onclick="Utils.linkAction('${id}', ${idx}, this)" oncontextmenu="event.preventDefault(); Utils.editLink('${id}', ${idx}, this)" data-link='${h?JSON.stringify(s):""}'>${icon}</div>`; };
 
@@ -728,7 +793,10 @@
                     timer: wrap('Event Timer', `<div class="timer-container" id="timer-wrap-${id}" onclick="Utils.setTimer('${id}')"><div id="timer-val-${id}" class="timer-big">--:--</div><div id="timer-lbl-${id}" class="timer-label">Click to Set</div><div class="timer-bar"><div id="timer-bar-${id}" class="timer-fill"></div></div></div>`),
                     battery: wrap('Battery', `<div class="batt-container"><div class="batt-icon-shell"><div class="batt-fill" id="batt-fill-${id}"></div></div><div><div id="batt-val-${id}" class="batt-text">--%</div><div id="batt-st-${id}" class="batt-state">Reading...</div></div></div>`),
                     password: wrap('Passwords', `<div id="pass-${id}" class="pass-display" onclick="Utils.copyPass('${id}')">CLICK GEN</div><div class="pass-controls"><span id="lbl-${id}" style="font-size:11px;color:var(--text-sec);width:60px">Length: 16</span><input type="range" id="rng-${id}" min="8" max="32" value="16" style="flex:1" oninput="Utils.genPass('${id}')"><button class="btn" onclick="Utils.genPass('${id}')">Gen</button></div>`),
-                    clipboard: wrap('Clipboard', `<button class="btn btn-primary" style="width:100%; justify-content:center" onclick="Utils.saveClip('${id}')"><i class="fa-solid fa-paste"></i> Save Recent</button><div id="clip-${id}" class="clip-list"></div>`)
+                    clipboard: wrap('Clipboard', `<button class="btn btn-primary" style="width:100%; justify-content:center" onclick="Utils.saveClip('${id}')"><i class="fa-solid fa-paste"></i> Save Recent</button><div id="clip-${id}" class="clip-list"></div>`),
+                    
+                    // YOUTUBE WIDGET
+                    youtube: `<div class="remove-widget">✕</div><div class="yt-container"><div id="yt-setup-${id}" class="yt-setup"><i class="fa-brands fa-youtube" style="font-size:40px;color:#FF0000;margin-bottom:10px"></i><input id="yt-input-${id}" class="yt-input" placeholder="Paste YouTube Link..." onkeypress="if(event.key==='Enter') Utils.loadYT('${id}')"><button class="btn" onclick="Utils.loadYT('${id}')">Load</button></div><iframe id="yt-frame-${id}" class="yt-frame" style="display:none" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe><div id="yt-controls-${id}" class="yt-controls" style="display:none"><button class="btn btn-danger" onclick="Utils.resetYT('${id}')"><i class="fa-solid fa-xmark"></i></button></div></div>`
                 };
                 return map[type] || `<div>Error</div>`;
             }
