@@ -42,6 +42,14 @@
             display: none; z-index: 5000; pointer-events: none; transition: opacity 0.3s;
         }
 
+            #pass-alert {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.8); color: white; padding: 8px 16px;
+            border-radius: 20px; font-size: 12px; border: 1px solid var(--ios-card-border);
+            display: none; z-index: 5000; pointer-events: none; transition: opacity 0.3s;
+        }
+
+
         /* --- LOGIN OVERLAY --- */
         #login-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -448,7 +456,7 @@
                 const text = document.getElementById(`pass-${id}`).innerText;
                 if(text && text !== "CLICK GEN") {
                     navigator.clipboard.writeText(text);
-                    alert("Password Copied!");
+                <div id="pass-alert">Pasword Copied</div>
                 }
             },
             addMusic: (id) => {
