@@ -265,7 +265,7 @@
             <div class="add-card" onclick="Core.createWidget('clock', 4, 2)"><i class="fa-regular fa-clock add-icon" style="color:white"></i><span class="add-label">Clock</span></div>
             <div class="add-card" onclick="Core.createWidget('weather', 3, 2)"><i class="fa-solid fa-cloud-sun add-icon" style="color:var(--ios-yellow)"></i><span class="add-label">Weather</span></div>
             <div class="add-card" onclick="Core.createWidget('todo', 3, 4)"><i class="fa-solid fa-check-circle add-icon" style="color:var(--ios-orange)"></i><span class="add-label">Reminders</span></div>
-            <div class="add-card" onclick="Core.createWidget('music', 3, 3)"><i class="fa-brands fa-spotify add-icon" style="color:#1DB954"></i><span class="add-label">Music</span></div>
+            <div class="add-card" onclick="Core.createWidget('music', 3, 3)"><i class="fa-brands fa-spotify add-icon" style="color:#1DB954"></i><span class="add-label">Music (Auth)</span></div>
             <div class="add-card" onclick="Core.createWidget('calc', 3, 5)"><i class="fa-solid fa-calculator add-icon" style="color:var(--ios-green)"></i><span class="add-label">Calculator</span></div>
             <div class="add-card" onclick="Core.createWidget('notes', 6, 3)"><i class="fa-solid fa-note-sticky add-icon" style="color:var(--ios-yellow)"></i><span class="add-label">Notes</span></div>
         </div>
@@ -293,6 +293,12 @@
     
     <script>
         
+// === SPOTIFY CONFIGURATION ===
+// 1. Get Client ID from developer.spotify.com
+// 2. Add your url (e.g. http://127.0.0.1:5500/index.html) to Redirect URIs in Spotify Dashboard
+const SPOTIFY_CLIENT_ID = "2aea224b957a49e0ade20938094a2170"; 
+const SPOTIFY_SCOPES = "playlist-read-private playlist-read-collaborative";
+
 const firebaseConfig = {
   apiKey: "AIzaSyArqMp658OSK8u46cjCefyVKiDJe4oe8-g",
   authDomain: "secondscreen-f7cd9.firebaseapp.com",
@@ -494,28 +500,83 @@ const firebaseConfig = {
                     UI.showToast("Password Copied!");
                 }
             },
-            addMusic: (id) => {
-                let url = prompt("Paste YouTube Music Link (Song or Playlist):");
-                if(!url) return;
-                const name = prompt("Name this playlist:", "My Playlist");
-                const select = document.getElementById(`ms-sel-${id}`);
-                let embedUrl = "";
-                if(url.includes('list=')) { const listId = url.split('list=')[1].split('&')[0]; embedUrl = `https://www.youtube.com/embed/videoseries?list=${listId}`; } 
-                else if(url.includes('v=')) { const vidId = url.split('v=')[1].split('&')[0]; embedUrl = `https://www.youtube.com/embed/${vidId}`; } 
-                else if(url.includes('youtu.be/')) { const vidId = url.split('youtu.be/')[1].split('?')[0]; embedUrl = `https://www.youtube.com/embed/${vidId}`; } 
-                else { alert("Invalid YouTube Link"); return; }
-                const opt = document.createElement('option'); opt.value = embedUrl; opt.innerText = name; select.appendChild(opt); select.value = embedUrl;
-                Utils.changeMusic(id); Core.saveLayout();
+
+            // --- SPOTIFY MUSIC WIDGET UTILS ---
+            loginSpotify: (id) => {
+                if(SPOTIFY_CLIENT_ID.includes("INSERT")) { alert("Please edit the HTML file and add your Spotify Client ID."); return; }
+                const redirect = window.location.href.split('#')[0];
+                const url = `https://accounts.spotify.com/authorize?client_id=${SPOTIFY_CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(redirect)}&scope=${encodeURIComponent(SPOTIFY_SCOPES)}&show_dialog=true`;
+                
+                // Open popup centered
+                const width = 450, height = 730, left = (screen.width/2)-(width/2), top = (screen.height/2)-(height/2);
+                window.open(url, 'Spotify_Auth', `menubar=no,location=no,resizable=no,scrollbars=no,status=no, width=${width}, height=${height}, top=${top}, left=${left}`);
             },
-            changeMusic: (id) => {
+            
+            handleSpotifyToken: (token) => {
+                localStorage.setItem('sp_token', token);
+                // Refresh all music widgets
+                document.querySelectorAll('.music-header').forEach(el => {
+                    const id = el.querySelector('select').id.replace('ms-sel-', '');
+                    Utils.fetchSpotifyPlaylists(id);
+                });
+            },
+
+            fetchSpotifyPlaylists: (id) => {
+                const token = localStorage.getItem('sp_token');
+                if(!token) return; // Show connect button state
+
+                fetch('https://api.spotify.com/v1/me/playlists?limit=50', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                })
+                .then(r => {
+                    if(r.status === 401) { localStorage.removeItem('sp_token'); return; }
+                    return r.json();
+                })
+                .then(data => {
+                    if(!data || !data.items) return;
+                    const select = document.getElementById(`ms-sel-${id}`);
+                    // Keep the first "Select" option
+                    const currentVal = select.value;
+                    select.innerHTML = '<option value="">Select Playlist...</option>';
+                    
+                    data.items.forEach(p => {
+                        const opt = document.createElement('option');
+                        opt.value = p.uri; // spotify:playlist:ID
+                        opt.innerText = p.name;
+                        select.appendChild(opt);
+                    });
+                    
+                    if(currentVal) select.value = currentVal;
+                    
+                    // Hide connect button if successful, maybe change to "Connected" or just leave it
+                    // The template puts the connect button next to select.
+                });
+            },
+
+            changeSpotifySource: (id) => {
                 const select = document.getElementById(`ms-sel-${id}`);
                 const iframe = document.getElementById(`ms-frame-${id}`);
                 const setup = document.getElementById(`ms-setup-${id}`);
-                if(select.value) { iframe.src = select.value; iframe.style.display = 'block'; setup.style.display = 'none'; } 
-                else { iframe.style.display = 'none'; setup.style.display = 'flex'; }
+                
+                if(select.value) {
+                    // Convert spotify:playlist:ID to https://open.spotify.com/embed/playlist/ID
+                    const uri = select.value;
+                    const parts = uri.split(':');
+                    const type = parts[1];
+                    const uid = parts[2];
+                    const embedUrl = `https://open.spotify.com/embed/${type}/${uid}?utm_source=generator&theme=0`;
+                    
+                    iframe.src = embedUrl;
+                    iframe.style.display = 'block';
+                    setup.style.display = 'none';
+                } else {
+                    iframe.style.display = 'none';
+                    setup.style.display = 'flex';
+                }
                 Core.saveLayout();
             },
-            deleteMusic: (id) => { const select = document.getElementById(`ms-sel-${id}`); if(select.selectedIndex > 0) { select.remove(select.selectedIndex); Utils.changeMusic(id); Core.saveLayout(); } },
+            
+            deleteMusic: (id) => { /* No longer needed for Spotify auth flow as list is auto-fetched */ },
             
             // --- YOUTUBE WIDGET UTILS ---
             loadYT: (id) => {
@@ -621,6 +682,20 @@ const firebaseConfig = {
             let grid = null, editing = false;
 
             const init = () => {
+                // --- SPOTIFY POPUP HANDLER ---
+                // Checks if this window was opened by a popup for auth
+                if(window.opener) {
+                    const hash = window.location.hash;
+                    if(hash && hash.includes('access_token')) {
+                        const token = hash.split('access_token=')[1].split('&')[0];
+                        if(token) {
+                            window.opener.Utils.handleSpotifyToken(token);
+                            window.close();
+                            return; // Stop execution in popup
+                        }
+                    }
+                }
+                
                 grid = GridStack.init({ column: 12, cellHeight: '85px', margin: 12, float: true, animate: true, disableDrag: true, disableResize: true });
                 grid.off('change added removed'); // IMPORTANT: No saving during init
 
@@ -648,13 +723,11 @@ const firebaseConfig = {
                 // --- LIMIT CHECK FOR FREE USERS ---
                 if (!isPro && grid.getGridItems().length >= 2 && !isDashboardLoaded) {
                     // Logic allows existing widgets to load, but prevents adding new ones interactively
-                    // Actually, if dashboard IS loaded (user clicking "Add"), we check limit.
                 }
                 
                 // If dashboard is loaded (meaning user is clicking ADD), check limit
                 if (isDashboardLoaded && !isPro && grid.getGridItems().length >= 2) {
                     alert("Free Tier Limit Reached (2 Widgets). Upgrade to Pro for unlimited access!");
-                    // Close modal
                     UI.toggleAdd(false);
                     return;
                 }
@@ -664,7 +737,6 @@ const firebaseConfig = {
                 if (content === '<div>Error</div>') return;
 
                 const el = grid.addWidget({ w, h, x, y, content, minW: 2, minH: 2 });
-                // FIX: TAG THE WIDGET WITH TYPE
                 el.setAttribute('data-type', type); 
 
                 const removeBtn = el.querySelector('.remove-widget');
@@ -688,17 +760,26 @@ const firebaseConfig = {
                     wrap.setAttribute('data-end', savedData.end);
                     document.getElementById(`timer-lbl-${id}`).innerText = savedData.label;
                 }
-                if (type === 'music' && savedData) {
-                    const select = document.getElementById(`ms-sel-${id}`);
-                    if(savedData.library) {
-                        savedData.library.forEach(item => {
-                            const opt = document.createElement('option'); opt.value = item.url; opt.innerText = item.name;
-                            if(item.url === savedData.current) opt.selected = true;
+                
+                // LOAD SPOTIFY MUSIC WIDGET
+                if (type === 'music') {
+                    // Try to load playlists if token exists
+                    Utils.fetchSpotifyPlaylists(id);
+                    // Load saved selection
+                    if(savedData && savedData.current) {
+                        const select = document.getElementById(`ms-sel-${id}`);
+                        // Create option immediately so value can be set before fetch completes
+                        if(savedData.currentName) {
+                            const opt = document.createElement('option');
+                            opt.value = savedData.current;
+                            opt.innerText = savedData.currentName;
                             select.appendChild(opt);
-                        });
-                        Utils.changeMusic(id);
+                        }
+                        select.value = savedData.current;
+                        Utils.changeSpotifySource(id);
                     }
                 }
+
                 // LOAD YOUTUBE STATE
                 if (type === 'youtube' && savedData && savedData.url) {
                     const frame = document.getElementById(`yt-frame-${id}`);
@@ -709,7 +790,7 @@ const firebaseConfig = {
                     controls.style.display = 'block';
                     setup.style.display = 'none';
                 }
-                // LOAD SPOTIFY STATE
+                // LOAD SPOTIFY EMBED STATE
                 if (type === 'spotify' && savedData && savedData.url) {
                     const frame = document.getElementById(`sp-frame-${id}`);
                     const setup = document.getElementById(`sp-setup-${id}`);
@@ -727,7 +808,7 @@ const firebaseConfig = {
                 if(!isDashboardLoaded) return; // THE LOCK
 
                 const items = grid.getGridItems().map(el => {
-                    const type = el.getAttribute('data-type'); // Now this finds the type!
+                    const type = el.getAttribute('data-type');
                     let data = null;
                     if (type === 'notes') data = el.querySelector('textarea').value;
                     if (type === 'todo') data = Array.from(el.querySelectorAll('.task-item')).map(i => ({t: i.querySelector('.task-text').innerText, d: i.classList.contains('done')}));
@@ -735,7 +816,13 @@ const firebaseConfig = {
                     if (type === 'countdown') { data = JSON.parse(el.querySelector('.count-container').getAttribute('data-target') || 'null'); }
                     if (type === 'clipboard') { data = Array.from(el.querySelectorAll('.clip-item')).map(i => i.innerText); }
                     if (type === 'timer') { const wrap = el.querySelector('.timer-container'); data = { end: wrap.getAttribute('data-end'), label: el.querySelector('.timer-label').innerText }; }
-                    if (type === 'music') { const select = el.querySelector('select'); const library = Array.from(select.options).slice(1).map(opt => ({name: opt.text, url: opt.value})); data = { library, current: select.value }; }
+                    
+                    if (type === 'music') { 
+                        const select = el.querySelector('select');
+                        const name = select.options[select.selectedIndex] ? select.options[select.selectedIndex].innerText : '';
+                        data = { current: select.value, currentName: name }; 
+                    }
+                    
                     if (type === 'weather') { const unit = el.getAttribute('data-unit') || 'F'; data = { unit }; }
                     
                     if (type === 'youtube') {
@@ -876,16 +963,17 @@ const firebaseConfig = {
                     todo: wrap('Reminders', `<div class="task-input-row"><input id="in-${id}" class="task-input" placeholder="Add task..."></div><div id="list-${id}" class="task-list"></div><div id="empty-${id}" class="task-empty">No tasks</div>`),
                     notes: wrap('Notes', `<textarea id="nt-${id}" style="flex:1;resize:none;background:transparent;border:none;padding:0;font-family:inherit;font-size:14px;line-height:1.4" placeholder="Type here..." oninput="Core.saveLayout()"></textarea>`),
                     calendar: `<div class="remove-widget">✕</div><div class="cal-wrapper"><div class="cal-header"><i class="fa-solid fa-chevron-left cal-nav" onclick="Utils.changeMonth('${id}', -1)"></i><span id="cal-title-${id}" class="cal-title" onclick="Utils.resetCalendar('${id}')">Month Year</span><i class="fa-solid fa-chevron-right cal-nav" onclick="Utils.changeMonth('${id}', 1)"></i></div><div class="cal-weekdays"><span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span></div><div id="cal-grid-${id}" class="cal-grid"></div></div>`,
-                    music: wrap('Music', `<div class="music-header" style="display:flex;gap:5px;margin-bottom:10px"><select id="ms-sel-${id}" style="flex:1;background:var(--ios-input);color:white;border-radius:8px;border:none;outline:none;font-size:12px;padding:6px" onchange="Utils.changeMusic('${id}')"><option value="">Select Playlist...</option></select><div class="btn" style="width:30px;padding:0;justify-content:center" onclick="Utils.addMusic('${id}')"><i class="fa-solid fa-plus"></i></div><div class="btn btn-danger" style="width:30px;padding:0;justify-content:center" onclick="Utils.deleteMusic('${id}')"><i class="fa-solid fa-trash"></i></div></div><div style="flex:1;border-radius:12px;overflow:hidden;background:black;position:relative"><div id="ms-setup-${id}" style="display:flex;flex-direction:column;justify-content:center;align-items:center;height:100%;text-align:center;gap:10px"><i class="fa-brands fa-youtube" style="font-size:40px;color:#FF0000"></i><p style="font-size:12px;color:var(--text-sec)">Add a song or playlist</p></div><iframe id="ms-frame-${id}" style="width:100%;height:100%;border:none;display:none" allow="autoplay; encrypted-media"></iframe></div>`),
+                    
+                    // MODIFIED MUSIC WIDGET FOR SPOTIFY API
+                    music: wrap('Music', `<div class="music-header" style="display:flex;gap:5px;margin-bottom:10px;align-items:center"><select id="ms-sel-${id}" style="flex:1;background:var(--ios-input);color:white;border-radius:8px;border:none;outline:none;font-size:12px;padding:6px" onchange="Utils.changeSpotifySource('${id}')"><option value="">Select Playlist...</option></select><button class="btn" style="background:#1DB954; color:white; font-size:12px; padding:4px 8px; border-radius:6px" onclick="Utils.loginSpotify('${id}')"><i class="fa-brands fa-spotify"></i> Connect</button></div><div style="flex:1;border-radius:12px;overflow:hidden;background:black;position:relative"><div id="ms-setup-${id}" style="display:flex;flex-direction:column;justify-content:center;align-items:center;height:100%;text-align:center;gap:10px"><i class="fa-brands fa-spotify" style="font-size:40px;color:#1DB954"></i><p style="font-size:12px;color:var(--text-sec)">Connect to view playlists</p></div><iframe id="ms-frame-${id}" style="width:100%;height:100%;border:none;display:none" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe></div>`),
+                    
                     timer: wrap('Event Timer', `<div class="timer-container" id="timer-wrap-${id}" onclick="Utils.setTimer('${id}')"><div id="timer-val-${id}" class="timer-big">--:--</div><div id="timer-lbl-${id}" class="timer-label">Click to Set</div><div class="timer-bar"><div id="timer-bar-${id}" class="timer-fill"></div></div></div>`),
                     battery: wrap('Battery', `<div class="batt-container"><div class="batt-icon-shell"><div class="batt-fill" id="batt-fill-${id}"></div></div><div><div id="batt-val-${id}" class="batt-text">--%</div><div id="batt-st-${id}" class="batt-state">Reading...</div></div></div>`),
                     password: wrap('Passwords', `<div id="pass-${id}" class="pass-display" onclick="Utils.copyPass('${id}')">CLICK GEN</div><div class="pass-controls"><span id="lbl-${id}" style="font-size:11px;color:var(--text-sec);width:60px">Length: 16</span><input type="range" id="rng-${id}" min="8" max="32" value="16" style="flex:1" oninput="Utils.genPass('${id}')"><button class="btn" onclick="Utils.genPass('${id}')">Gen</button></div>`),
                     clipboard: wrap('Clipboard', `<button class="btn btn-primary" style="width:100%; justify-content:center" onclick="Utils.saveClip('${id}')"><i class="fa-solid fa-paste"></i> Save Recent</button><div id="clip-${id}" class="clip-list"></div>`),
                     
-                    // YOUTUBE WIDGET
                     youtube: `<div class="remove-widget">✕</div><div class="yt-container"><div id="yt-setup-${id}" class="yt-setup"><i class="fa-brands fa-youtube" style="font-size:40px;color:#FF0000;margin-bottom:10px"></i><input id="yt-input-${id}" class="yt-input" placeholder="Paste YouTube Link..." onkeypress="if(event.key==='Enter') Utils.loadYT('${id}')"><button class="btn" onclick="Utils.loadYT('${id}')">Load</button></div><iframe id="yt-frame-${id}" class="yt-frame" style="display:none" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe><div id="yt-controls-${id}" class="yt-controls" style="display:none"><button class="btn btn-danger" onclick="Utils.resetYT('${id}')"><i class="fa-solid fa-xmark"></i></button></div></div>`,
                     
-                    // SPOTIFY WIDGET (EMBED METHOD)
                     spotify: `<div class="remove-widget">✕</div><div class="sp-container"><div id="sp-setup-${id}" class="sp-setup"><i class="fa-brands fa-spotify" style="font-size:40px;color:#1DB954;margin-bottom:10px"></i><div style="font-size:12px;color:var(--text-sec)">Paste Spotify Song/Playlist Link</div><input id="sp-input-${id}" class="yt-input" placeholder="https://open.spotify.com/..." onkeypress="if(event.key==='Enter') Utils.loadSpotify('${id}')"><button class="btn" onclick="Utils.loadSpotify('${id}')">Load</button></div><iframe id="sp-frame-${id}" class="sp-frame" style="display:none" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe><div id="sp-controls-${id}" class="yt-controls" style="display:none"><button class="btn btn-danger" onclick="Utils.resetSpotify('${id}')"><i class="fa-solid fa-xmark"></i></button></div></div>`
                 };
                 return map[type] || `<div>Error</div>`;
