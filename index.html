@@ -505,7 +505,9 @@ loginSpotify: (id) => {
                 
                 // Get the current page URL to use as the redirect
                 const redirect = window.location.href.split('#')[0]; 
-
+                
+                // --- FIXED URL ---
+                // We use the official accounts.spotify.com URL
                 const url = `https://accounts.spotify.com/authorize?client_id=${SPOTIFY_CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(redirect)}&scope=${encodeURIComponent(SPOTIFY_SCOPES)}&show_dialog=true`;
                 
                 const width = 450, height = 730, left = (screen.width/2)-(width/2), top = (screen.height/2)-(height/2);
