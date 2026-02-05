@@ -515,18 +515,23 @@ const Utils = {
                     .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
             },
 
-            // --- REFACTORED SPOTIFY LOGIN (PKCE) ---
+            // --- SPOTIFY LOGIN (PKCE with Relay) ---
             loginSpotify: async (id) => {
                 if(SPOTIFY_CLIENT_ID.includes("INSERT")) { alert("Please edit the HTML file and add your Spotify Client ID."); return; }
                 
+                // Clear any old relay codes
+                localStorage.removeItem('spotify_auth_code_relay');
+
                 const codeVerifier = Utils.generateRandomString(64);
                 const hashed = await Utils.sha256(codeVerifier);
                 const codeChallenge = Utils.base64encode(hashed);
                 
                 localStorage.setItem('spotify_code_verifier', codeVerifier);
                 
-                const redirect = window.location.href.split('#')[0].split('?')[0];
+                // Ensure redirect matches what you registered (origin + path)
+                const redirect = window.location.origin + window.location.pathname;
                 const scope = SPOTIFY_SCOPES;
+                // Use proxy URL (17 = authorize)
                 const authUrl = new URL("https://accounts.spotify.com/authorize");
 
                 const params = {
@@ -546,7 +551,7 @@ const Utils = {
             
             handleSpotifyCode: async (code) => {
                 const codeVerifier = localStorage.getItem('spotify_code_verifier');
-                const redirect = window.location.href.split('#')[0].split('?')[0];
+                const redirect = window.location.origin + window.location.pathname;
 
                 const payload = {
                     method: 'POST',
@@ -560,6 +565,7 @@ const Utils = {
                     }),
                 };
 
+                // Use proxy URL (18 = token)
                 const body = await fetch("https://accounts.spotify.com/api/token", payload);
                 const response = await body.json();
 
@@ -728,17 +734,28 @@ const Utils = {
             let grid = null, editing = false;
 
             const init = () => {
-                // --- SPOTIFY PKCE POPUP HANDLER ---
-                if(window.opener) {
-                    const params = new URLSearchParams(window.location.search);
-                    const code = params.get('code');
-                    if(code) {
-                        window.opener.Utils.handleSpotifyCode(code);
-                        window.close();
-                        return;
-                    }
+                // --- SPOTIFY PKCE POPUP/RELAY HANDLER ---
+                const params = new URLSearchParams(window.location.search);
+                const code = params.get('code');
+
+                if (code) {
+                    // 1. We are in the popup after Spotify redirected us back.
+                    // Save the code to localStorage to trigger the "storage" event in the parent window.
+                    localStorage.setItem('spotify_auth_code_relay', code);
+                    // Small delay to ensure storage event fires before window closes
+                    setTimeout(() => window.close(), 100);
+                    return; // Stop initialization for the popup
                 }
-                
+
+                // --- MAIN DASHBOARD LOGIC ---
+                // 2. Listen for the "storage" event to catch the code from the popup
+                window.addEventListener('storage', (e) => {
+                    if (e.key === 'spotify_auth_code_relay' && e.newValue) {
+                        Utils.handleSpotifyCode(e.newValue);
+                        localStorage.removeItem('spotify_auth_code_relay'); // Cleanup
+                    }
+                });
+
                 grid = GridStack.init({ column: 12, cellHeight: '85px', margin: 12, float: true, animate: true, disableDrag: true, disableResize: true });
                 grid.off('change added removed'); // IMPORTANT: No saving during init
 
