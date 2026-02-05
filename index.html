@@ -294,9 +294,7 @@
     <script>
         
 // === SPOTIFY CONFIGURATION ===
-// 1. Get Client ID from developer.spotify.com
-// 2. Add your url (e.g. http://127.0.0.1:5500/index.html) to Redirect URIs in Spotify Dashboard
-const SPOTIFY_CLIENT_ID = "2aea224b957a49e0ade20938094a2170"; 
+const SPOTIFY_CLIENT_ID = "INSERT_YOUR_SPOTIFY_CLIENT_ID_HERE"; 
 const SPOTIFY_SCOPES = "playlist-read-private playlist-read-collaborative";
 
 const firebaseConfig = {
@@ -501,20 +499,18 @@ const firebaseConfig = {
                 }
             },
 
-            // --- SPOTIFY MUSIC WIDGET UTILS ---
+            // --- SPOTIFY MUSIC WIDGET UTILS (CORRECTED) ---
             loginSpotify: (id) => {
                 if(SPOTIFY_CLIENT_ID.includes("INSERT")) { alert("Please edit the HTML file and add your Spotify Client ID."); return; }
-                const redirect = window.location.href.split('#')[0];
+                const redirect = window.location.href.split('#')[0]; // Gets your current URL automatically
                 const url = `https://accounts.spotify.com/authorize?client_id=${SPOTIFY_CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(redirect)}&scope=${encodeURIComponent(SPOTIFY_SCOPES)}&show_dialog=true`;
                 
-                // Open popup centered
                 const width = 450, height = 730, left = (screen.width/2)-(width/2), top = (screen.height/2)-(height/2);
                 window.open(url, 'Spotify_Auth', `menubar=no,location=no,resizable=no,scrollbars=no,status=no, width=${width}, height=${height}, top=${top}, left=${left}`);
             },
             
             handleSpotifyToken: (token) => {
                 localStorage.setItem('sp_token', token);
-                // Refresh all music widgets
                 document.querySelectorAll('.music-header').forEach(el => {
                     const id = el.querySelector('select').id.replace('ms-sel-', '');
                     Utils.fetchSpotifyPlaylists(id);
@@ -523,9 +519,9 @@ const firebaseConfig = {
 
             fetchSpotifyPlaylists: (id) => {
                 const token = localStorage.getItem('sp_token');
-                if(!token) return; // Show connect button state
+                if(!token) return; 
 
-                fetch('https://api.spotify.com/v1/me/playlists?limit=50', {
+                fetch('https://api.spotify.com/v1/me/playlists', {
                     headers: { 'Authorization': 'Bearer ' + token }
                 })
                 .then(r => {
@@ -535,21 +531,17 @@ const firebaseConfig = {
                 .then(data => {
                     if(!data || !data.items) return;
                     const select = document.getElementById(`ms-sel-${id}`);
-                    // Keep the first "Select" option
                     const currentVal = select.value;
                     select.innerHTML = '<option value="">Select Playlist...</option>';
                     
                     data.items.forEach(p => {
                         const opt = document.createElement('option');
-                        opt.value = p.uri; // spotify:playlist:ID
+                        opt.value = p.uri; 
                         opt.innerText = p.name;
                         select.appendChild(opt);
                     });
                     
                     if(currentVal) select.value = currentVal;
-                    
-                    // Hide connect button if successful, maybe change to "Connected" or just leave it
-                    // The template puts the connect button next to select.
                 });
             },
 
@@ -559,7 +551,6 @@ const firebaseConfig = {
                 const setup = document.getElementById(`ms-setup-${id}`);
                 
                 if(select.value) {
-                    // Convert spotify:playlist:ID to https://open.spotify.com/embed/playlist/ID
                     const uri = select.value;
                     const parts = uri.split(':');
                     const type = parts[1];
@@ -576,7 +567,7 @@ const firebaseConfig = {
                 Core.saveLayout();
             },
             
-            deleteMusic: (id) => { /* No longer needed for Spotify auth flow as list is auto-fetched */ },
+            deleteMusic: (id) => { },
             
             // --- YOUTUBE WIDGET UTILS ---
             loadYT: (id) => {
@@ -621,9 +612,8 @@ const firebaseConfig = {
                 const controls = document.getElementById(`sp-controls-${id}`);
                 const url = input.value;
                 
-                // Convert simple link to embed link
-                let embedUrl = url.replace('open.spotify.com/', 'open.spotify.com/embed/');
-                // Ensure ?utm_source=generator is appended for best styling
+                let embedUrl = url.replace('https://open.spotify.com/', 'https://open.spotify.com/embed/');
+                                  
                 if(!embedUrl.includes('?')) embedUrl += "?utm_source=generator&theme=0";
 
                 frame.src = embedUrl;
@@ -974,7 +964,7 @@ const firebaseConfig = {
                     
                     youtube: `<div class="remove-widget">✕</div><div class="yt-container"><div id="yt-setup-${id}" class="yt-setup"><i class="fa-brands fa-youtube" style="font-size:40px;color:#FF0000;margin-bottom:10px"></i><input id="yt-input-${id}" class="yt-input" placeholder="Paste YouTube Link..." onkeypress="if(event.key==='Enter') Utils.loadYT('${id}')"><button class="btn" onclick="Utils.loadYT('${id}')">Load</button></div><iframe id="yt-frame-${id}" class="yt-frame" style="display:none" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe><div id="yt-controls-${id}" class="yt-controls" style="display:none"><button class="btn btn-danger" onclick="Utils.resetYT('${id}')"><i class="fa-solid fa-xmark"></i></button></div></div>`,
                     
-                    spotify: `<div class="remove-widget">✕</div><div class="sp-container"><div id="sp-setup-${id}" class="sp-setup"><i class="fa-brands fa-spotify" style="font-size:40px;color:#1DB954;margin-bottom:10px"></i><div style="font-size:12px;color:var(--text-sec)">Paste Spotify Song/Playlist Link</div><input id="sp-input-${id}" class="yt-input" placeholder="https://open.spotify.com/..." onkeypress="if(event.key==='Enter') Utils.loadSpotify('${id}')"><button class="btn" onclick="Utils.loadSpotify('${id}')">Load</button></div><iframe id="sp-frame-${id}" class="sp-frame" style="display:none" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe><div id="sp-controls-${id}" class="yt-controls" style="display:none"><button class="btn btn-danger" onclick="Utils.resetSpotify('${id}')"><i class="fa-solid fa-xmark"></i></button></div></div>`
+                    spotify: `<div class="remove-widget">✕</div><div class="sp-container"><div id="sp-setup-${id}" class="sp-setup"><i class="fa-brands fa-spotify" style="font-size:40px;color:#1DB954;margin-bottom:10px"></i><div style="font-size:12px;color:var(--text-sec)">Paste Spotify Song/Playlist Link</div><input id="sp-input-${id}" class="yt-input" placeholder="https://open.spotify.com/playlist/..." onkeypress="if(event.key==='Enter') Utils.loadSpotify('${id}')"><button class="btn" onclick="Utils.loadSpotify('${id}')">Load</button></div><iframe id="sp-frame-${id}" class="sp-frame" style="display:none" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe><div id="sp-controls-${id}" class="yt-controls" style="display:none"><button class="btn btn-danger" onclick="Utils.resetSpotify('${id}')"><i class="fa-solid fa-xmark"></i></button></div></div>`
                 };
                 return map[type] || `<div>Error</div>`;
             }
