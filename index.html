@@ -499,33 +499,83 @@ const Utils = {
                 }
             },
 
-            // --- SPOTIFY MUSIC WIDGET UTILS (NOW CORRECTED) ---
-            loginSpotify: (id) => {
+            // --- PKCE HELPERS ---
+            generateRandomString: (length) => {
+                const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+                const values = crypto.getRandomValues(new Uint8Array(length));
+                return values.reduce((acc, x) => acc + possible[x % possible.length], "");
+            },
+            sha256: async (plain) => {
+                const encoder = new TextEncoder();
+                const data = encoder.encode(plain);
+                return window.crypto.subtle.digest('SHA-256', data);
+            },
+            base64encode: (input) => {
+                return btoa(String.fromCharCode.apply(null, new Uint8Array(input)))
+                    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+            },
+
+            // --- REFACTORED SPOTIFY LOGIN (PKCE) ---
+            loginSpotify: async (id) => {
                 if(SPOTIFY_CLIENT_ID.includes("INSERT")) { alert("Please edit the HTML file and add your Spotify Client ID."); return; }
                 
-                // Automatically gets your current Worker URL (https://secondscreen2...)
-                const redirect = window.location.href.split('#')[0];
+                const codeVerifier = Utils.generateRandomString(64);
+                const hashed = await Utils.sha256(codeVerifier);
+                const codeChallenge = Utils.base64encode(hashed);
                 
-                // CORRECT SPOTIFY AUTH URL
-                const url = `https://accounts.spotify.com/authorize?client_id=${SPOTIFY_CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(redirect)}&scope=${encodeURIComponent(SPOTIFY_SCOPES)}&show_dialog=true`;
+                localStorage.setItem('spotify_code_verifier', codeVerifier);
+                
+                const redirect = window.location.href.split('#')[0].split('?')[0];
+                const scope = SPOTIFY_SCOPES;
+                const authUrl = new URL("https://accounts.spotify.com/authorize");
+
+                const params = {
+                    response_type: 'code',
+                    client_id: SPOTIFY_CLIENT_ID,
+                    scope,
+                    code_challenge_method: 'S256',
+                    code_challenge: codeChallenge,
+                    redirect_uri: redirect,
+                };
+
+                authUrl.search = new URLSearchParams(params).toString();
                 
                 const width = 450, height = 730, left = (screen.width/2)-(width/2), top = (screen.height/2)-(height/2);
-                window.open(url, 'Spotify_Auth', `menubar=no,location=no,resizable=no,scrollbars=no,status=no, width=${width}, height=${height}, top=${top}, left=${left}`);
+                window.open(authUrl.toString(), 'Spotify_Auth', `menubar=no,location=no,resizable=no,scrollbars=no,status=no, width=${width}, height=${height}, top=${top}, left=${left}`);
             },
             
-            handleSpotifyToken: (token) => {
-                localStorage.setItem('sp_token', token);
-                document.querySelectorAll('.music-header').forEach(el => {
-                    const id = el.querySelector('select').id.replace('ms-sel-', '');
-                    Utils.fetchSpotifyPlaylists(id);
-                });
+            handleSpotifyCode: async (code) => {
+                const codeVerifier = localStorage.getItem('spotify_code_verifier');
+                const redirect = window.location.href.split('#')[0].split('?')[0];
+
+                const payload = {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({
+                        client_id: SPOTIFY_CLIENT_ID,
+                        grant_type: 'authorization_code',
+                        code,
+                        redirect_uri: redirect,
+                        code_verifier: codeVerifier,
+                    }),
+                };
+
+                const body = await fetch("https://accounts.spotify.com/api/token", payload);
+                const response = await body.json();
+
+                if (response.access_token) {
+                    localStorage.setItem('sp_token', response.access_token);
+                    document.querySelectorAll('.music-header').forEach(el => {
+                        const id = el.querySelector('select').id.replace('ms-sel-', '');
+                        Utils.fetchSpotifyPlaylists(id);
+                    });
+                }
             },
 
             fetchSpotifyPlaylists: (id) => {
                 const token = localStorage.getItem('sp_token');
                 if(!token) return; 
 
-                // CORRECT SPOTIFY API URL
                 fetch('https://api.spotify.com/v1/me/playlists', {
                     headers: { 'Authorization': 'Bearer ' + token }
                 })
@@ -561,7 +611,6 @@ const Utils = {
                     const type = parts[1];
                     const uid = parts[2];
                     
-                    // CORRECT SPOTIFY EMBED URL
                     const embedUrl = `https://open.spotify.com/embed/${type}/${uid}?utm_source=generator&theme=0`;
                     
                     iframe.src = embedUrl;
@@ -619,7 +668,7 @@ const Utils = {
                 const controls = document.getElementById(`sp-controls-${id}`);
                 const url = input.value;
                 
-                let embedUrl = url.replace('spotify.com/', 'spotify.com/embed/');
+                let embedUrl = url.replace('open.spotify.com', 'open.spotify.com/embed');
                                   
                 if(!embedUrl.includes('?')) embedUrl += "?utm_source=generator&theme=0";
 
@@ -679,17 +728,14 @@ const Utils = {
             let grid = null, editing = false;
 
             const init = () => {
-                // --- SPOTIFY POPUP HANDLER ---
-                // Checks if this window was opened by a popup for auth
+                // --- SPOTIFY PKCE POPUP HANDLER ---
                 if(window.opener) {
-                    const hash = window.location.hash;
-                    if(hash && hash.includes('access_token')) {
-                        const token = hash.split('access_token=')[1].split('&')[0];
-                        if(token) {
-                            window.opener.Utils.handleSpotifyToken(token);
-                            window.close();
-                            return; // Stop execution in popup
-                        }
+                    const params = new URLSearchParams(window.location.search);
+                    const code = params.get('code');
+                    if(code) {
+                        window.opener.Utils.handleSpotifyCode(code);
+                        window.close();
+                        return;
                     }
                 }
                 
@@ -717,12 +763,8 @@ const Utils = {
             };
 
             const createWidget = (type, w, h, x, y, savedData) => {
-                // --- LIMIT CHECK FOR FREE USERS ---
-                if (!isPro && grid.getGridItems().length >= 2 && !isDashboardLoaded) {
-                    // Logic allows existing widgets to load, but prevents adding new ones interactively
-                }
-                
-                // If dashboard is loaded (meaning user is clicking ADD), check limit
+                if (!isPro && grid.getGridItems().length >= 2 && !isDashboardLoaded) { }
+
                 if (isDashboardLoaded && !isPro && grid.getGridItems().length >= 2) {
                     alert("Free Tier Limit Reached (2 Widgets). Upgrade to Pro for unlimited access!");
                     UI.toggleAdd(false);
@@ -758,14 +800,10 @@ const Utils = {
                     document.getElementById(`timer-lbl-${id}`).innerText = savedData.label;
                 }
                 
-                // LOAD SPOTIFY MUSIC WIDGET
                 if (type === 'music') {
-                    // Try to load playlists if token exists
                     Utils.fetchSpotifyPlaylists(id);
-                    // Load saved selection
                     if(savedData && savedData.current) {
                         const select = document.getElementById(`ms-sel-${id}`);
-                        // Create option immediately so value can be set before fetch completes
                         if(savedData.currentName) {
                             const opt = document.createElement('option');
                             opt.value = savedData.current;
@@ -777,7 +815,6 @@ const Utils = {
                     }
                 }
 
-                // LOAD YOUTUBE STATE
                 if (type === 'youtube' && savedData && savedData.url) {
                     const frame = document.getElementById(`yt-frame-${id}`);
                     const setup = document.getElementById(`yt-setup-${id}`);
@@ -787,7 +824,6 @@ const Utils = {
                     controls.style.display = 'block';
                     setup.style.display = 'none';
                 }
-                // LOAD SPOTIFY EMBED STATE
                 if (type === 'spotify' && savedData && savedData.url) {
                     const frame = document.getElementById(`sp-frame-${id}`);
                     const setup = document.getElementById(`sp-setup-${id}`);
@@ -802,7 +838,7 @@ const Utils = {
             };
 
             const saveLayout = debounce(() => {
-                if(!isDashboardLoaded) return; // THE LOCK
+                if(!isDashboardLoaded) return; 
 
                 const items = grid.getGridItems().map(el => {
                     const type = el.getAttribute('data-type');
@@ -845,7 +881,7 @@ const Utils = {
             const loadData = () => {
                 if(!Cloud.user || !db) return;
 
-                isDashboardLoaded = false; // LOCK
+                isDashboardLoaded = false;
                 grid.off('change added removed');
 
                 db.collection('users').doc(Cloud.user.uid).get().then(doc => {
@@ -853,7 +889,6 @@ const Utils = {
                     if(doc.exists) {
                         const dbData = doc.data();
                         
-                        // CHECK PRO STATUS
                         isPro = dbData.isPro || false;
                         if(isPro) {
                             document.getElementById('upgrade-btn').style.display = 'none';
@@ -876,7 +911,6 @@ const Utils = {
                         loadDefaults();
                     }
                     
-                    // UNLOCK after delay
                     setTimeout(() => {
                         isDashboardLoaded = true;
                         grid.on('change added removed', saveLayout);
@@ -896,7 +930,7 @@ const Utils = {
                 
                 setTimeout(() => {
                     isDashboardLoaded = true;
-                    saveLayout(); // Force save to fix the DB
+                    saveLayout();
                     grid.on('change added removed', saveLayout);
                 }, 1000);
             };
@@ -937,7 +971,7 @@ const Utils = {
                 el.innerText = msg;
                 el.style.display = 'block';
                 el.style.animation = 'none';
-                el.offsetHeight; /* trigger reflow */
+                el.offsetHeight; 
                 el.style.animation = 'popUpFade 2s ease forwards';
                 setTimeout(() => { el.style.display = 'none'; }, 2000);
             }
@@ -961,7 +995,6 @@ const Utils = {
                     notes: wrap('Notes', `<textarea id="nt-${id}" style="flex:1;resize:none;background:transparent;border:none;padding:0;font-family:inherit;font-size:14px;line-height:1.4" placeholder="Type here..." oninput="Core.saveLayout()"></textarea>`),
                     calendar: `<div class="remove-widget">✕</div><div class="cal-wrapper"><div class="cal-header"><i class="fa-solid fa-chevron-left cal-nav" onclick="Utils.changeMonth('${id}', -1)"></i><span id="cal-title-${id}" class="cal-title" onclick="Utils.resetCalendar('${id}')">Month Year</span><i class="fa-solid fa-chevron-right cal-nav" onclick="Utils.changeMonth('${id}', 1)"></i></div><div class="cal-weekdays"><span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span></div><div id="cal-grid-${id}" class="cal-grid"></div></div>`,
                     
-                    // MODIFIED MUSIC WIDGET FOR SPOTIFY API
                     music: wrap('Music', `<div class="music-header" style="display:flex;gap:5px;margin-bottom:10px;align-items:center"><select id="ms-sel-${id}" style="flex:1;background:var(--ios-input);color:white;border-radius:8px;border:none;outline:none;font-size:12px;padding:6px" onchange="Utils.changeSpotifySource('${id}')"><option value="">Select Playlist...</option></select><button class="btn" style="background:#1DB954; color:white; font-size:12px; padding:4px 8px; border-radius:6px" onclick="Utils.loginSpotify('${id}')"><i class="fa-brands fa-spotify"></i> Connect</button></div><div style="flex:1;border-radius:12px;overflow:hidden;background:black;position:relative"><div id="ms-setup-${id}" style="display:flex;flex-direction:column;justify-content:center;align-items:center;height:100%;text-align:center;gap:10px"><i class="fa-brands fa-spotify" style="font-size:40px;color:#1DB954"></i><p style="font-size:12px;color:var(--text-sec)">Connect to view playlists</p></div><iframe id="ms-frame-${id}" style="width:100%;height:100%;border:none;display:none" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe></div>`),
                     
                     timer: wrap('Event Timer', `<div class="timer-container" id="timer-wrap-${id}" onclick="Utils.setTimer('${id}')"><div id="timer-val-${id}" class="timer-big">--:--</div><div id="timer-lbl-${id}" class="timer-label">Click to Set</div><div class="timer-bar"><div id="timer-bar-${id}" class="timer-fill"></div></div></div>`),
@@ -971,7 +1004,7 @@ const Utils = {
                     
                     youtube: `<div class="remove-widget">✕</div><div class="yt-container"><div id="yt-setup-${id}" class="yt-setup"><i class="fa-brands fa-youtube" style="font-size:40px;color:#FF0000;margin-bottom:10px"></i><input id="yt-input-${id}" class="yt-input" placeholder="Paste YouTube Link..." onkeypress="if(event.key==='Enter') Utils.loadYT('${id}')"><button class="btn" onclick="Utils.loadYT('${id}')">Load</button></div><iframe id="yt-frame-${id}" class="yt-frame" style="display:none" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe><div id="yt-controls-${id}" class="yt-controls" style="display:none"><button class="btn btn-danger" onclick="Utils.resetYT('${id}')"><i class="fa-solid fa-xmark"></i></button></div></div>`,
                     
-                    spotify: `<div class="remove-widget">✕</div><div class="sp-container"><div id="sp-setup-${id}" class="sp-setup"><i class="fa-brands fa-spotify" style="font-size:40px;color:#1DB954;margin-bottom:10px"></i><div style="font-size:12px;color:var(--text-sec)">Paste Spotify Song/Playlist Link</div><input id="sp-input-${id}" class="yt-input" placeholder="https://open.spotify.com/playlist/..." onkeypress="if(event.key==='Enter') Utils.loadSpotify('${id}')"><button class="btn" onclick="Utils.loadSpotify('${id}')">Load</button></div><iframe id="sp-frame-${id}" class="sp-frame" style="display:none" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe><div id="sp-controls-${id}" class="yt-controls" style="display:none"><button class="btn btn-danger" onclick="Utils.resetSpotify('${id}')"><i class="fa-solid fa-xmark"></i></button></div></div>`
+                    spotify: `<div class="remove-widget">✕</div><div class="sp-container"><div id="sp-setup-${id}" class="sp-setup"><i class="fa-brands fa-spotify" style="font-size:40px;color:#1DB954;margin-bottom:10px"></i><div style="font-size:12px;color:var(--text-sec)">Paste Spotify Song/Playlist Link</div><input id="sp-input-${id}" class="yt-input" placeholder="https://open.spotify.com/..." onkeypress="if(event.key==='Enter') Utils.loadSpotify('${id}')"><button class="btn" onclick="Utils.loadSpotify('${id}')">Load</button></div><iframe id="sp-frame-${id}" class="sp-frame" style="display:none" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe><div id="sp-controls-${id}" class="yt-controls" style="display:none"><button class="btn btn-danger" onclick="Utils.resetSpotify('${id}')"><i class="fa-solid fa-xmark"></i></button></div></div>`
                 };
                 return map[type] || `<div>Error</div>`;
             }
