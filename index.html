@@ -500,9 +500,12 @@ const firebaseConfig = {
             },
 
             // --- SPOTIFY MUSIC WIDGET UTILS (CORRECTED) ---
-            loginSpotify: (id) => {
+loginSpotify: (id) => {
                 if(SPOTIFY_CLIENT_ID.includes("INSERT")) { alert("Please edit the HTML file and add your Spotify Client ID."); return; }
-                const redirect = window.location.href.split('#')[0]; // Gets your current URL automatically
+                
+                // Get the current page URL to use as the redirect
+                const redirect = window.location.href.split('#')[0]; 
+
                 const url = `https://accounts.spotify.com/authorize?client_id=${SPOTIFY_CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(redirect)}&scope=${encodeURIComponent(SPOTIFY_SCOPES)}&show_dialog=true`;
                 
                 const width = 450, height = 730, left = (screen.width/2)-(width/2), top = (screen.height/2)-(height/2);
