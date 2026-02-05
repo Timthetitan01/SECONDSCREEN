@@ -377,7 +377,7 @@ const firebaseConfig = {
             };
         }
 
-        const Utils = {
+const Utils = {
             calc: (id, val) => {
                 const s = document.getElementById(`scr-${id}`);
                 if (val === '=') { try { s.innerText = eval(s.innerText.replace('×','*').replace('÷','/')); } catch { s.innerText = "Error"; } }
@@ -499,15 +499,14 @@ const firebaseConfig = {
                 }
             },
 
-            // --- SPOTIFY MUSIC WIDGET UTILS (CORRECTED) ---
-loginSpotify: (id) => {
+            // --- SPOTIFY MUSIC WIDGET UTILS (NOW CORRECTED) ---
+            loginSpotify: (id) => {
                 if(SPOTIFY_CLIENT_ID.includes("INSERT")) { alert("Please edit the HTML file and add your Spotify Client ID."); return; }
                 
-                // Get the current page URL to use as the redirect
-                const redirect = window.location.href.split('#')[0]; 
+                // Automatically gets your current Worker URL (https://secondscreen2...)
+                const redirect = window.location.href.split('#')[0];
                 
-                // --- FIXED URL ---
-                // We use the official accounts.spotify.com URL
+                // CORRECT SPOTIFY AUTH URL
                 const url = `https://accounts.spotify.com/authorize?client_id=${SPOTIFY_CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(redirect)}&scope=${encodeURIComponent(SPOTIFY_SCOPES)}&show_dialog=true`;
                 
                 const width = 450, height = 730, left = (screen.width/2)-(width/2), top = (screen.height/2)-(height/2);
@@ -526,6 +525,7 @@ loginSpotify: (id) => {
                 const token = localStorage.getItem('sp_token');
                 if(!token) return; 
 
+                // CORRECT SPOTIFY API URL
                 fetch('https://api.spotify.com/v1/me/playlists', {
                     headers: { 'Authorization': 'Bearer ' + token }
                 })
@@ -560,6 +560,8 @@ loginSpotify: (id) => {
                     const parts = uri.split(':');
                     const type = parts[1];
                     const uid = parts[2];
+                    
+                    // CORRECT SPOTIFY EMBED URL
                     const embedUrl = `https://open.spotify.com/embed/${type}/${uid}?utm_source=generator&theme=0`;
                     
                     iframe.src = embedUrl;
@@ -617,7 +619,7 @@ loginSpotify: (id) => {
                 const controls = document.getElementById(`sp-controls-${id}`);
                 const url = input.value;
                 
-                let embedUrl = url.replace('https://open.spotify.com/', 'https://open.spotify.com/embed/');
+                let embedUrl = url.replace('spotify.com/', 'spotify.com/embed/');
                                   
                 if(!embedUrl.includes('?')) embedUrl += "?utm_source=generator&theme=0";
 
