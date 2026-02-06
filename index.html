@@ -210,14 +210,33 @@
         .sp-setup { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; }
         .sp-frame { flex: 1; width: 100%; border: none; border-radius: 12px; }
 
-        /* --- APPLE MUSIC WIDGET STYLES --- */
-        .music-ctrl { display: flex; gap: 8px; margin-bottom: 12px; }
-        .music-sel { flex: 1; background: rgba(118,118,128,0.2); color: white; border: none; border-radius: 10px; padding: 0 12px; height: 32px; font-size: 12px; -webkit-appearance: none; background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23FFFFFF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); background-repeat: no-repeat; background-position: right 10px center; background-size: 8px; outline: none; transition: 0.2s; }
-        .music-sel:focus { background: rgba(118,118,128,0.35); }
-        .music-auth { width: 32px; height: 32px; border-radius: 10px; background: rgba(30, 215, 96, 0.2); color: #1DB954; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; font-size: 18px; }
-        .music-auth:hover { background: #1DB954; color: white; transform: scale(1.05); }
-        .music-frame-wrap { flex: 1; border-radius: 16px; overflow: hidden; background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)); position: relative; border: 1px solid rgba(255,255,255,0.05); }
-        .music-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-sec); gap: 8px; }
+        /* --- APPLE MUSIC STYLE WIDGET --- */
+        .music-wrapper { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden; border-radius: 22px; }
+        .music-toggle { position: absolute; top: 12px; right: 12px; width: 30px; height: 30px; border-radius: 50%; background: rgba(0,0,0,0.4); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; color: white; border: none; z-index: 50; cursor: pointer; transition: 0.2s; }
+        .music-toggle:hover { background: rgba(0,0,0,0.6); transform: scale(1.05); }
+        .music-toggle:active { transform: scale(0.95); }
+
+        /* The Selection Menu (Overlay) */
+        .music-picker { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(20, 20, 20, 0.95); backdrop-filter: blur(20px); z-index: 40; display: flex; flex-direction: column; padding: 20px; transition: transform 0.3s cubic-bezier(0.19, 1, 0.22, 1); transform: translateY(100%); }
+        .music-picker.active { transform: translateY(0); }
+        .music-picker-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-weight: 700; font-size: 16px; }
+        .music-sel-row { display: flex; gap: 10px; margin-bottom: 10px; }
+        .music-sel { flex: 1; background: rgba(255,255,255,0.1); border: none; color: white; padding: 8px 12px; border-radius: 10px; font-size: 13px; outline: none; }
+        .music-btn-auth { background: #1DB954; color: white; border: none; padding: 8px 14px; border-radius: 10px; font-weight: 600; font-size: 12px; cursor: pointer; }
+
+        /* The Player View */
+        .music-player { flex: 1; position: relative; background: linear-gradient(135deg, #1c1c1e 0%, #2c2c2e 100%); display: flex; flex-direction: column; }
+        .music-frame { width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; z-index: 10; opacity: 0; transition: opacity 0.5s; pointer-events: none; }
+        .music-frame.show { opacity: 1; pointer-events: all; }
+
+        /* The Custom "Empty State" UI (Apple Style) */
+        .music-placeholder { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 5; padding: 15px; }
+        .mp-art { width: 50px; height: 50px; background: rgba(255,255,255,0.1); border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; color: var(--text-sec); font-size: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .mp-controls { display: flex; align-items: center; gap: 25px; margin-bottom: 15px; }
+        .mp-btn { color: white; font-size: 20px; opacity: 0.8; cursor: default; }
+        .mp-play { font-size: 32px; opacity: 1; }
+        .mp-bar-bg { width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; position: relative; max-width: 140px; }
+        .mp-bar-fill { position: absolute; left: 0; top: 0; height: 100%; width: 30%; background: var(--text-sec); border-radius: 2px; }
 
         /* Modal */
         #modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); z-index: 1999; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
@@ -579,8 +598,8 @@ const Utils = {
 
                 if (response.access_token) {
                     localStorage.setItem('sp_token', response.access_token);
-                    document.querySelectorAll('.music-header').forEach(el => {
-                        const id = el.querySelector('select').id.replace('ms-sel-', '');
+                    document.querySelectorAll('.music-wrapper').forEach(el => {
+                        const id = el.querySelector('.music-toggle').getAttribute('onclick').match(/'([^']+)'/)[1];
                         Utils.fetchSpotifyPlaylists(id);
                     });
                 }
@@ -617,7 +636,7 @@ const Utils = {
             changeSpotifySource: (id) => {
                 const select = document.getElementById(`ms-sel-${id}`);
                 const iframe = document.getElementById(`ms-frame-${id}`);
-                const setup = document.getElementById(`ms-setup-${id}`);
+                const picker = document.getElementById(`ms-picker-${id}`);
                 
                 if(select.value) {
                     const uri = select.value;
@@ -628,13 +647,17 @@ const Utils = {
                     const embedUrl = `https://open.spotify.com/embed/${type}/${uid}?utm_source=generator&theme=0`;
                     
                     iframe.src = embedUrl;
-                    iframe.style.display = 'block';
-                    setup.style.display = 'none';
+                    iframe.classList.add('show');
+                    picker.classList.remove('active'); // Hide menu on select
                 } else {
-                    iframe.style.display = 'none';
-                    setup.style.display = 'flex';
+                    iframe.classList.remove('show');
                 }
                 Core.saveLayout();
+            },
+            
+            toggleMusicMenu: (id) => {
+                const picker = document.getElementById(`ms-picker-${id}`);
+                picker.classList.toggle('active');
             },
             
             deleteMusic: (id) => { },
@@ -1020,7 +1043,7 @@ const Utils = {
                     notes: wrap('Notes', `<textarea id="nt-${id}" style="flex:1;resize:none;background:transparent;border:none;padding:0;font-family:inherit;font-size:14px;line-height:1.4" placeholder="Type here..." oninput="Core.saveLayout()"></textarea>`),
                     calendar: `<div class="remove-widget">✕</div><div class="cal-wrapper"><div class="cal-header"><i class="fa-solid fa-chevron-left cal-nav" onclick="Utils.changeMonth('${id}', -1)"></i><span id="cal-title-${id}" class="cal-title" onclick="Utils.resetCalendar('${id}')">Month Year</span><i class="fa-solid fa-chevron-right cal-nav" onclick="Utils.changeMonth('${id}', 1)"></i></div><div class="cal-weekdays"><span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span></div><div id="cal-grid-${id}" class="cal-grid"></div></div>`,
                     
-                    music: wrap('Music', `<div class="music-ctrl"><select id="ms-sel-${id}" class="music-sel" onchange="Utils.changeSpotifySource('${id}')"><option value="">Choose Playlist...</option></select><div class="music-auth" onclick="Utils.loginSpotify('${id}')"><i class="fa-brands fa-spotify"></i></div></div><div class="music-frame-wrap"><div id="ms-setup-${id}" class="music-empty"><i class="fa-solid fa-music" style="font-size:24px; opacity:0.5"></i><span style="font-size:11px; font-weight:500">No Music Selected</span></div><iframe id="ms-frame-${id}" style="width:100%;height:100%;border:none;display:none" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe></div>`),
+                    music: `<div class="remove-widget">✕</div><div class="music-wrapper"><button class="music-toggle" onclick="Utils.toggleMusicMenu('${id}')"><i class="fa-solid fa-list"></i></button><div id="ms-picker-${id}" class="music-picker"><div class="music-picker-header"><span>Music Setup</span><button class="music-btn-auth" onclick="Utils.loginSpotify('${id}')">Login</button></div><div class="music-sel-row"><select id="ms-sel-${id}" class="music-sel" onchange="Utils.changeSpotifySource('${id}')"><option value="">Connect first...</option></select></div></div><div class="music-player"><iframe id="ms-frame-${id}" class="music-frame" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe><div class="music-placeholder"><div class="mp-art"><i class="fa-solid fa-music"></i></div><div class="mp-controls"><i class="fa-solid fa-backward-step mp-btn"></i><i class="fa-solid fa-play mp-btn mp-play"></i><i class="fa-solid fa-forward-step mp-btn"></i></div><div class="mp-bar-bg"><div class="mp-bar-fill"></div></div></div></div></div>`,
                     
                     timer: wrap('Event Timer', `<div class="timer-container" id="timer-wrap-${id}" onclick="Utils.setTimer('${id}')"><div id="timer-val-${id}" class="timer-big">--:--</div><div id="timer-lbl-${id}" class="timer-label">Click to Set</div><div class="timer-bar"><div id="timer-bar-${id}" class="timer-fill"></div></div></div>`),
                     battery: wrap('Battery', `<div class="batt-container"><div class="batt-icon-shell"><div class="batt-fill" id="batt-fill-${id}"></div></div><div><div id="batt-val-${id}" class="batt-text">--%</div><div id="batt-st-${id}" class="batt-state">Reading...</div></div></div>`),
