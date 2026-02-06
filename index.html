@@ -475,31 +475,15 @@ const Utils = {
                 document.getElementById(`timer-lbl-${id}`).innerText = `Until ${time}`;
                 Utils.updateTimer(id); Core.saveLayout();
             },
-updateTimer: (id) => {
-    const el = document.getElementById(`timer-wrap-${id}`); 
-    if(!el) return;
-    const end = parseInt(el.getAttribute('data-end')); 
-    if(!end) return;
-    
-    const diff = end - Date.now();
-    
-    if(diff <= 0) { 
-        document.getElementById(`timer-val-${id}`).innerText = "0m"; // Or "Done"
-        document.getElementById(`timer-bar-${id}`).style.width = '0%';
-        return; 
-    }
-
-    const hr = Math.floor(diff / 3600000);
-    // CHANGE THIS LINE: Use Math.ceil so 1m 1s shows as 2m, and 59s shows as 1m
-    const mn = Math.ceil(diff / 60000); 
-
-    document.getElementById(`timer-val-${id}`).innerText = hr > 0 ? `${hr}h ${mn}m` : `${mn}m`;
-    
-    // Optional: Smooth progress bar update
-    // Assuming a 1-hour max for the bar scale, or you can track 'start' time
-    const pct = Math.max(0, Math.min(100, (diff / 3600000) * 100));
-    document.getElementById(`timer-bar-${id}`).style.width = pct + '%';
-},
+            updateTimer: (id) => {
+                const el = document.getElementById(`timer-wrap-${id}`); if(!el) return;
+                const end = parseInt(el.getAttribute('data-end')); if(!end) return;
+                const diff = end - Date.now();
+                if(diff <= 0) { document.getElementById(`timer-val-${id}`).innerText = "Done"; return; }
+                const hr = Math.floor((diff % (86400000)) / (3600000));
+                const mn = Math.floor((diff % (3600000)) / 60000);
+                document.getElementById(`timer-val-${id}`).innerText = `${hr}h ${mn}m`;
+            },
             updateBattery: async (id) => {
                 if('getBattery' in navigator) {
                     const batt = await navigator.getBattery();
