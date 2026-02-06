@@ -199,7 +199,6 @@
         .cal-day.today { background: var(--ios-red); color: white; font-weight: 700; }
         .cal-day.empty { pointer-events: none; }
         
-        /* YouTube & Spotify Widgets */
         .yt-container { height: 100%; display: flex; flex-direction: column; position: relative; }
         .yt-setup { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
         .yt-frame { flex: 1; width: 100%; border: none; border-radius: 12px; }
@@ -210,6 +209,34 @@
         .sp-container { height: 100%; display: flex; flex-direction: column; position: relative; }
         .sp-setup { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; }
         .sp-frame { flex: 1; width: 100%; border: none; border-radius: 12px; }
+
+        /* --- APPLE MUSIC STYLE WIDGET --- */
+        .music-wrapper { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden; border-radius: 22px; }
+        .music-toggle { position: absolute; top: 12px; right: 12px; width: 30px; height: 30px; border-radius: 50%; background: rgba(0,0,0,0.4); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; color: white; border: none; z-index: 50; cursor: pointer; transition: 0.2s; }
+        .music-toggle:hover { background: rgba(0,0,0,0.6); transform: scale(1.05); }
+        .music-toggle:active { transform: scale(0.95); }
+
+        /* The Selection Menu (Overlay) */
+        .music-picker { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(20, 20, 20, 0.95); backdrop-filter: blur(20px); z-index: 40; display: flex; flex-direction: column; padding: 20px; transition: transform 0.3s cubic-bezier(0.19, 1, 0.22, 1); transform: translateY(100%); }
+        .music-picker.active { transform: translateY(0); }
+        .music-picker-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-weight: 700; font-size: 16px; }
+        .music-sel-row { display: flex; gap: 10px; margin-bottom: 10px; }
+        .music-sel { flex: 1; background: rgba(255,255,255,0.1); border: none; color: white; padding: 8px 12px; border-radius: 10px; font-size: 13px; outline: none; }
+        .music-btn-auth { background: #1DB954; color: white; border: none; padding: 8px 14px; border-radius: 10px; font-weight: 600; font-size: 12px; cursor: pointer; }
+
+        /* The Player View */
+        .music-player { flex: 1; position: relative; background: linear-gradient(135deg, #1c1c1e 0%, #2c2c2e 100%); display: flex; flex-direction: column; }
+        .music-frame { width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; z-index: 10; opacity: 0; transition: opacity 0.5s; pointer-events: none; }
+        .music-frame.show { opacity: 1; pointer-events: all; }
+
+        /* The Custom "Empty State" UI (Apple Style) */
+        .music-placeholder { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 5; padding: 15px; }
+        .mp-art { width: 50px; height: 50px; background: rgba(255,255,255,0.1); border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; color: var(--text-sec); font-size: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .mp-controls { display: flex; align-items: center; gap: 25px; margin-bottom: 15px; }
+        .mp-btn { color: white; font-size: 20px; opacity: 0.8; cursor: default; }
+        .mp-play { font-size: 32px; opacity: 1; }
+        .mp-bar-bg { width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; position: relative; max-width: 140px; }
+        .mp-bar-fill { position: absolute; left: 0; top: 0; height: 100%; width: 30%; background: var(--text-sec); border-radius: 2px; }
 
         /* Modal */
         #modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); z-index: 1999; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
@@ -499,33 +526,89 @@ const Utils = {
                 }
             },
 
-            // --- SPOTIFY MUSIC WIDGET UTILS (NOW CORRECTED) ---
-            loginSpotify: (id) => {
+            // --- PKCE HELPERS ---
+            generateRandomString: (length) => {
+                const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+                const values = crypto.getRandomValues(new Uint8Array(length));
+                return values.reduce((acc, x) => acc + possible[x % possible.length], "");
+            },
+            sha256: async (plain) => {
+                const encoder = new TextEncoder();
+                const data = encoder.encode(plain);
+                return window.crypto.subtle.digest('SHA-256', data);
+            },
+            base64encode: (input) => {
+                return btoa(String.fromCharCode.apply(null, new Uint8Array(input)))
+                    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+            },
+
+            // --- SPOTIFY LOGIN (PKCE with Relay) ---
+            loginSpotify: async (id) => {
                 if(SPOTIFY_CLIENT_ID.includes("INSERT")) { alert("Please edit the HTML file and add your Spotify Client ID."); return; }
                 
-                // Automatically gets your current Worker URL (https://secondscreen2...)
-                const redirect = window.location.href.split('#')[0];
+                // Clear any old relay codes
+                localStorage.removeItem('spotify_auth_code_relay');
+
+                const codeVerifier = Utils.generateRandomString(64);
+                const hashed = await Utils.sha256(codeVerifier);
+                const codeChallenge = Utils.base64encode(hashed);
                 
-                // CORRECT SPOTIFY AUTH URL
-                const url = `https://accounts.spotify.com/authorize?client_id=${SPOTIFY_CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(redirect)}&scope=${encodeURIComponent(SPOTIFY_SCOPES)}&show_dialog=true`;
+                localStorage.setItem('spotify_code_verifier', codeVerifier);
+                
+                // Ensure redirect matches what you registered (origin + path)
+                const redirect = window.location.origin + window.location.pathname;
+                const scope = SPOTIFY_SCOPES;
+                // Use proxy URL (17 = authorize)
+                const authUrl = new URL("https://accounts.spotify.com/authorize");
+
+                const params = {
+                    response_type: 'code',
+                    client_id: SPOTIFY_CLIENT_ID,
+                    scope,
+                    code_challenge_method: 'S256',
+                    code_challenge: codeChallenge,
+                    redirect_uri: redirect,
+                };
+
+                authUrl.search = new URLSearchParams(params).toString();
                 
                 const width = 450, height = 730, left = (screen.width/2)-(width/2), top = (screen.height/2)-(height/2);
-                window.open(url, 'Spotify_Auth', `menubar=no,location=no,resizable=no,scrollbars=no,status=no, width=${width}, height=${height}, top=${top}, left=${left}`);
+                window.open(authUrl.toString(), 'Spotify_Auth', `menubar=no,location=no,resizable=no,scrollbars=no,status=no, width=${width}, height=${height}, top=${top}, left=${left}`);
             },
             
-            handleSpotifyToken: (token) => {
-                localStorage.setItem('sp_token', token);
-                document.querySelectorAll('.music-header').forEach(el => {
-                    const id = el.querySelector('select').id.replace('ms-sel-', '');
-                    Utils.fetchSpotifyPlaylists(id);
-                });
+            handleSpotifyCode: async (code) => {
+                const codeVerifier = localStorage.getItem('spotify_code_verifier');
+                const redirect = window.location.origin + window.location.pathname;
+
+                const payload = {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({
+                        client_id: SPOTIFY_CLIENT_ID,
+                        grant_type: 'authorization_code',
+                        code,
+                        redirect_uri: redirect,
+                        code_verifier: codeVerifier,
+                    }),
+                };
+
+                // Use proxy URL (18 = token)
+                const body = await fetch("https://accounts.spotify.com/api/token", payload);
+                const response = await body.json();
+
+                if (response.access_token) {
+                    localStorage.setItem('sp_token', response.access_token);
+                    document.querySelectorAll('.music-wrapper').forEach(el => {
+                        const id = el.querySelector('.music-toggle').getAttribute('onclick').match(/'([^']+)'/)[1];
+                        Utils.fetchSpotifyPlaylists(id);
+                    });
+                }
             },
 
             fetchSpotifyPlaylists: (id) => {
                 const token = localStorage.getItem('sp_token');
                 if(!token) return; 
 
-                // CORRECT SPOTIFY API URL
                 fetch('https://api.spotify.com/v1/me/playlists', {
                     headers: { 'Authorization': 'Bearer ' + token }
                 })
@@ -553,7 +636,7 @@ const Utils = {
             changeSpotifySource: (id) => {
                 const select = document.getElementById(`ms-sel-${id}`);
                 const iframe = document.getElementById(`ms-frame-${id}`);
-                const setup = document.getElementById(`ms-setup-${id}`);
+                const picker = document.getElementById(`ms-picker-${id}`);
                 
                 if(select.value) {
                     const uri = select.value;
@@ -561,17 +644,20 @@ const Utils = {
                     const type = parts[1];
                     const uid = parts[2];
                     
-                    // CORRECT SPOTIFY EMBED URL
                     const embedUrl = `https://open.spotify.com/embed/${type}/${uid}?utm_source=generator&theme=0`;
                     
                     iframe.src = embedUrl;
-                    iframe.style.display = 'block';
-                    setup.style.display = 'none';
+                    iframe.classList.add('show');
+                    picker.classList.remove('active'); // Hide menu on select
                 } else {
-                    iframe.style.display = 'none';
-                    setup.style.display = 'flex';
+                    iframe.classList.remove('show');
                 }
                 Core.saveLayout();
+            },
+            
+            toggleMusicMenu: (id) => {
+                const picker = document.getElementById(`ms-picker-${id}`);
+                picker.classList.toggle('active');
             },
             
             deleteMusic: (id) => { },
@@ -619,7 +705,7 @@ const Utils = {
                 const controls = document.getElementById(`sp-controls-${id}`);
                 const url = input.value;
                 
-                let embedUrl = url.replace('spotify.com/', 'spotify.com/embed/');
+                let embedUrl = url.replace('open.spotify.com', 'open.spotify.com/embed');
                                   
                 if(!embedUrl.includes('?')) embedUrl += "?utm_source=generator&theme=0";
 
@@ -679,20 +765,28 @@ const Utils = {
             let grid = null, editing = false;
 
             const init = () => {
-                // --- SPOTIFY POPUP HANDLER ---
-                // Checks if this window was opened by a popup for auth
-                if(window.opener) {
-                    const hash = window.location.hash;
-                    if(hash && hash.includes('access_token')) {
-                        const token = hash.split('access_token=')[1].split('&')[0];
-                        if(token) {
-                            window.opener.Utils.handleSpotifyToken(token);
-                            window.close();
-                            return; // Stop execution in popup
-                        }
-                    }
+                // --- SPOTIFY PKCE POPUP/RELAY HANDLER ---
+                const params = new URLSearchParams(window.location.search);
+                const code = params.get('code');
+
+                if (code) {
+                    // 1. We are in the popup after Spotify redirected us back.
+                    // Save the code to localStorage to trigger the "storage" event in the parent window.
+                    localStorage.setItem('spotify_auth_code_relay', code);
+                    // Small delay to ensure storage event fires before window closes
+                    setTimeout(() => window.close(), 100);
+                    return; // Stop initialization for the popup
                 }
-                
+
+                // --- MAIN DASHBOARD LOGIC ---
+                // 2. Listen for the "storage" event to catch the code from the popup
+                window.addEventListener('storage', (e) => {
+                    if (e.key === 'spotify_auth_code_relay' && e.newValue) {
+                        Utils.handleSpotifyCode(e.newValue);
+                        localStorage.removeItem('spotify_auth_code_relay'); // Cleanup
+                    }
+                });
+
                 grid = GridStack.init({ column: 12, cellHeight: '85px', margin: 12, float: true, animate: true, disableDrag: true, disableResize: true });
                 grid.off('change added removed'); // IMPORTANT: No saving during init
 
@@ -717,12 +811,8 @@ const Utils = {
             };
 
             const createWidget = (type, w, h, x, y, savedData) => {
-                // --- LIMIT CHECK FOR FREE USERS ---
-                if (!isPro && grid.getGridItems().length >= 2 && !isDashboardLoaded) {
-                    // Logic allows existing widgets to load, but prevents adding new ones interactively
-                }
-                
-                // If dashboard is loaded (meaning user is clicking ADD), check limit
+                if (!isPro && grid.getGridItems().length >= 2 && !isDashboardLoaded) { }
+
                 if (isDashboardLoaded && !isPro && grid.getGridItems().length >= 2) {
                     alert("Free Tier Limit Reached (2 Widgets). Upgrade to Pro for unlimited access!");
                     UI.toggleAdd(false);
@@ -758,14 +848,10 @@ const Utils = {
                     document.getElementById(`timer-lbl-${id}`).innerText = savedData.label;
                 }
                 
-                // LOAD SPOTIFY MUSIC WIDGET
                 if (type === 'music') {
-                    // Try to load playlists if token exists
                     Utils.fetchSpotifyPlaylists(id);
-                    // Load saved selection
                     if(savedData && savedData.current) {
                         const select = document.getElementById(`ms-sel-${id}`);
-                        // Create option immediately so value can be set before fetch completes
                         if(savedData.currentName) {
                             const opt = document.createElement('option');
                             opt.value = savedData.current;
@@ -777,7 +863,6 @@ const Utils = {
                     }
                 }
 
-                // LOAD YOUTUBE STATE
                 if (type === 'youtube' && savedData && savedData.url) {
                     const frame = document.getElementById(`yt-frame-${id}`);
                     const setup = document.getElementById(`yt-setup-${id}`);
@@ -787,7 +872,6 @@ const Utils = {
                     controls.style.display = 'block';
                     setup.style.display = 'none';
                 }
-                // LOAD SPOTIFY EMBED STATE
                 if (type === 'spotify' && savedData && savedData.url) {
                     const frame = document.getElementById(`sp-frame-${id}`);
                     const setup = document.getElementById(`sp-setup-${id}`);
@@ -802,7 +886,7 @@ const Utils = {
             };
 
             const saveLayout = debounce(() => {
-                if(!isDashboardLoaded) return; // THE LOCK
+                if(!isDashboardLoaded) return; 
 
                 const items = grid.getGridItems().map(el => {
                     const type = el.getAttribute('data-type');
@@ -845,7 +929,7 @@ const Utils = {
             const loadData = () => {
                 if(!Cloud.user || !db) return;
 
-                isDashboardLoaded = false; // LOCK
+                isDashboardLoaded = false;
                 grid.off('change added removed');
 
                 db.collection('users').doc(Cloud.user.uid).get().then(doc => {
@@ -853,7 +937,6 @@ const Utils = {
                     if(doc.exists) {
                         const dbData = doc.data();
                         
-                        // CHECK PRO STATUS
                         isPro = dbData.isPro || false;
                         if(isPro) {
                             document.getElementById('upgrade-btn').style.display = 'none';
@@ -876,7 +959,6 @@ const Utils = {
                         loadDefaults();
                     }
                     
-                    // UNLOCK after delay
                     setTimeout(() => {
                         isDashboardLoaded = true;
                         grid.on('change added removed', saveLayout);
@@ -896,7 +978,7 @@ const Utils = {
                 
                 setTimeout(() => {
                     isDashboardLoaded = true;
-                    saveLayout(); // Force save to fix the DB
+                    saveLayout();
                     grid.on('change added removed', saveLayout);
                 }, 1000);
             };
@@ -937,7 +1019,7 @@ const Utils = {
                 el.innerText = msg;
                 el.style.display = 'block';
                 el.style.animation = 'none';
-                el.offsetHeight; /* trigger reflow */
+                el.offsetHeight; 
                 el.style.animation = 'popUpFade 2s ease forwards';
                 setTimeout(() => { el.style.display = 'none'; }, 2000);
             }
@@ -961,8 +1043,7 @@ const Utils = {
                     notes: wrap('Notes', `<textarea id="nt-${id}" style="flex:1;resize:none;background:transparent;border:none;padding:0;font-family:inherit;font-size:14px;line-height:1.4" placeholder="Type here..." oninput="Core.saveLayout()"></textarea>`),
                     calendar: `<div class="remove-widget">✕</div><div class="cal-wrapper"><div class="cal-header"><i class="fa-solid fa-chevron-left cal-nav" onclick="Utils.changeMonth('${id}', -1)"></i><span id="cal-title-${id}" class="cal-title" onclick="Utils.resetCalendar('${id}')">Month Year</span><i class="fa-solid fa-chevron-right cal-nav" onclick="Utils.changeMonth('${id}', 1)"></i></div><div class="cal-weekdays"><span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span></div><div id="cal-grid-${id}" class="cal-grid"></div></div>`,
                     
-                    // MODIFIED MUSIC WIDGET FOR SPOTIFY API
-                    music: wrap('Music', `<div class="music-header" style="display:flex;gap:5px;margin-bottom:10px;align-items:center"><select id="ms-sel-${id}" style="flex:1;background:var(--ios-input);color:white;border-radius:8px;border:none;outline:none;font-size:12px;padding:6px" onchange="Utils.changeSpotifySource('${id}')"><option value="">Select Playlist...</option></select><button class="btn" style="background:#1DB954; color:white; font-size:12px; padding:4px 8px; border-radius:6px" onclick="Utils.loginSpotify('${id}')"><i class="fa-brands fa-spotify"></i> Connect</button></div><div style="flex:1;border-radius:12px;overflow:hidden;background:black;position:relative"><div id="ms-setup-${id}" style="display:flex;flex-direction:column;justify-content:center;align-items:center;height:100%;text-align:center;gap:10px"><i class="fa-brands fa-spotify" style="font-size:40px;color:#1DB954"></i><p style="font-size:12px;color:var(--text-sec)">Connect to view playlists</p></div><iframe id="ms-frame-${id}" style="width:100%;height:100%;border:none;display:none" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe></div>`),
+                    music: `<div class="remove-widget">✕</div><div class="music-wrapper"><button class="music-toggle" onclick="Utils.toggleMusicMenu('${id}')"><i class="fa-solid fa-list"></i></button><div id="ms-picker-${id}" class="music-picker"><div class="music-picker-header"><span>Music Setup</span><button class="music-btn-auth" onclick="Utils.loginSpotify('${id}')">Login</button></div><div class="music-sel-row"><select id="ms-sel-${id}" class="music-sel" onchange="Utils.changeSpotifySource('${id}')"><option value="">Connect first...</option></select></div></div><div class="music-player"><iframe id="ms-frame-${id}" class="music-frame" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe><div class="music-placeholder"><div class="mp-art"><i class="fa-solid fa-music"></i></div><div class="mp-controls"><i class="fa-solid fa-backward-step mp-btn"></i><i class="fa-solid fa-play mp-btn mp-play"></i><i class="fa-solid fa-forward-step mp-btn"></i></div><div class="mp-bar-bg"><div class="mp-bar-fill"></div></div></div></div></div>`,
                     
                     timer: wrap('Event Timer', `<div class="timer-container" id="timer-wrap-${id}" onclick="Utils.setTimer('${id}')"><div id="timer-val-${id}" class="timer-big">--:--</div><div id="timer-lbl-${id}" class="timer-label">Click to Set</div><div class="timer-bar"><div id="timer-bar-${id}" class="timer-fill"></div></div></div>`),
                     battery: wrap('Battery', `<div class="batt-container"><div class="batt-icon-shell"><div class="batt-fill" id="batt-fill-${id}"></div></div><div><div id="batt-val-${id}" class="batt-text">--%</div><div id="batt-st-${id}" class="batt-state">Reading...</div></div></div>`),
@@ -971,7 +1052,7 @@ const Utils = {
                     
                     youtube: `<div class="remove-widget">✕</div><div class="yt-container"><div id="yt-setup-${id}" class="yt-setup"><i class="fa-brands fa-youtube" style="font-size:40px;color:#FF0000;margin-bottom:10px"></i><input id="yt-input-${id}" class="yt-input" placeholder="Paste YouTube Link..." onkeypress="if(event.key==='Enter') Utils.loadYT('${id}')"><button class="btn" onclick="Utils.loadYT('${id}')">Load</button></div><iframe id="yt-frame-${id}" class="yt-frame" style="display:none" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe><div id="yt-controls-${id}" class="yt-controls" style="display:none"><button class="btn btn-danger" onclick="Utils.resetYT('${id}')"><i class="fa-solid fa-xmark"></i></button></div></div>`,
                     
-                    spotify: `<div class="remove-widget">✕</div><div class="sp-container"><div id="sp-setup-${id}" class="sp-setup"><i class="fa-brands fa-spotify" style="font-size:40px;color:#1DB954;margin-bottom:10px"></i><div style="font-size:12px;color:var(--text-sec)">Paste Spotify Song/Playlist Link</div><input id="sp-input-${id}" class="yt-input" placeholder="https://open.spotify.com/playlist/..." onkeypress="if(event.key==='Enter') Utils.loadSpotify('${id}')"><button class="btn" onclick="Utils.loadSpotify('${id}')">Load</button></div><iframe id="sp-frame-${id}" class="sp-frame" style="display:none" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe><div id="sp-controls-${id}" class="yt-controls" style="display:none"><button class="btn btn-danger" onclick="Utils.resetSpotify('${id}')"><i class="fa-solid fa-xmark"></i></button></div></div>`
+                    spotify: `<div class="remove-widget">✕</div><div class="sp-container"><div id="sp-setup-${id}" class="sp-setup"><i class="fa-brands fa-spotify" style="font-size:40px;color:#1DB954;margin-bottom:10px"></i><div style="font-size:12px;color:var(--text-sec)">Paste Spotify Song/Playlist Link</div><input id="sp-input-${id}" class="yt-input" placeholder="https://open.spotify.com/..." onkeypress="if(event.key==='Enter') Utils.loadSpotify('${id}')"><button class="btn" onclick="Utils.loadSpotify('${id}')">Load</button></div><iframe id="sp-frame-${id}" class="sp-frame" style="display:none" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe><div id="sp-controls-${id}" class="yt-controls" style="display:none"><button class="btn btn-danger" onclick="Utils.resetSpotify('${id}')"><i class="fa-solid fa-xmark"></i></button></div></div>`
                 };
                 return map[type] || `<div>Error</div>`;
             }
