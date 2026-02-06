@@ -232,7 +232,7 @@
 
         /* Main Player UI */
         .music-ui { flex: 1; display: flex; flex-direction: row; padding: 15px; gap: 15px; align-items: center; position: relative; }
-        .music-art-box { width: 45%; aspect-ratio: 1; background: var(--music-art); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: black; font-size: 24px; flex-shrink: 0; }
+        .music-art-box { width: 45%; aspect-ratio: 1; background: var(--music-art); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: black; font-size: 24px; flex-shrink: 0; background-size: cover; background-position: center; transition: 0.3s; }
         .music-info-box { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 8px; min-width: 0; }
         
         .music-text { display: flex; flex-direction: column; gap: 4px; }
@@ -244,7 +244,8 @@
         .music-prog-knob { position: absolute; left: 40%; top: 50%; transform: translate(-50%, -50%); width: 10px; height: 10px; background: var(--music-accent); border-radius: 50%; }
 
         .music-controls { display: flex; align-items: center; gap: 20px; margin-top: 5px; }
-        .music-btn { color: var(--music-accent); font-size: 24px; cursor: pointer; background: transparent; border: none; display: flex; align-items: center; justify-content: center; }
+        .music-btn { color: var(--music-accent); font-size: 24px; cursor: pointer; background: transparent; border: none; display: flex; align-items: center; justify-content: center; transition: 0.1s; }
+        .music-btn:active { opacity: 0.6; transform: scale(0.9); }
         .music-btn-play { font-size: 22px; background: var(--music-accent); color: black; width: 45px; height: 45px; border-radius: 50%; padding-left: 4px; box-shadow: 0 0 15px rgba(0, 229, 255, 0.3); }
 
         /* Iframe overlay (Hidden by default, triggered by Play) */
@@ -335,7 +336,8 @@
         
 // === SPOTIFY CONFIGURATION ===
 const SPOTIFY_CLIENT_ID = "2aea224b957a49e0ade20938094a2170"; 
-const SPOTIFY_SCOPES = "playlist-read-private playlist-read-collaborative";
+// Updated Scopes for Player Control
+const SPOTIFY_SCOPES = "playlist-read-private playlist-read-collaborative user-modify-playback-state user-read-currently-playing user-read-playback-state";
 
 const firebaseConfig = {
   apiKey: "AIzaSyArqMp658OSK8u46cjCefyVKiDJe4oe8-g",
@@ -660,11 +662,6 @@ const Utils = {
                     const embedUrl = `https://open.spotify.com/embed/${type}/${uid}?utm_source=generator&theme=0`;
                     
                     iframe.src = embedUrl;
-                    // Auto-hide picker, but show the overlay when needed. 
-                    // Note: Since we want the Custom Look, the iframe stays hidden until Play is clicked? 
-                    // Actually, for simplicity in this static demo, we will overlay the iframe once selected 
-                    // OR we assume the user just wants the visual widget.
-                    // For now, let's keep the custom UI visible and load the iframe in the bg or overlay when active.
                     iframe.classList.add('active'); 
                     picker.classList.remove('active'); 
                 } else {
@@ -676,6 +673,76 @@ const Utils = {
             toggleMusicMenu: (id) => {
                 const picker = document.getElementById(`ms-picker-${id}`);
                 picker.classList.toggle('active');
+            },
+            
+            // --- NEW: REAL-TIME REMOTE CONTROL LOGIC ---
+            controlMusic: async (id, command) => {
+                const token = localStorage.getItem('sp_token');
+                if(!token) return UI.showToast("Login Required");
+                
+                const method = (command === 'next' || command === 'previous') ? 'POST' : 'PUT';
+                let endpoint = `https://api.spotify.com/v1/me/player/${command}`;
+                
+                // Handle toggle logic manually since API doesn't have a simple "toggle"
+                if(command === 'playpause') {
+                    // Just try to play, if error (already playing), then pause. Or fetch state first.
+                    // Simple hack: Let's assume pause first, then catch? No, lets read state.
+                    const stateData = await fetch('https://api.spotify.com/v1/me/player', { headers: { 'Authorization': 'Bearer ' + token } }).then(r=>r.json()).catch(()=>null);
+                    if(stateData && stateData.is_playing) {
+                        endpoint = `https://api.spotify.com/v1/me/player/pause`;
+                    } else {
+                        endpoint = `https://api.spotify.com/v1/me/player/play`;
+                    }
+                }
+
+                fetch(endpoint, {
+                    method: method,
+                    headers: { 'Authorization': 'Bearer ' + token }
+                }).then(r => {
+                    if(r.status === 204) setTimeout(() => Utils.updateMusicState(id), 500); // Success, update UI
+                    else if(r.status === 404 || r.status === 403) UI.showToast("Open Spotify App on Device");
+                });
+            },
+
+            // --- NEW: POLLING FOR NOW PLAYING DATA ---
+            updateMusicState: (id) => {
+                const token = localStorage.getItem('sp_token');
+                if(!token) return;
+
+                fetch('https://api.spotify.com/v1/me/player/currently-playing', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                })
+                .then(r => {
+                    if(r.status === 204) return null; // Nothing playing
+                    return r.json();
+                })
+                .then(data => {
+                    if(!data || !data.item) return;
+                    
+                    const title = data.item.name;
+                    const artist = data.item.artists.map(a => a.name).join(', ');
+                    const art = data.item.album.images[0]?.url;
+                    const progress = (data.progress_ms / data.item.duration_ms) * 100;
+
+                    // Update DOM
+                    const elTitle = document.getElementById(`ms-title-${id}`);
+                    const elArtist = document.getElementById(`ms-artist-${id}`);
+                    const elArt = document.getElementById(`ms-art-${id}`);
+                    const elFill = document.getElementById(`ms-fill-${id}`);
+                    const elKnob = document.getElementById(`ms-knob-${id}`);
+                    const elPlayIcon = document.getElementById(`ms-playicon-${id}`);
+
+                    if(elTitle) elTitle.innerText = title;
+                    if(elArtist) elArtist.innerText = artist;
+                    if(elArt) elArt.style.backgroundImage = `url('${art}')`;
+                    if(elFill) elFill.style.width = `${progress}%`;
+                    if(elKnob) elKnob.style.left = `${progress}%`;
+                    
+                    // Update Play Icon based on state
+                    if(elPlayIcon) {
+                        elPlayIcon.className = data.is_playing ? "fa-solid fa-pause" : "fa-solid fa-play";
+                    }
+                });
             },
             
             deleteMusic: (id) => { },
@@ -813,6 +880,14 @@ const Utils = {
                 setInterval(UI.updateTime, 1000);
                 setInterval(() => document.querySelectorAll('.count-container').forEach(el => Utils.updateCountdown(el.id.replace('count-wrap-', ''))), 60000);
                 setInterval(() => { document.querySelectorAll('.timer-container').forEach(el => Utils.updateTimer(el.id.replace('timer-wrap-',''))); }, 1000);
+                
+                // --- MUSIC WIDGET POLLING LOOP ---
+                setInterval(() => {
+                    document.querySelectorAll('.music-wrapper').forEach(el => {
+                        const id = el.querySelector('.music-toggle').getAttribute('onclick').match(/'([^']+)'/)[1];
+                        Utils.updateMusicState(id);
+                    });
+                }, 3000); // Update every 3 seconds
 
                 document.getElementById('dashboard-wrapper').addEventListener('click', (e) => {
                     if (editing && !e.target.closest('.grid-stack-item')) { Core.toggleEdit(); }
@@ -1061,7 +1136,7 @@ const Utils = {
                     notes: wrap('Notes', `<textarea id="nt-${id}" style="flex:1;resize:none;background:transparent;border:none;padding:0;font-family:inherit;font-size:14px;line-height:1.4" placeholder="Type here..." oninput="Core.saveLayout()"></textarea>`),
                     calendar: `<div class="remove-widget">✕</div><div class="cal-wrapper"><div class="cal-header"><i class="fa-solid fa-chevron-left cal-nav" onclick="Utils.changeMonth('${id}', -1)"></i><span id="cal-title-${id}" class="cal-title" onclick="Utils.resetCalendar('${id}')">Month Year</span><i class="fa-solid fa-chevron-right cal-nav" onclick="Utils.changeMonth('${id}', 1)"></i></div><div class="cal-weekdays"><span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span></div><div id="cal-grid-${id}" class="cal-grid"></div></div>`,
                     
-                    music: `<div class="remove-widget">✕</div><div class="music-wrapper"><button class="music-toggle" onclick="Utils.toggleMusicMenu('${id}')"><i class="fa-solid fa-list"></i></button><div id="ms-picker-${id}" class="music-picker"><div class="music-picker-header"><span>Music Setup</span><button class="music-btn-auth" onclick="Utils.loginSpotify('${id}')">Login</button></div><div class="music-sel-row"><select id="ms-sel-${id}" class="music-sel" onchange="Utils.changeSpotifySource('${id}')"><option value="">Connect first...</option></select></div></div><div class="music-ui"><div class="music-art-box"><i class="fa-solid fa-music"></i></div><div class="music-info-box"><div class="music-text"><span class="music-title">Song Title</span><span class="music-artist">Artist Name</span></div><div class="music-progress"><div class="music-prog-fill"></div><div class="music-prog-knob"></div></div><div class="music-controls"><button class="music-btn"><i class="fa-solid fa-backward-step"></i></button><button class="music-btn music-btn-play"><i class="fa-solid fa-play"></i></button><button class="music-btn"><i class="fa-solid fa-forward-step"></i></button></div></div><iframe id="ms-frame-${id}" class="music-frame-overlay" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe></div></div>`,
+                    music: `<div class="remove-widget">✕</div><div class="music-wrapper"><button class="music-toggle" onclick="Utils.toggleMusicMenu('${id}')"><i class="fa-solid fa-list"></i></button><div id="ms-picker-${id}" class="music-picker"><div class="music-picker-header"><span>Music Setup</span><button class="music-btn-auth" onclick="Utils.loginSpotify('${id}')">Login</button></div><div class="music-sel-row"><select id="ms-sel-${id}" class="music-sel" onchange="Utils.changeSpotifySource('${id}')"><option value="">Connect first...</option></select></div></div><div class="music-ui"><div class="music-art-box" id="ms-art-${id}"><i class="fa-solid fa-music"></i></div><div class="music-info-box"><div class="music-text"><span class="music-title" id="ms-title-${id}">Song Title</span><span class="music-artist" id="ms-artist-${id}">Artist Name</span></div><div class="music-progress"><div class="music-prog-fill" id="ms-fill-${id}"></div><div class="music-prog-knob" id="ms-knob-${id}"></div></div><div class="music-controls"><button class="music-btn" onclick="Utils.controlMusic('${id}', 'previous')"><i class="fa-solid fa-backward-step"></i></button><button class="music-btn music-btn-play" onclick="Utils.controlMusic('${id}', 'playpause')"><i class="fa-solid fa-play" id="ms-playicon-${id}"></i></button><button class="music-btn" onclick="Utils.controlMusic('${id}', 'next')"><i class="fa-solid fa-forward-step"></i></button></div></div><iframe id="ms-frame-${id}" class="music-frame-overlay" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe></div></div>`,
                     
                     timer: wrap('Event Timer', `<div class="timer-container" id="timer-wrap-${id}" onclick="Utils.setTimer('${id}')"><div id="timer-val-${id}" class="timer-big">--:--</div><div id="timer-lbl-${id}" class="timer-label">Click to Set</div><div class="timer-bar"><div id="timer-bar-${id}" class="timer-fill"></div></div></div>`),
                     battery: wrap('Battery', `<div class="batt-container"><div class="batt-icon-shell"><div class="batt-fill" id="batt-fill-${id}"></div></div><div><div id="batt-val-${id}" class="batt-text">--%</div><div id="batt-st-${id}" class="batt-state">Reading...</div></div></div>`),
