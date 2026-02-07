@@ -23,6 +23,11 @@
             --text-main: #FFFFFF; --text-sec: rgba(235, 235, 245, 0.6);
             --radius: 22px;
             --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+            
+            /* Custom Music Theme */
+            --music-bg: #000000;
+            --music-accent: #00E5FF; /* Cyan */
+            --music-art: #FFD600; /* Yellow */
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; user-select: none; }
@@ -46,9 +51,9 @@
         /* ACTION TOAST */
         #action-toast {
             position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%);
-            background: rgba(48, 209, 88, 0.9);
-            color: white; padding: 10px 24px;
-            border-radius: 50px; font-size: 14px; font-weight: 600;
+            background: var(--music-accent);
+            color: black; padding: 10px 24px;
+            border-radius: 50px; font-size: 14px; font-weight: 700;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
             display: none; z-index: 6000; pointer-events: none;
             backdrop-filter: blur(10px);
@@ -253,7 +258,7 @@
             <button class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;" onclick="UI.toggleAdd(false)">Close</button>
         </div>
         <div class="modal-grid">
-            <div class="add-card" onclick="Core.createWidget('music', 4, 3)"><i class="fa-brands fa-spotify add-icon" style="color:#1DB954"></i><span class="add-label">Music (Auth)</span></div>
+            <div class="add-card" onclick="Core.createWidget('music', 4, 2)"><i class="fa-brands fa-spotify add-icon" style="color:#1DB954"></i><span class="add-label">Music (Auth)</span></div>
             <div class="add-card" onclick="Core.createWidget('youtube', 4, 3)"><i class="fa-brands fa-youtube add-icon" style="color:#FF0000"></i><span class="add-label">YouTube</span></div>
             <div class="add-card" onclick="Core.createWidget('timer', 3, 2)"><i class="fa-solid fa-hourglass-end add-icon" style="color:var(--ios-orange)"></i><span class="add-label">Timer</span></div>
             <div class="add-card" onclick="Core.createWidget('battery', 3, 2)"><i class="fa-solid fa-battery-half add-icon" style="color:var(--ios-green)"></i><span class="add-label">Battery</span></div>
@@ -308,7 +313,8 @@ const firebaseConfig = {
 };
 
         // --- 2. STRIPE CONFIG ---
-        const STRIPE_LINK = "https://buy.stripe.com/test_..."; // PASTE YOUR STRIPE PAYMENT LINK HERE
+        // REPLACE with your actual Stripe Payment Link
+        const STRIPE_LINK = "https://buy.stripe.com/test_..."; 
 
         try {
             if(firebaseConfig.apiKey !== "YOUR_API_KEY_HERE") {
@@ -350,7 +356,6 @@ const firebaseConfig = {
                     status.style.display = 'block';
                     status.innerText = "Saving...";
                     
-                    // SAVE WITH MERGE TRUE to not overwrite 'isPro' status
                     db.collection('users').doc(Cloud.user.uid).set({ 
                         layout: JSON.stringify(data), 
                         updated: Date.now() 
@@ -364,8 +369,23 @@ const firebaseConfig = {
                 }
             },
             upgrade: () => {
-                window.open(STRIPE_LINK, '_blank');
-                alert("After payment, please contact support (you) to activate Pro status.");
+                // Redirect user to Stripe Payment Link
+                window.location.href = STRIPE_LINK;
+            },
+            activatePro: () => {
+                if(Cloud.user && db) {
+                    // Update user record to Pro
+                    db.collection('users').doc(Cloud.user.uid).update({ 
+                        isPro: true 
+                    }).then(() => {
+                        isPro = true;
+                        UI.showToast("Pro Activated! ⚡");
+                        document.getElementById('upgrade-btn').style.display = 'none';
+                        document.getElementById('user-info').innerHTML += '<span class="pro-badge">PRO ⚡</span>';
+                        // Remove query param from URL without reload
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                    });
+                }
             }
         };
 
@@ -740,17 +760,15 @@ const Utils = {
                 // --- SPOTIFY PKCE POPUP/RELAY HANDLER ---
                 const params = new URLSearchParams(window.location.search);
                 const code = params.get('code');
+                const paymentSuccess = params.get('payment_success');
 
                 if (code) {
                     // 1. We are in the popup after Spotify redirected us back.
-                    // Save the code to localStorage to trigger the "storage" event in the parent window.
                     localStorage.setItem('spotify_auth_code_relay', code);
-                    // Small delay to ensure storage event fires before window closes
                     setTimeout(() => window.close(), 100);
-                    return; // Stop initialization for the popup
+                    return; 
                 }
 
-                // --- MAIN DASHBOARD LOGIC ---
                 // 2. Listen for the "storage" event to catch the code from the popup
                 window.addEventListener('storage', (e) => {
                     if (e.key === 'spotify_auth_code_relay' && e.newValue) {
@@ -758,6 +776,11 @@ const Utils = {
                         localStorage.removeItem('spotify_auth_code_relay'); // Cleanup
                     }
                 });
+                
+                // 3. Check for Payment Success
+                if (paymentSuccess) {
+                    Cloud.activatePro();
+                }
 
                 grid = GridStack.init({ column: 12, cellHeight: '85px', margin: 12, float: true, animate: true, disableDrag: true, disableResize: true });
                 grid.off('change added removed'); // IMPORTANT: No saving during init
