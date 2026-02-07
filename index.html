@@ -294,7 +294,8 @@
         
 // === SPOTIFY CONFIGURATION ===
 const SPOTIFY_CLIENT_ID = "2aea224b957a49e0ade20938094a2170"; 
-const SPOTIFY_SCOPES = "playlist-read-private playlist-read-collaborative";
+// Updated Scopes for Player Control
+const SPOTIFY_SCOPES = "playlist-read-private playlist-read-collaborative user-modify-playback-state user-read-currently-playing user-read-playback-state";
 
 const firebaseConfig = {
   apiKey: "AIzaSyArqMp658OSK8u46cjCefyVKiDJe4oe8-g",
@@ -621,6 +622,9 @@ const Utils = {
                     iframe.src = embedUrl;
                     iframe.style.display = 'block';
                     setup.style.display = 'none';
+                    // Apply special styling to remove padding for music widget when active
+                    const widgetContent = iframe.closest('.grid-stack-item-content');
+                    if(widgetContent) widgetContent.style.padding = '0';
                 } else {
                     iframe.style.display = 'none';
                     setup.style.display = 'flex';
