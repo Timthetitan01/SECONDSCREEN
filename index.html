@@ -108,6 +108,7 @@
         .btn:active { transform: scale(0.95); opacity: 0.8; }
         .btn-primary { background: var(--ios-blue); }
         .btn-danger { background: rgba(255, 69, 58, 0.15); color: var(--ios-red); }
+        /* NEW: Upgrade Button Style */
         .btn-gold { background: linear-gradient(135deg, #FFD700, #FFA500); color: black; border: 1px solid #FFD700; font-weight: 700; text-shadow: 0 1px 0 rgba(255,255,255,0.4); }
         .btn-gold:hover { transform: scale(1.05); box-shadow: 0 0 15px rgba(255, 215, 0, 0.4); }
 
@@ -258,7 +259,7 @@
             <button class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;" onclick="UI.toggleAdd(false)">Close</button>
         </div>
         <div class="modal-grid">
-            <div class="add-card" onclick="Core.createWidget('music', 4, 2)"><i class="fa-brands fa-spotify add-icon" style="color:#1DB954"></i><span class="add-label">Music (Auth)</span></div>
+            <div class="add-card" onclick="Core.createWidget('music', 4, 3)"><i class="fa-brands fa-spotify add-icon" style="color:#1DB954"></i><span class="add-label">Music (Auth)</span></div>
             <div class="add-card" onclick="Core.createWidget('youtube', 4, 3)"><i class="fa-brands fa-youtube add-icon" style="color:#FF0000"></i><span class="add-label">YouTube</span></div>
             <div class="add-card" onclick="Core.createWidget('timer', 3, 2)"><i class="fa-solid fa-hourglass-end add-icon" style="color:var(--ios-orange)"></i><span class="add-label">Timer</span></div>
             <div class="add-card" onclick="Core.createWidget('battery', 3, 2)"><i class="fa-solid fa-battery-half add-icon" style="color:var(--ios-green)"></i><span class="add-label">Battery</span></div>
@@ -313,8 +314,7 @@ const firebaseConfig = {
 };
 
         // --- 2. STRIPE CONFIG ---
-        // REPLACE with your actual Stripe Payment Link
-        const STRIPE_LINK = "https://buy.stripe.com/test_..."; 
+        const STRIPE_LINK = "https://buy.stripe.com/test_dRm9AV1EkbVkcke21Mcwg00"; // PASTE YOUR STRIPE PAYMENT LINK HERE
 
         try {
             if(firebaseConfig.apiKey !== "YOUR_API_KEY_HERE") {
@@ -344,6 +344,12 @@ const firebaseConfig = {
                         document.getElementById('login-overlay').style.opacity = '0';
                         setTimeout(() => document.getElementById('login-overlay').style.display = 'none', 500);
                         Core.loadData();
+                        
+                        // Check for payment success URL param
+                        const params = new URLSearchParams(window.location.search);
+                        if (params.get('payment_success') === 'true') {
+                            Cloud.activatePro();
+                        }
                     } else {
                         document.getElementById('login-overlay').style.display = 'flex';
                         document.getElementById('login-overlay').style.opacity = '1';
@@ -369,20 +375,17 @@ const firebaseConfig = {
                 }
             },
             upgrade: () => {
-                // Redirect user to Stripe Payment Link
                 window.location.href = STRIPE_LINK;
             },
             activatePro: () => {
                 if(Cloud.user && db) {
-                    // Update user record to Pro
-                    db.collection('users').doc(Cloud.user.uid).update({ 
+                    db.collection('users').doc(Cloud.user.uid).set({ 
                         isPro: true 
-                    }).then(() => {
+                    }, { merge: true }).then(() => {
                         isPro = true;
                         UI.showToast("Pro Activated! ⚡");
                         document.getElementById('upgrade-btn').style.display = 'none';
                         document.getElementById('user-info').innerHTML += '<span class="pro-badge">PRO ⚡</span>';
-                        // Remove query param from URL without reload
                         window.history.replaceState({}, document.title, window.location.pathname);
                     });
                 }
@@ -764,11 +767,14 @@ const Utils = {
 
                 if (code) {
                     // 1. We are in the popup after Spotify redirected us back.
+                    // Save the code to localStorage to trigger the "storage" event in the parent window.
                     localStorage.setItem('spotify_auth_code_relay', code);
+                    // Small delay to ensure storage event fires before window closes
                     setTimeout(() => window.close(), 100);
-                    return; 
+                    return; // Stop initialization for the popup
                 }
 
+                // --- MAIN DASHBOARD LOGIC ---
                 // 2. Listen for the "storage" event to catch the code from the popup
                 window.addEventListener('storage', (e) => {
                     if (e.key === 'spotify_auth_code_relay' && e.newValue) {
@@ -779,7 +785,7 @@ const Utils = {
                 
                 // 3. Check for Payment Success
                 if (paymentSuccess) {
-                    Cloud.activatePro();
+                    // We will handle this in Cloud.initAuth to ensure user is logged in first
                 }
 
                 grid = GridStack.init({ column: 12, cellHeight: '85px', margin: 12, float: true, animate: true, disableDrag: true, disableResize: true });
