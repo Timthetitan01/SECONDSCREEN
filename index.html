@@ -108,14 +108,13 @@
         .btn:active { transform: scale(0.95); opacity: 0.8; }
         .btn-primary { background: var(--ios-blue); }
         .btn-danger { background: rgba(255, 69, 58, 0.15); color: var(--ios-red); }
-        /* NEW: Upgrade Button Style */
         .btn-gold { background: linear-gradient(135deg, #FFD700, #FFA500); color: black; border: 1px solid #FFD700; font-weight: 700; text-shadow: 0 1px 0 rgba(255,255,255,0.4); }
         .btn-gold:hover { transform: scale(1.05); box-shadow: 0 0 15px rgba(255, 215, 0, 0.4); }
 
         .user-pill { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.3); padding: 4px 12px 4px 4px; border-radius: 99px; }
         .user-avatar { width: 24px; height: 24px; border-radius: 50%; background: #555; }
         .user-name { font-size: 12px; font-weight: 500; }
-        .pro-badge { background: #FFD700; color: black; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 800; margin-left: 5px; }
+        .pro-badge { background: #0A84FF; color: black; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 800; margin-left: 5px; }
 
         #dashboard-wrapper { flex: 1; padding: 20px; overflow-y: auto; overflow-x: hidden; cursor: default; }
         .grid-stack-item { overflow: visible !important; }
@@ -314,7 +313,8 @@ const firebaseConfig = {
 };
 
         // --- 2. STRIPE CONFIG ---
-        const STRIPE_LINK = "https://buy.stripe.com/test_dRm9AV1EkbVkcke21Mcwg00"; // PASTE YOUR STRIPE PAYMENT LINK HERE
+        // REPLACE with your actual Stripe Payment Link
+        const STRIPE_LINK = "https://buy.stripe.com/test_dRm9AV1EkbVkcke21Mcwg00"; 
 
         try {
             if(firebaseConfig.apiKey !== "YOUR_API_KEY_HERE") {
@@ -385,7 +385,9 @@ const firebaseConfig = {
                         isPro = true;
                         UI.showToast("Pro Activated! ⚡");
                         document.getElementById('upgrade-btn').style.display = 'none';
-                        document.getElementById('user-info').innerHTML += '<span class="pro-badge">PRO ⚡</span>';
+                        if(!document.querySelector('.pro-badge')) {
+                            document.getElementById('user-info').innerHTML += '<span class="pro-badge">PRO ⚡</span>';
+                        }
                         window.history.replaceState({}, document.title, window.location.pathname);
                     });
                 }
@@ -645,9 +647,11 @@ const Utils = {
                     iframe.src = embedUrl;
                     iframe.style.display = 'block';
                     setup.style.display = 'none';
-                    // Apply special styling to remove padding for music widget when active
+                    
+                    // NEW: Remove padding when player is active to let it fill the card
                     const widgetContent = iframe.closest('.grid-stack-item-content');
                     if(widgetContent) widgetContent.style.padding = '0';
+                    
                 } else {
                     iframe.style.display = 'none';
                     setup.style.display = 'flex';
@@ -864,7 +868,7 @@ const Utils = {
                     }
                 }
 
-                if (type === 'youtube' && savedData && savedData.url) {
+                if (type === 'youtube') {
                     const frame = document.getElementById(`yt-frame-${id}`);
                     const setup = document.getElementById(`yt-setup-${id}`);
                     const controls = document.getElementById(`yt-controls-${id}`);
@@ -941,7 +945,9 @@ const Utils = {
                         isPro = dbData.isPro || false;
                         if(isPro) {
                             document.getElementById('upgrade-btn').style.display = 'none';
-                            document.getElementById('user-info').innerHTML += '<span class="pro-badge">PRO ⚡</span>';
+                            if(!document.querySelector('.pro-badge')) {
+                                document.getElementById('user-info').innerHTML += '<span class="pro-badge">PRO ⚡</span>';
+                            }
                         } else {
                             document.getElementById('upgrade-btn').style.display = 'block';
                         }
