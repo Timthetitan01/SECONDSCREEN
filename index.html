@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StudyNest</title>
+    <title>SecondScreen | Pro Tier</title>
     <link rel="icon" type="image/png" href="studynestlogo.png">
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack.min.css" />
@@ -23,11 +23,6 @@
             --text-main: #FFFFFF; --text-sec: rgba(235, 235, 245, 0.6);
             --radius: 22px;
             --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
-            
-            /* Custom Music Theme */
-            --music-bg: #000000;
-            --music-accent: #00E5FF; /* Cyan */
-            --music-art: #FFD600; /* Yellow */
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; user-select: none; }
@@ -51,8 +46,8 @@
         /* ACTION TOAST */
         #action-toast {
             position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%);
-            background: var(--music-accent);
-            color: black; padding: 10px 24px;
+            background: #1DB954; /* Spotify Green for general success */
+            color: white; padding: 10px 24px;
             border-radius: 50px; font-size: 14px; font-weight: 700;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
             display: none; z-index: 6000; pointer-events: none;
@@ -216,6 +211,25 @@
         .sp-setup { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; }
         .sp-frame { flex: 1; width: 100%; border: none; border-radius: 12px; }
 
+        /* --- APPLE MUSIC STYLE WIDGET --- */
+        .music-wrapper { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden; border-radius: 22px; }
+        .music-toggle { position: absolute; top: 12px; right: 12px; width: 30px; height: 30px; border-radius: 50%; background: rgba(0,0,0,0.4); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; color: white; border: none; z-index: 50; cursor: pointer; transition: 0.2s; }
+        .music-toggle:hover { background: rgba(0,0,0,0.6); transform: scale(1.05); }
+        .music-toggle:active { transform: scale(0.95); }
+
+        /* The Selection Menu (Overlay) */
+        .music-picker { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(20, 20, 20, 0.95); backdrop-filter: blur(20px); z-index: 40; display: flex; flex-direction: column; padding: 20px; transition: transform 0.3s cubic-bezier(0.19, 1, 0.22, 1); transform: translateY(100%); }
+        .music-picker.active { transform: translateY(0); }
+        .music-picker-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-weight: 700; font-size: 16px; }
+        .music-sel-row { display: flex; gap: 10px; margin-bottom: 10px; }
+        .music-sel { flex: 1; background: rgba(255,255,255,0.1); border: none; color: white; padding: 8px 12px; border-radius: 10px; font-size: 13px; outline: none; }
+        .music-btn-auth { background: #1DB954; color: white; border: none; padding: 8px 14px; border-radius: 10px; font-weight: 600; font-size: 12px; cursor: pointer; }
+
+        /* The Player View */
+        .music-player { flex: 1; position: relative; background: linear-gradient(135deg, #1c1c1e 0%, #2c2c2e 100%); display: flex; flex-direction: column; }
+        .music-frame { width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; z-index: 10; opacity: 0; transition: opacity 0.5s; pointer-events: none; }
+        .music-frame.show { opacity: 1; pointer-events: all; }
+
         /* Modal */
         #modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); z-index: 1999; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
         #modal-overlay.show { opacity: 1; pointer-events: all; }
@@ -243,7 +257,7 @@
 
     <div id="login-overlay">
         <div class="login-card">
-            <div class="login-title"><i class="fa-brands fa-apple"></i> StudyNest</div>
+            <div class="login-title"><i class="fa-brands fa-apple"></i> SecondScreen Pro</div>
             <div class="login-sub">Sign in with Google to load your dashboard.</div>
             <button class="btn btn-primary" style="font-size:16px; padding:12px 24px" onclick="Cloud.login()">
                 <i class="fa-brands fa-google"></i> Sign in with Google
@@ -258,7 +272,7 @@
             <button class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;" onclick="UI.toggleAdd(false)">Close</button>
         </div>
         <div class="modal-grid">
-            <div class="add-card" onclick="Core.createWidget('music', 4, 3)"><i class="fa-brands fa-spotify add-icon" style="color:#1DB954"></i><span class="add-label">Music (Auth)</span></div>
+            <div class="add-card" onclick="Core.createWidget('music', 4, 2)"><i class="fa-brands fa-spotify add-icon" style="color:#1DB954"></i><span class="add-label">Music (Auth)</span></div>
             <div class="add-card" onclick="Core.createWidget('youtube', 4, 3)"><i class="fa-brands fa-youtube add-icon" style="color:#FF0000"></i><span class="add-label">YouTube</span></div>
             <div class="add-card" onclick="Core.createWidget('timer', 3, 2)"><i class="fa-solid fa-hourglass-end add-icon" style="color:var(--ios-orange)"></i><span class="add-label">Timer</span></div>
             <div class="add-card" onclick="Core.createWidget('battery', 3, 2)"><i class="fa-solid fa-battery-half add-icon" style="color:var(--ios-green)"></i><span class="add-label">Battery</span></div>
@@ -276,7 +290,7 @@
     </div>
 
     <nav>
-        <div class="brand"><i class="fa-brands fa-apple"></i> StudyNest</div>
+        <div class="brand"><i class="fa-brands fa-apple"></i> SecondScreen Pro</div>
         <div class="nav-actions">
             <button id="upgrade-btn" class="btn btn-gold" onclick="Cloud.upgrade()" style="display:none">
                 <i class="fa-solid fa-star"></i> Upgrade
@@ -488,16 +502,33 @@ const Utils = {
                 document.getElementById(`timer-val-${id}`).innerText = `${hr}h ${mn}m`;
             },
             updateBattery: async (id) => {
-                if('getBattery' in navigator) {
-                    const batt = await navigator.getBattery();
-                    const up = () => {
-                        const lvl = Math.round(batt.level * 100);
-                        document.getElementById(`batt-val-${id}`).innerText = lvl + '%';
-                        document.getElementById(`batt-fill-${id}`).style.width = lvl + '%';
-                        document.getElementById(`batt-st-${id}`).innerText = batt.charging ? 'Charging ⚡' : 'On Battery';
-                        document.getElementById(`batt-fill-${id}`).style.background = batt.charging ? 'var(--ios-green)' : (lvl<20?'var(--ios-red)':'var(--text-main)');
-                    }; up(); batt.addEventListener('levelchange', up); batt.addEventListener('chargingchange', up);
-                } else { document.getElementById(`batt-st-${id}`).innerText = "Not Supported"; }
+                if(navigator.getBattery) {
+                    try {
+                        const batt = await navigator.getBattery();
+                        const up = () => {
+                            const lvl = Math.round(batt.level * 100);
+                            const valEl = document.getElementById(`batt-val-${id}`);
+                            const fillEl = document.getElementById(`batt-fill-${id}`);
+                            const stEl = document.getElementById(`batt-st-${id}`);
+                            
+                            if(valEl) valEl.innerText = lvl + '%';
+                            if(fillEl) {
+                                fillEl.style.width = lvl + '%';
+                                fillEl.style.background = batt.charging ? 'var(--ios-green)' : (lvl<20?'var(--ios-red)':'var(--text-main)');
+                            }
+                            if(stEl) stEl.innerText = batt.charging ? 'Charging ⚡' : 'On Battery';
+                        };
+                        up();
+                        batt.addEventListener('levelchange', up);
+                        batt.addEventListener('chargingchange', up);
+                    } catch(e) {
+                        const stEl = document.getElementById(`batt-st-${id}`);
+                        if(stEl) stEl.innerText = "Error";
+                    }
+                } else {
+                    const stEl = document.getElementById(`batt-st-${id}`);
+                    if(stEl) stEl.innerText = "Not Supported";
+                }
             },
             genPass: (id) => {
                 const len = document.getElementById(`rng-${id}`).value;
@@ -647,11 +678,9 @@ const Utils = {
                     iframe.src = embedUrl;
                     iframe.style.display = 'block';
                     setup.style.display = 'none';
-                    
-                    // NEW: Remove padding when player is active to let it fill the card
+                    // Apply special styling to remove padding for music widget when active
                     const widgetContent = iframe.closest('.grid-stack-item-content');
                     if(widgetContent) widgetContent.style.padding = '0';
-                    
                 } else {
                     iframe.style.display = 'none';
                     setup.style.display = 'flex';
@@ -868,7 +897,7 @@ const Utils = {
                     }
                 }
 
-                if (type === 'youtube') {
+                if (type === 'youtube' && savedData && savedData.url) {
                     const frame = document.getElementById(`yt-frame-${id}`);
                     const setup = document.getElementById(`yt-setup-${id}`);
                     const controls = document.getElementById(`yt-controls-${id}`);
