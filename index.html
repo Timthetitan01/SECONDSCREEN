@@ -23,6 +23,11 @@
             --text-main: #FFFFFF; --text-sec: rgba(235, 235, 245, 0.6);
             --radius: 22px;
             --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+            
+            /* Custom Music Theme */
+            --music-bg: #000000;
+            --music-accent: #00E5FF; /* Cyan */
+            --music-art: #FFD600; /* Yellow */
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; user-select: none; }
@@ -46,8 +51,8 @@
         /* ACTION TOAST */
         #action-toast {
             position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%);
-            background: #1DB954; /* Spotify Green for general success */
-            color: white; padding: 10px 24px;
+            background: var(--music-accent);
+            color: black; padding: 10px 24px;
             border-radius: 50px; font-size: 14px; font-weight: 700;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
             display: none; z-index: 6000; pointer-events: none;
@@ -210,25 +215,6 @@
         .sp-container { height: 100%; display: flex; flex-direction: column; position: relative; }
         .sp-setup { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; }
         .sp-frame { flex: 1; width: 100%; border: none; border-radius: 12px; }
-
-        /* --- APPLE MUSIC STYLE WIDGET --- */
-        .music-wrapper { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden; border-radius: 22px; }
-        .music-toggle { position: absolute; top: 12px; right: 12px; width: 30px; height: 30px; border-radius: 50%; background: rgba(0,0,0,0.4); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; color: white; border: none; z-index: 50; cursor: pointer; transition: 0.2s; }
-        .music-toggle:hover { background: rgba(0,0,0,0.6); transform: scale(1.05); }
-        .music-toggle:active { transform: scale(0.95); }
-
-        /* The Selection Menu (Overlay) */
-        .music-picker { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(20, 20, 20, 0.95); backdrop-filter: blur(20px); z-index: 40; display: flex; flex-direction: column; padding: 20px; transition: transform 0.3s cubic-bezier(0.19, 1, 0.22, 1); transform: translateY(100%); }
-        .music-picker.active { transform: translateY(0); }
-        .music-picker-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-weight: 700; font-size: 16px; }
-        .music-sel-row { display: flex; gap: 10px; margin-bottom: 10px; }
-        .music-sel { flex: 1; background: rgba(255,255,255,0.1); border: none; color: white; padding: 8px 12px; border-radius: 10px; font-size: 13px; outline: none; }
-        .music-btn-auth { background: #1DB954; color: white; border: none; padding: 8px 14px; border-radius: 10px; font-weight: 600; font-size: 12px; cursor: pointer; }
-
-        /* The Player View */
-        .music-player { flex: 1; position: relative; background: linear-gradient(135deg, #1c1c1e 0%, #2c2c2e 100%); display: flex; flex-direction: column; }
-        .music-frame { width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; z-index: 10; opacity: 0; transition: opacity 0.5s; pointer-events: none; }
-        .music-frame.show { opacity: 1; pointer-events: all; }
 
         /* Modal */
         #modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); z-index: 1999; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
@@ -521,6 +507,8 @@ const Utils = {
                         up();
                         batt.addEventListener('levelchange', up);
                         batt.addEventListener('chargingchange', up);
+                        // Try to force update
+                        setTimeout(up, 500);
                     } catch(e) {
                         const stEl = document.getElementById(`batt-st-${id}`);
                         if(stEl) stEl.innerText = "Error";
