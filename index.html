@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     
+    <script src="https://sdk.scdn.co/spotify-player.js"></script>
+
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -23,6 +25,11 @@
             --text-main: #FFFFFF; --text-sec: rgba(235, 235, 245, 0.6);
             --radius: 22px;
             --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+            
+            /* Custom Music Theme */
+            --music-bg: #000000;
+            --music-accent: #00E5FF; /* Cyan */
+            --music-art: #FFD600; /* Yellow */
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; user-select: none; }
@@ -46,8 +53,8 @@
         /* ACTION TOAST */
         #action-toast {
             position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%);
-            background: #1DB954; /* Spotify Green */
-            color: white; padding: 10px 24px;
+            background: var(--music-accent);
+            color: black; padding: 10px 24px;
             border-radius: 50px; font-size: 14px; font-weight: 700;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
             display: none; z-index: 6000; pointer-events: none;
@@ -211,6 +218,96 @@
         .sp-setup { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; }
         .sp-frame { flex: 1; width: 100%; border: none; border-radius: 12px; }
 
+        /* --- ADDED: CUSTOM MUSIC WIDGET STYLES (For SDK) --- */
+        .music-wrapper { 
+            width: 100%; height: 100%; 
+            background: var(--music-bg); 
+            display: flex; align-items: center; 
+            padding: 20px; gap: 20px; position: relative;
+        }
+
+        /* Album Art Box */
+        .music-art {
+            width: 90px; height: 90px;
+            background-color: var(--music-art);
+            border-radius: 16px;
+            flex-shrink: 0;
+            background-size: cover;
+            background-position: center;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .music-art-icon { font-size: 32px; color: black; opacity: 0.3; }
+
+        /* Info & Controls Area */
+        .music-info { 
+            flex: 1; display: flex; flex-direction: column; 
+            justify-content: center; min-width: 0; 
+        }
+
+        /* Text Styling */
+        .music-title { 
+            font-size: 18px; font-weight: 700; 
+            color: var(--music-accent); 
+            margin-bottom: 2px; 
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .music-artist { 
+            font-size: 13px; font-weight: 500; 
+            color: var(--music-accent); opacity: 0.7; 
+            margin-bottom: 12px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+
+        /* Progress Bar */
+        .music-progress {
+            width: 100%; height: 4px;
+            background: rgba(0, 229, 255, 0.2);
+            border-radius: 4px; margin-bottom: 15px;
+            position: relative;
+        }
+        .music-fill {
+            height: 100%; width: 0%;
+            background: var(--music-accent);
+            border-radius: 4px;
+            position: relative;
+            transition: width 0.3s linear;
+        }
+
+        /* Controls */
+        .music-controls { display: flex; align-items: center; gap: 20px; }
+        .ctrl-btn { 
+            background: none; border: none; 
+            color: var(--music-accent); 
+            font-size: 20px; cursor: pointer; 
+            transition: transform 0.1s;
+        }
+        .ctrl-btn:active { transform: scale(0.9); opacity: 0.7; }
+        
+        .play-btn {
+            width: 40px; height: 40px;
+            background: var(--music-accent);
+            color: black;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; padding-left: 2px;
+        }
+        .play-btn.paused { padding-left: 0; } 
+
+        /* Hidden Settings Overlay */
+        .music-settings {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 40;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: 0.3s;
+        }
+        .music-settings.active { opacity: 1; pointer-events: all; }
+        .login-btn {
+            background: var(--music-accent); color: black; border: none;
+            padding: 10px 20px; border-radius: 50px; font-weight: 700; font-size:12px;
+            cursor: pointer; margin-top:10px;
+        }
+
+
         /* Modal */
         #modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); z-index: 1999; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
         #modal-overlay.show { opacity: 1; pointer-events: all; }
@@ -253,7 +350,7 @@
             <button class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;" onclick="UI.toggleAdd(false)">Close</button>
         </div>
         <div class="modal-grid">
-            <div class="add-card" onclick="Core.createWidget('music', 4, 3)"><i class="fa-brands fa-spotify add-icon" style="color:#1DB954"></i><span class="add-label">Music (Auth)</span></div>
+            <div class="add-card" onclick="Core.createWidget('music', 4, 2)"><i class="fa-brands fa-spotify add-icon" style="color:#1DB954"></i><span class="add-label">Spotify (SDK)</span></div>
             <div class="add-card" onclick="Core.createWidget('youtube', 4, 3)"><i class="fa-brands fa-youtube add-icon" style="color:#FF0000"></i><span class="add-label">YouTube</span></div>
             <div class="add-card" onclick="Core.createWidget('timer', 3, 2)"><i class="fa-solid fa-hourglass-end add-icon" style="color:var(--ios-orange)"></i><span class="add-label">Timer</span></div>
             <div class="add-card" onclick="Core.createWidget('battery', 3, 2)"><i class="fa-solid fa-battery-half add-icon" style="color:var(--ios-green)"></i><span class="add-label">Battery</span></div>
@@ -293,793 +390,771 @@
     <script>
         
 // === SPOTIFY CONFIGURATION ===
-const SPOTIFY_CLIENT_ID = "2aea224b957a49e0ade20938094a2170"; 
-// Updated Scopes for Player Control
-const SPOTIFY_SCOPES = "playlist-read-private playlist-read-collaborative user-modify-playback-state user-read-currently-playing user-read-playback-state";
+const SPOTIFY_CLIENT_ID = "2aea224b957a49e0ade20938094a2170"; 
+// SDK Scopes
+const SPOTIFY_SCOPES = "streaming user-read-email user-read-private user-modify-playback-state user-read-currently-playing user-read-playback-state";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyArqMp658OSK8u46cjCefyVKiDJe4oe8-g",
-  authDomain: "secondscreen-f7cd9.firebaseapp.com",
-  projectId: "secondscreen-f7cd9",
-  storageBucket: "secondscreen-f7cd9.firebasestorage.app",
-  messagingSenderId: "233696091813",
-  appId: "1:233696091813:web:734ed34d527ba05dbbf74c",
-  measurementId: "G-QTQZ0ET1KJ"
+  apiKey: "AIzaSyArqMp658OSK8u46cjCefyVKiDJe4oe8-g",
+  authDomain: "secondscreen-f7cd9.firebaseapp.com",
+  projectId: "secondscreen-f7cd9",
+  storageBucket: "secondscreen-f7cd9.firebasestorage.app",
+  messagingSenderId: "233696091813",
+  appId: "1:233696091813:web:734ed34d527ba05dbbf74c",
+  measurementId: "G-QTQZ0ET1KJ"
 };
 
-        // --- 2. STRIPE CONFIG ---
-        // REPLACE with your actual Stripe Payment Link
-        const STRIPE_LINK = "https://buy.stripe.com/test_dRm9AV1EkbVkcke21Mcwg00"; 
+        // --- 2. STRIPE CONFIG ---
+        const STRIPE_LINK = "https://buy.stripe.com/test_dRm9AV1EkbVkcke21Mcwg00"; 
 
-        try {
-            if(firebaseConfig.apiKey !== "YOUR_API_KEY_HERE") {
-                firebase.initializeApp(firebaseConfig);
-                var db = firebase.firestore();
-                var auth = firebase.auth();
-                var provider = new firebase.auth.GoogleAuthProvider();
-            }
-        } catch(e) { console.warn("Firebase not configured."); }
+        try {
+            if(firebaseConfig.apiKey !== "YOUR_API_KEY_HERE") {
+                firebase.initializeApp(firebaseConfig);
+                var db = firebase.firestore();
+                var auth = firebase.auth();
+                var provider = new firebase.auth.GoogleAuthProvider();
+            }
+        } catch(e) { console.warn("Firebase not configured."); }
 
-        // GLOBAL LOADING LOCK & PRO STATUS
-        let isDashboardLoaded = false;
-        let isPro = false;
+        // GLOBAL LOADING LOCK & PRO STATUS
+        let isDashboardLoaded = false;
+        let isPro = false;
+        let player = null; // SDK Player Global
 
-        const Cloud = {
-            user: null,
+        const Cloud = {
+            user: null,
+            login: () => {
+                auth.signInWithPopup(provider).catch(e => alert(e.message));
+            },
+            logout: () => {
+                auth.signOut().then(() => location.reload());
+            },
+            initAuth: () => {
+                auth.onAuthStateChanged(user => {
+                    if (user) {
+                        Cloud.user = user;
+                        document.getElementById('login-overlay').style.opacity = '0';
+                        setTimeout(() => document.getElementById('login-overlay').style.display = 'none', 500);
+                        Core.loadData();
+                        
+                        // Check for payment success URL param
+                        const params = new URLSearchParams(window.location.search);
+                        if (params.get('payment_success') === 'true') {
+                            Cloud.activatePro();
+                        }
+
+                        // Auto-init player if token exists
+                        if(localStorage.getItem('sp_token')) setTimeout(Spotify.initPlayer, 1000);
+
+                    } else {
+                        document.getElementById('login-overlay').style.display = 'flex';
+                        document.getElementById('login-overlay').style.opacity = '1';
+                    }
+                });
+            },
+            save: (data) => {
+                if(Cloud.user && db) {
+                    const status = document.getElementById('status-bar');
+                    status.style.display = 'block';
+                    status.innerText = "Saving...";
+                    
+                    db.collection('users').doc(Cloud.user.uid).set({ 
+                        layout: JSON.stringify(data), 
+                        updated: Date.now() 
+                    }, { merge: true }).then(() => {
+                        status.innerText = "Saved";
+                        setTimeout(() => status.style.display = 'none', 1500);
+                    }).catch(e => {
+                        console.error(e);
+                        status.innerText = "Error Saving";
+                    });
+                }
+            },
+            upgrade: () => {
+                window.location.href = STRIPE_LINK;
+            },
+            activatePro: () => {
+                if(Cloud.user && db) {
+                    db.collection('users').doc(Cloud.user.uid).set({ 
+                        isPro: true 
+                    }, { merge: true }).then(() => {
+                        isPro = true;
+                        UI.showToast("Pro Activated! ⚡");
+                        document.getElementById('upgrade-btn').style.display = 'none';
+                        if(!document.querySelector('.pro-badge')) {
+                            document.getElementById('user-info').innerHTML += '<span class="pro-badge">PRO ⚡</span>';
+                        }
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                    });
+                }
+            }
+        };
+
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
+        // --- SPOTIFY SDK IMPLEMENTATION ---
+        const Spotify = {
+            token: null,
+            deviceId: null,
+
             login: () => {
-                auth.signInWithPopup(provider).catch(e => alert(e.message));
+                const generateRandomString = (l) => {
+                    const p = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+                    return crypto.getRandomValues(new Uint8Array(l)).reduce((a, x) => a + p[x % p.length], "");
+                };
+                const sha256 = async (p) => window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(p));
+                const base64encode = (i) => btoa(String.fromCharCode.apply(null, new Uint8Array(i))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+                const start = async () => {
+                    const v = generateRandomString(64);
+                    localStorage.setItem('spotify_verifier', v);
+                    const hash = await sha256(v);
+                    const challenge = base64encode(hash);
+                    const url = new URL("https://accounts.spotify.com/authorize");
+                    url.search = new URLSearchParams({
+                        response_type: 'code', client_id: SPOTIFY_CLIENT_ID, scope: SPOTIFY_SCOPES,
+                        code_challenge_method: 'S256', code_challenge: challenge,
+                        redirect_uri: window.location.origin + window.location.pathname
+                    }).toString();
+                    window.open(url, 'Spotify', 'width=500,height=800');
+                };
+                start();
             },
-            logout: () => {
-                auth.signOut().then(() => location.reload());
-            },
-            initAuth: () => {
-                auth.onAuthStateChanged(user => {
-                    if (user) {
-                        Cloud.user = user;
-                        document.getElementById('login-overlay').style.opacity = '0';
-                        setTimeout(() => document.getElementById('login-overlay').style.display = 'none', 500);
-                        Core.loadData();
-                        
-                        // Check for payment success URL param
-                        const params = new URLSearchParams(window.location.search);
-                        if (params.get('payment_success') === 'true') {
-                            Cloud.activatePro();
-                        }
-                    } else {
-                        document.getElementById('login-overlay').style.display = 'flex';
-                        document.getElementById('login-overlay').style.opacity = '1';
-                    }
+
+            handleCode: async (code) => {
+                const v = localStorage.getItem('spotify_verifier');
+                const res = await fetch("https://accounts.spotify.com/api/token", {
+                    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({
+                        client_id: SPOTIFY_CLIENT_ID, grant_type: 'authorization_code',
+                        code, redirect_uri: window.location.origin + window.location.pathname, code_verifier: v
+                    })
                 });
+                const d = await res.json();
+                if(d.access_token) {
+                    Spotify.token = d.access_token;
+                    localStorage.setItem('sp_token', d.access_token);
+                    UI.showToast("Connected! Loading Player...");
+                    Spotify.initPlayer();
+                }
             },
-            save: (data) => {
-                if(Cloud.user && db) {
-                    const status = document.getElementById('status-bar');
-                    status.style.display = 'block';
-                    status.innerText = "Saving...";
+
+            initPlayer: () => {
+                const t = localStorage.getItem('sp_token');
+                if(!t) return;
+                Spotify.token = t;
+                if(player) return; // Prevent double init
+
+                window.onSpotifyWebPlaybackSDKReady = () => {
+                    player = new Spotify.Player({
+                        name: 'SecondScreen Web Player',
+                        getOAuthToken: cb => { cb(Spotify.token); },
+                        volume: 0.5
+                    });
+
+                    player.addListener('ready', ({ device_id }) => {
+                        console.log('Ready with Device ID', device_id);
+                        Spotify.deviceId = device_id;
+                        
+                        // Update UI to show start button
+                        document.querySelectorAll('.music-settings').forEach(el => {
+                            el.classList.add('active');
+                            el.innerHTML = `
+                                <div class="music-msg">Player Ready</div>
+                                <button class="login-btn" onclick="Spotify.transfer()">Start Player</button>
+                            `;
+                        });
+                    });
+
+                    player.addListener('player_state_changed', state => {
+                        if (!state) return;
+                        Spotify.updateUI(state);
+                    });
                     
-                    db.collection('users').doc(Cloud.user.uid).set({ 
-                        layout: JSON.stringify(data), 
-                        updated: Date.now() 
-                    }, { merge: true }).then(() => {
-                        status.innerText = "Saved";
-                        setTimeout(() => status.style.display = 'none', 1500);
-                    }).catch(e => {
-                        console.error(e);
-                        status.innerText = "Error Saving";
+                    player.addListener('authentication_error', () => {
+                         UI.showToast("Auth Error. Re-login");
+                         localStorage.removeItem('sp_token');
                     });
-                }
+
+                    player.connect();
+                };
             },
-            upgrade: () => {
-                window.location.href = STRIPE_LINK;
+
+            transfer: async () => {
+                if(!Spotify.deviceId || !Spotify.token) return;
+                await fetch(`https://api.spotify.com/v1/...`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${Spotify.token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ device_ids: [Spotify.deviceId], play: true })
+                });
+                document.querySelectorAll('.music-settings').forEach(el => el.classList.remove('active'));
             },
-            activatePro: () => {
-                if(Cloud.user && db) {
-                    db.collection('users').doc(Cloud.user.uid).set({ 
-                        isPro: true 
-                    }, { merge: true }).then(() => {
-                        isPro = true;
-                        UI.showToast("Pro Activated! ⚡");
-                        document.getElementById('upgrade-btn').style.display = 'none';
-                        if(!document.querySelector('.pro-badge')) {
-                            document.getElementById('user-info').innerHTML += '<span class="pro-badge">PRO ⚡</span>';
-                        }
-                        window.history.replaceState({}, document.title, window.location.pathname);
-                    });
-                }
+
+            toggle: () => { if(player) player.togglePlay(); },
+            next: () => { if(player) player.nextTrack(); },
+            prev: () => { if(player) player.previousTrack(); },
+
+            updateUI: (state) => {
+                const track = state.track_window.current_track;
+                if(!track) return;
+                
+                const title = track.name;
+                const artist = track.artists[0].name;
+                const art = track.album.images[0]?.url;
+                const progress = (state.position / state.duration) * 100;
+                
+                document.querySelectorAll('.music-wrapper').forEach(el => {
+                    // Update Texts
+                    el.querySelector('.music-title').innerText = title;
+                    el.querySelector('.music-artist').innerText = artist;
+                    
+                    // Update Art
+                    const artEl = el.querySelector('.music-art');
+                    artEl.style.backgroundImage = `url('${art}')`;
+                    artEl.innerHTML = ''; // Remove icon
+                    
+                    // Update Progress
+                    el.querySelector('.music-fill').style.width = `${progress}%`;
+                    
+                    // Update Play Button
+                    const btn = el.querySelector('.play-btn');
+                    btn.innerHTML = state.paused ? '<i class="fa-solid fa-play"></i>' : '<i class="fa-solid fa-pause"></i>';
+                    btn.classList.toggle('paused', state.paused);
+                    
+                    // Hide overlay if playing
+                    const overlay = el.querySelector('.music-settings');
+                    if(overlay && !state.paused) overlay.classList.remove('active');
+                });
             }
         };
-
-        function debounce(func, wait) {
-            let timeout;
-            return function(...args) {
-                clearTimeout(timeout);
-                timeout = setTimeout(() => func.apply(this, args), wait);
-            };
-        }
 
 const Utils = {
-            calc: (id, val) => {
-                const s = document.getElementById(`scr-${id}`);
-                if (val === '=') { try { s.innerText = eval(s.innerText.replace('×','*').replace('÷','/')); } catch { s.innerText = "Error"; } }
-                else if (val === 'C') { s.innerText = ''; }
-                else s.innerText += val;
-            },
-            linkAction: (id, index, btn) => {
-                const saved = JSON.parse(btn.getAttribute('data-link') || 'null');
-                if (saved && saved.url) { window.open(saved.url, '_blank'); } 
-                else { Utils.editLink(id, index, btn); }
-            },
-            editLink: (id, index, btn) => {
-                let url = prompt("Enter URL (e.g., google.com):", "");
-                if (url) {
-                    if (!url.startsWith('http://') && !url.startsWith('https://')) { url = 'https://' + url; }
-                    let domain; try { domain = new URL(url).hostname; } catch(e) { domain = url; }
-                    const name = prompt("Label:", "Link");
-                    const data = { url, name, domain };
-                    btn.setAttribute('data-link', JSON.stringify(data));
-                    btn.innerHTML = `<img src="https://www.google.com/s2/favicons?domain=${domain}&sz=64" class="deck-favicon"><span class="deck-label">${name}</span>`;
-                    Core.saveLayout();
-                }
-            },
-            setCountdown: (id) => {
-                const date = prompt("YYYY-MM-DD:");
-                if (!date) return;
-                const name = prompt("Event Name:", "Event");
-                const widget = document.getElementById(`count-wrap-${id}`);
-                widget.setAttribute('data-target', JSON.stringify({date, name}));
-                Utils.updateCountdown(id);
-                Core.saveLayout();
-            },
-            updateCountdown: (id) => {
-                const widget = document.getElementById(`count-wrap-${id}`);
-                if (!widget) return;
-                const data = JSON.parse(widget.getAttribute('data-target') || 'null');
-                if (data) {
-                    const diff = Math.ceil((new Date(data.date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-                    document.getElementById(`cd-val-${id}`).innerText = diff > 0 ? diff : 0;
-                    document.getElementById(`cd-lbl-${id}`).innerText = diff > 0 ? `Days until ${data.name}` : `${data.name} is here!`;
-                    const pct = Math.max(0, Math.min(100, (diff / 30) * 100));
-                    document.getElementById(`cd-bar-${id}`).style.width = (100 - pct) + '%';
-                }
-            },
-            initCalendar: (id) => { if(!window[`cal_date_${id}`]) { window[`cal_date_${id}`] = new Date(); } Utils.renderCalendar(id); },
-            changeMonth: (id, offset) => { const currentDate = window[`cal_date_${id}`]; currentDate.setMonth(currentDate.getMonth() + offset); Utils.renderCalendar(id); },
-            resetCalendar: (id) => { window[`cal_date_${id}`] = new Date(); Utils.renderCalendar(id); },
-            renderCalendar: (id) => {
-                const date = window[`cal_date_${id}`];
-                const year = date.getFullYear();
-                const month = date.getMonth();
-                document.getElementById(`cal-title-${id}`).innerText = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-                const daysContainer = document.getElementById(`cal-grid-${id}`);
-                daysContainer.innerHTML = '';
-                const firstDayIndex = new Date(year, month, 1).getDay();
-                const lastDay = new Date(year, month + 1, 0).getDate();
-                const today = new Date();
-                for (let i = 0; i < firstDayIndex; i++) { const empty = document.createElement('div'); empty.classList.add('cal-day', 'empty'); daysContainer.appendChild(empty); }
-                for (let i = 1; i <= lastDay; i++) {
-                    const dayEl = document.createElement('div'); dayEl.classList.add('cal-day'); dayEl.innerText = i;
-                    if (i === today.getDate() && month === today.getMonth() && year === today.getFullYear()) { dayEl.classList.add('today'); }
-                    daysContainer.appendChild(dayEl);
-                }
-            },
-            setTimer: (id) => {
-                const time = prompt("Enter Time (e.g. 5:00 PM or 17:00):");
-                if(!time) return;
-                const d = new Date(); const [timeStr, mod] = time.split(' '); let [h, m] = timeStr.split(':');
-                if (h === '12') h = '00'; if (mod && (mod.toLowerCase() === 'pm')) h = parseInt(h, 10) + 12;
-                d.setHours(h, m, 0, 0);
-                if(d < new Date()) { alert("Time passed!"); return; }
-                document.getElementById(`timer-wrap-${id}`).setAttribute('data-end', d.getTime());
-                document.getElementById(`timer-lbl-${id}`).innerText = `Until ${time}`;
-                Utils.updateTimer(id); Core.saveLayout();
-            },
-            updateTimer: (id) => {
-                const el = document.getElementById(`timer-wrap-${id}`); if(!el) return;
-                const end = parseInt(el.getAttribute('data-end')); if(!end) return;
-                const diff = end - Date.now();
-                if(diff <= 0) { document.getElementById(`timer-val-${id}`).innerText = "Done"; return; }
-                const hr = Math.floor((diff % (86400000)) / (3600000));
-                const mn = Math.floor((diff % (3600000)) / 60000);
-                document.getElementById(`timer-val-${id}`).innerText = `${hr}h ${mn}m`;
-            },
-            updateBattery: async (id) => {
-                if(navigator.getBattery) {
-                    try {
-                        const batt = await navigator.getBattery();
-                        const up = () => {
-                            const lvl = Math.round(batt.level * 100);
-                            const valEl = document.getElementById(`batt-val-${id}`);
-                            const fillEl = document.getElementById(`batt-fill-${id}`);
-                            const stEl = document.getElementById(`batt-st-${id}`);
-                            
-                            if(valEl) valEl.innerText = lvl + '%';
-                            if(fillEl) {
-                                fillEl.style.width = lvl + '%';
-                                fillEl.style.background = batt.charging ? 'var(--ios-green)' : (lvl<20?'var(--ios-red)':'var(--text-main)');
-                            }
-                            if(stEl) stEl.innerText = batt.charging ? 'Charging ⚡' : 'On Battery';
-                        };
-                        up();
-                        batt.addEventListener('levelchange', up);
-                        batt.addEventListener('chargingchange', up);
-                        // Try to force update
-                        setTimeout(up, 500);
-                    } catch(e) {
-                        const stEl = document.getElementById(`batt-st-${id}`);
-                        if(stEl) stEl.innerText = "Error";
-                    }
-                } else {
-                    const stEl = document.getElementById(`batt-st-${id}`);
-                    if(stEl) stEl.innerText = "Not Supported";
-                }
-            },
-            genPass: (id) => {
-                const len = document.getElementById(`rng-${id}`).value;
-                const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%^&*";
-                let pass = ""; for(let i=0; i<len; i++) pass += chars.charAt(Math.floor(Math.random() * chars.length));
-                document.getElementById(`pass-${id}`).innerText = pass;
-                document.getElementById(`lbl-${id}`).innerText = `Length: ${len}`;
-            },
-            saveClip: async (id) => {
-                try {
-                    const text = await navigator.clipboard.readText(); if(!text) return;
-                    const list = document.getElementById(`clip-${id}`);
-                    const item = document.createElement('div'); item.className = 'clip-item'; item.innerText = text;
-                    item.onclick = () => { navigator.clipboard.writeText(text); UI.showToast("Copied to Clipboard!"); };
-                    list.prepend(item); if(list.children.length > 5) list.lastChild.remove();
-                    Core.saveLayout();
-                } catch(e) { alert("Clipboard permission required"); }
-            },
-            copyPass: (id) => {
-                const text = document.getElementById(`pass-${id}`).innerText;
-                if(text && text !== "CLICK GEN") {
-                    navigator.clipboard.writeText(text);
-                    UI.showToast("Password Copied!");
-                }
-            },
+            calc: (id, val) => {
+                const s = document.getElementById(`scr-${id}`);
+                if (val === '=') { try { s.innerText = eval(s.innerText.replace('×','*').replace('÷','/')); } catch { s.innerText = "Error"; } }
+                else if (val === 'C') { s.innerText = ''; }
+                else s.innerText += val;
+            },
+            linkAction: (id, index, btn) => {
+                const saved = JSON.parse(btn.getAttribute('data-link') || 'null');
+                if (saved && saved.url) { window.open(saved.url, '_blank'); } 
+                else { Utils.editLink(id, index, btn); }
+            },
+            editLink: (id, index, btn) => {
+                let url = prompt("Enter URL (e.g., google.com):", "");
+                if (url) {
+                    if (!url.startsWith('http://') && !url.startsWith('https://')) { url = 'https://' + url; }
+                    let domain; try { domain = new URL(url).hostname; } catch(e) { domain = url; }
+                    const name = prompt("Label:", "Link");
+                    const data = { url, name, domain };
+                    btn.setAttribute('data-link', JSON.stringify(data));
+                    btn.innerHTML = `<img src="https://www.google.com/s2/favicons?domain=${domain}&sz=64" class="deck-favicon"><span class="deck-label">${name}</span>`;
+                    Core.saveLayout();
+                }
+            },
+            setCountdown: (id) => {
+                const date = prompt("YYYY-MM-DD:");
+                if (!date) return;
+                const name = prompt("Event Name:", "Event");
+                const widget = document.getElementById(`count-wrap-${id}`);
+                widget.setAttribute('data-target', JSON.stringify({date, name}));
+                Utils.updateCountdown(id);
+                Core.saveLayout();
+            },
+            updateCountdown: (id) => {
+                const widget = document.getElementById(`count-wrap-${id}`);
+                if (!widget) return;
+                const data = JSON.parse(widget.getAttribute('data-target') || 'null');
+                if (data) {
+                    const diff = Math.ceil((new Date(data.date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                    document.getElementById(`cd-val-${id}`).innerText = diff > 0 ? diff : 0;
+                    document.getElementById(`cd-lbl-${id}`).innerText = diff > 0 ? `Days until ${data.name}` : `${data.name} is here!`;
+                    const pct = Math.max(0, Math.min(100, (diff / 30) * 100));
+                    document.getElementById(`cd-bar-${id}`).style.width = (100 - pct) + '%';
+                }
+            },
+            initCalendar: (id) => { if(!window[`cal_date_${id}`]) { window[`cal_date_${id}`] = new Date(); } Utils.renderCalendar(id); },
+            changeMonth: (id, offset) => { const currentDate = window[`cal_date_${id}`]; currentDate.setMonth(currentDate.getMonth() + offset); Utils.renderCalendar(id); },
+            resetCalendar: (id) => { window[`cal_date_${id}`] = new Date(); Utils.renderCalendar(id); },
+            renderCalendar: (id) => {
+                const date = window[`cal_date_${id}`];
+                const year = date.getFullYear();
+                const month = date.getMonth();
+                document.getElementById(`cal-title-${id}`).innerText = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                const daysContainer = document.getElementById(`cal-grid-${id}`);
+                daysContainer.innerHTML = '';
+                const firstDayIndex = new Date(year, month, 1).getDay();
+                const lastDay = new Date(year, month + 1, 0).getDate();
+                const today = new Date();
+                for (let i = 0; i < firstDayIndex; i++) { const empty = document.createElement('div'); empty.classList.add('cal-day', 'empty'); daysContainer.appendChild(empty); }
+                for (let i = 1; i <= lastDay; i++) {
+                    const dayEl = document.createElement('div'); dayEl.classList.add('cal-day'); dayEl.innerText = i;
+                    if (i === today.getDate() && month === today.getMonth() && year === today.getFullYear()) { dayEl.classList.add('today'); }
+                    daysContainer.appendChild(dayEl);
+                }
+            },
+            setTimer: (id) => {
+                const time = prompt("Enter Time (e.g. 5:00 PM or 17:00):");
+                if(!time) return;
+                const d = new Date(); const [timeStr, mod] = time.split(' '); let [h, m] = timeStr.split(':');
+                if (h === '12') h = '00'; if (mod && (mod.toLowerCase() === 'pm')) h = parseInt(h, 10) + 12;
+                d.setHours(h, m, 0, 0);
+                if(d < new Date()) { alert("Time passed!"); return; }
+                document.getElementById(`timer-wrap-${id}`).setAttribute('data-end', d.getTime());
+                document.getElementById(`timer-lbl-${id}`).innerText = `Until ${time}`;
+                Utils.updateTimer(id); Core.saveLayout();
+            },
+            updateTimer: (id) => {
+                const el = document.getElementById(`timer-wrap-${id}`); if(!el) return;
+                const end = parseInt(el.getAttribute('data-end')); if(!end) return;
+                const diff = end - Date.now();
+                if(diff <= 0) { document.getElementById(`timer-val-${id}`).innerText = "Done"; return; }
+                const hr = Math.floor((diff % (86400000)) / (3600000));
+                const mn = Math.floor((diff % (3600000)) / 60000);
+                document.getElementById(`timer-val-${id}`).innerText = `${hr}h ${mn}m`;
+            },
+            updateBattery: async (id) => {
+                if(navigator.getBattery) {
+                    try {
+                        const batt = await navigator.getBattery();
+                        const up = () => {
+                            const lvl = Math.round(batt.level * 100);
+                            const valEl = document.getElementById(`batt-val-${id}`);
+                            const fillEl = document.getElementById(`batt-fill-${id}`);
+                            const stEl = document.getElementById(`batt-st-${id}`);
+                            
+                            if(valEl) valEl.innerText = lvl + '%';
+                            if(fillEl) {
+                                fillEl.style.width = lvl + '%';
+                                fillEl.style.background = batt.charging ? 'var(--ios-green)' : (lvl<20?'var(--ios-red)':'var(--text-main)');
+                            }
+                            if(stEl) stEl.innerText = batt.charging ? 'Charging ⚡' : 'On Battery';
+                        };
+                        up();
+                        batt.addEventListener('levelchange', up);
+                        batt.addEventListener('chargingchange', up);
+                        // Try to force update
+                        setTimeout(up, 500);
+                    } catch(e) {
+                        const stEl = document.getElementById(`batt-st-${id}`);
+                        if(stEl) stEl.innerText = "Error";
+                    }
+                } else {
+                    const stEl = document.getElementById(`batt-st-${id}`);
+                    if(stEl) stEl.innerText = "Not Supported";
+                }
+            },
+            genPass: (id) => {
+                const len = document.getElementById(`rng-${id}`).value;
+                const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%^&*";
+                let pass = ""; for(let i=0; i<len; i++) pass += chars.charAt(Math.floor(Math.random() * chars.length));
+                document.getElementById(`pass-${id}`).innerText = pass;
+                document.getElementById(`lbl-${id}`).innerText = `Length: ${len}`;
+            },
+            saveClip: async (id) => {
+                try {
+                    const text = await navigator.clipboard.readText(); if(!text) return;
+                    const list = document.getElementById(`clip-${id}`);
+                    const item = document.createElement('div'); item.className = 'clip-item'; item.innerText = text;
+                    item.onclick = () => { navigator.clipboard.writeText(text); UI.showToast("Copied to Clipboard!"); };
+                    list.prepend(item); if(list.children.length > 5) list.lastChild.remove();
+                    Core.saveLayout();
+                } catch(e) { alert("Clipboard permission required"); }
+            },
+            copyPass: (id) => {
+                const text = document.getElementById(`pass-${id}`).innerText;
+                if(text && text !== "CLICK GEN") {
+                    navigator.clipboard.writeText(text);
+                    UI.showToast("Password Copied!");
+                }
+            },
 
-            // --- PKCE HELPERS ---
-            generateRandomString: (length) => {
-                const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-                const values = crypto.getRandomValues(new Uint8Array(length));
-                return values.reduce((acc, x) => acc + possible[x % possible.length], "");
-            },
-            sha256: async (plain) => {
-                const encoder = new TextEncoder();
-                const data = encoder.encode(plain);
-                return window.crypto.subtle.digest('SHA-256', data);
-            },
-            base64encode: (input) => {
-                return btoa(String.fromCharCode.apply(null, new Uint8Array(input)))
-                    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-            },
-
-            // --- SPOTIFY LOGIN (PKCE with Relay) ---
-            loginSpotify: async (id) => {
-                if(SPOTIFY_CLIENT_ID.includes("INSERT")) { alert("Please edit the HTML file and add your Spotify Client ID."); return; }
-                
-                // Clear any old relay codes
-                localStorage.removeItem('spotify_auth_code_relay');
-
-                const codeVerifier = Utils.generateRandomString(64);
-                const hashed = await Utils.sha256(codeVerifier);
-                const codeChallenge = Utils.base64encode(hashed);
-                
-                localStorage.setItem('spotify_code_verifier', codeVerifier);
-                
-                // Ensure redirect matches what you registered (origin + path)
-                const redirect = window.location.origin + window.location.pathname;
-                const scope = SPOTIFY_SCOPES;
-                // Use proxy URL (17 = authorize)
-                const authUrl = new URL("https://accounts.spotify.com/authorize");
-
-                const params = {
-                    response_type: 'code',
-                    client_id: SPOTIFY_CLIENT_ID,
-                    scope,
-                    code_challenge_method: 'S256',
-                    code_challenge: codeChallenge,
-                    redirect_uri: redirect,
-                };
-
-                authUrl.search = new URLSearchParams(params).toString();
-                
-                const width = 450, height = 730, left = (screen.width/2)-(width/2), top = (screen.height/2)-(height/2);
-                window.open(authUrl.toString(), 'Spotify_Auth', `menubar=no,location=no,resizable=no,scrollbars=no,status=no, width=${width}, height=${height}, top=${top}, left=${left}`);
-            },
-            
-            handleSpotifyCode: async (code) => {
-                const codeVerifier = localStorage.getItem('spotify_code_verifier');
-                const redirect = window.location.origin + window.location.pathname;
-
-                const payload = {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams({
-                        client_id: SPOTIFY_CLIENT_ID,
-                        grant_type: 'authorization_code',
-                        code,
-                        redirect_uri: redirect,
-                        code_verifier: codeVerifier,
-                    }),
-                };
-
-                // Use proxy URL (18 = token)
-                const body = await fetch("https://accounts.spotify.com/api/token", payload);
-                const response = await body.json();
-
-                if (response.access_token) {
-                    localStorage.setItem('sp_token', response.access_token);
-                    document.querySelectorAll('.music-header').forEach(el => {
-                        const id = el.querySelector('select').id.replace('ms-sel-', '');
-                        Utils.fetchSpotifyPlaylists(id);
-                    });
-                }
-            },
-
-            fetchSpotifyPlaylists: (id) => {
-                const token = localStorage.getItem('sp_token');
-                if(!token) return; 
-
-                fetch('https://api.spotify.com/v1/me/playlists', {
-                    headers: { 'Authorization': 'Bearer ' + token }
-                })
-                .then(r => {
-                    if(r.status === 401) { localStorage.removeItem('sp_token'); return; }
-                    return r.json();
-                })
-                .then(data => {
-                    if(!data || !data.items) return;
-                    const select = document.getElementById(`ms-sel-${id}`);
-                    const currentVal = select.value;
-                    select.innerHTML = '<option value="">Select Playlist...</option>';
-                    
-                    data.items.forEach(p => {
-                        const opt = document.createElement('option');
-                        opt.value = p.uri; 
-                        opt.innerText = p.name;
-                        select.appendChild(opt);
-                    });
-                    
-                    if(currentVal) select.value = currentVal;
-                });
-            },
-
-            changeSpotifySource: (id) => {
-                const select = document.getElementById(`ms-sel-${id}`);
-                const iframe = document.getElementById(`ms-frame-${id}`);
-                const setup = document.getElementById(`ms-setup-${id}`);
-                
-                if(select.value) {
-                    const uri = select.value;
-                    const parts = uri.split(':');
-                    const type = parts[1];
-                    const uid = parts[2];
-                    
-                    const embedUrl = `https://open.spotify.com/embed/${type}/${uid}?utm_source=generator&theme=0`;
-                    
-                    iframe.src = embedUrl;
-                    iframe.style.display = 'block';
-                    setup.style.display = 'none';
-                    
-                    // NEW: Remove padding when player is active to let it fill the card
-                    const widgetContent = iframe.closest('.grid-stack-item-content');
-                    if(widgetContent) widgetContent.style.padding = '0';
-                    
-                } else {
-                    iframe.style.display = 'none';
-                    setup.style.display = 'flex';
-                }
-                Core.saveLayout();
-            },
-            
-            deleteMusic: (id) => { },
-            
             // --- YOUTUBE WIDGET UTILS ---
-            loadYT: (id) => {
-                const input = document.getElementById(`yt-input-${id}`);
-                const frame = document.getElementById(`yt-frame-${id}`);
-                const setup = document.getElementById(`yt-setup-${id}`);
-                const controls = document.getElementById(`yt-controls-${id}`);
-                let url = input.value;
-                let embedUrl = "";
+            loadYT: (id) => {
+                const input = document.getElementById(`yt-input-${id}`);
+                const frame = document.getElementById(`yt-frame-${id}`);
+                const setup = document.getElementById(`yt-setup-${id}`);
+                const controls = document.getElementById(`yt-controls-${id}`);
+                let url = input.value;
+                let embedUrl = "";
 
-                if(url.includes('list=')) { 
-                    const listId = url.split('list=')[1].split('&')[0]; 
-                    embedUrl = `https://www.youtube.com/embed/videoseries?list=${listId}`; 
-                } else if(url.includes('v=')) { 
-                    const vidId = url.split('v=')[1].split('&')[0]; 
-                    embedUrl = `https://www.youtube.com/embed/${vidId}`; 
-                } else if(url.includes('youtu.be/')) { 
-                    const vidId = url.split('youtu.be/')[1].split('?')[0]; 
-                    embedUrl = `https://www.youtube.com/embed/${vidId}`; 
-                } else { return; }
+                if(url.includes('list=')) { 
+                    const listId = url.split('list=')[1].split('&')[0]; 
+                    embedUrl = `https://www.youtube.com/embed/videoseries?list=${listId}`; 
+                } else if(url.includes('v=')) { 
+                    const vidId = url.split('v=')[1].split('&')[0]; 
+                    embedUrl = `https://www.youtube.com/embed/${vidId}`; 
+                } else if(url.includes('youtu.be/')) { 
+                    const vidId = url.split('youtu.be/')[1].split('?')[0]; 
+                    embedUrl = `https://www.youtube.com/embed/${vidId}`; 
+                } else { return; }
 
-                frame.src = embedUrl;
-                setup.style.display = 'none';
-                frame.style.display = 'block';
-                controls.style.display = 'block';
-                Core.saveLayout();
-            },
-            resetYT: (id) => {
-                document.getElementById(`yt-frame-${id}`).src = "";
-                document.getElementById(`yt-frame-${id}`).style.display = "none";
-                document.getElementById(`yt-controls-${id}`).style.display = "none";
-                document.getElementById(`yt-setup-${id}`).style.display = "flex";
-                document.getElementById(`yt-input-${id}`).value = "";
-                Core.saveLayout();
-            },
+                frame.src = embedUrl;
+                setup.style.display = 'none';
+                frame.style.display = 'block';
+                controls.style.display = 'block';
+                Core.saveLayout();
+            },
+            resetYT: (id) => {
+                document.getElementById(`yt-frame-${id}`).src = "";
+                document.getElementById(`yt-frame-${id}`).style.display = "none";
+                document.getElementById(`yt-controls-${id}`).style.display = "none";
+                document.getElementById(`yt-setup-${id}`).style.display = "flex";
+                document.getElementById(`yt-input-${id}`).value = "";
+                Core.saveLayout();
+            },
 
-            // --- SPOTIFY UTILS (EMBED VERSION) ---
-            loadSpotify: (id) => {
-                const input = document.getElementById(`sp-input-${id}`);
-                const frame = document.getElementById(`sp-frame-${id}`);
-                const setup = document.getElementById(`sp-setup-${id}`);
-                const controls = document.getElementById(`sp-controls-${id}`);
-                const url = input.value;
-                
-                let embedUrl = url.replace('open.spotify.com', 'open.spotify.com/embed');
-                                  
-                if(!embedUrl.includes('?')) embedUrl += "?utm_source=generator&theme=0";
+            initWeather: (id, savedData) => {
+                const el = document.getElementById(`temp-${id}`);
+                const widget = el.closest('.grid-stack-item');
+                let unit = savedData && savedData.unit ? savedData.unit : 'F';
+                widget.setAttribute('data-unit', unit);
 
-                frame.src = embedUrl;
-                setup.style.display = 'none';
-                frame.style.display = 'block';
-                controls.style.display = 'block';
-                Core.saveLayout();
-            },
-            resetSpotify: (id) => {
-                document.getElementById(`sp-frame-${id}`).src = "";
-                document.getElementById(`sp-frame-${id}`).style.display = "none";
-                document.getElementById(`sp-controls-${id}`).style.display = "none";
-                document.getElementById(`sp-setup-${id}`).style.display = "flex";
-                document.getElementById(`sp-input-${id}`).value = "";
-                Core.saveLayout();
-            },
+                navigator.geolocation.getCurrentPosition(pos => {
+                    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&current_weather=true`)
+                    .then(r=>r.json()).then(d => {
+                        const raw = d.current_weather.temperature;
+                        widget.setAttribute('data-raw-temp', raw);
+                        Utils.renderWeather(id);
+                    });
+                });
 
-            initWeather: (id, savedData) => {
-                const el = document.getElementById(`temp-${id}`);
-                const widget = el.closest('.grid-stack-item');
-                let unit = savedData && savedData.unit ? savedData.unit : 'F';
-                widget.setAttribute('data-unit', unit);
+                el.onclick = () => {
+                    if(document.body.classList.contains('editing')) {
+                        let u = widget.getAttribute('data-unit');
+                        u = u === 'F' ? 'C' : 'F';
+                        widget.setAttribute('data-unit', u);
+                        Utils.renderWeather(id);
+                        Core.saveLayout();
+                    }
+                };
+            },
+            renderWeather: (id) => {
+                const el = document.getElementById(`temp-${id}`);
+                const widget = el.closest('.grid-stack-item');
+                const raw = parseFloat(widget.getAttribute('data-raw-temp'));
+                const unit = widget.getAttribute('data-unit');
+                if(isNaN(raw)) return;
+                let val = raw;
+                if(unit === 'F') val = (raw * 9/5) + 32;
+                el.innerText = Math.round(val) + '°' + unit;
+            }
+        };
 
-                navigator.geolocation.getCurrentPosition(pos => {
-                    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&current_weather=true`)
-                    .then(r=>r.json()).then(d => {
-                        const raw = d.current_weather.temperature;
-                        widget.setAttribute('data-raw-temp', raw);
-                        Utils.renderWeather(id);
-                    });
-                });
+        const Core = (() => {
+            let grid = null, editing = false;
 
-                el.onclick = () => {
-                    if(document.body.classList.contains('editing')) {
-                        let u = widget.getAttribute('data-unit');
-                        u = u === 'F' ? 'C' : 'F';
-                        widget.setAttribute('data-unit', u);
-                        Utils.renderWeather(id);
-                        Core.saveLayout();
-                    }
-                };
-            },
-            renderWeather: (id) => {
-                const el = document.getElementById(`temp-${id}`);
-                const widget = el.closest('.grid-stack-item');
-                const raw = parseFloat(widget.getAttribute('data-raw-temp'));
-                const unit = widget.getAttribute('data-unit');
-                if(isNaN(raw)) return;
-                let val = raw;
-                if(unit === 'F') val = (raw * 9/5) + 32;
-                el.innerText = Math.round(val) + '°' + unit;
-            }
-        };
+            const init = () => {
+                // --- SPOTIFY PKCE POPUP/RELAY HANDLER ---
+                const params = new URLSearchParams(window.location.search);
+                const code = params.get('code');
+                const paymentSuccess = params.get('payment_success');
 
-        const Core = (() => {
-            let grid = null, editing = false;
+                if (code) {
+                    // 1. We are in the popup after Spotify redirected us back.
+                    // Save the code to localStorage to trigger the "storage" event in the parent window.
+                    localStorage.setItem('spotify_auth_code_relay', code);
+                    // Small delay to ensure storage event fires before window closes
+                    setTimeout(() => window.close(), 100);
+                    return; // Stop initialization for the popup
+                }
 
-            const init = () => {
-                // --- SPOTIFY PKCE POPUP/RELAY HANDLER ---
-                const params = new URLSearchParams(window.location.search);
-                const code = params.get('code');
-                const paymentSuccess = params.get('payment_success');
+                // --- MAIN DASHBOARD LOGIC ---
+                // 2. Listen for the "storage" event to catch the code from the popup
+                window.addEventListener('storage', (e) => {
+                    if (e.key === 'spotify_auth_code_relay' && e.newValue) {
+                        Spotify.handleCode(e.newValue);
+                        localStorage.removeItem('spotify_auth_code_relay'); // Cleanup
+                    }
+                });
+                
+                // 3. Check for Payment Success
+                if (paymentSuccess) {
+                    // We will handle this in Cloud.initAuth to ensure user is logged in first
+                }
 
-                if (code) {
-                    // 1. We are in the popup after Spotify redirected us back.
-                    // Save the code to localStorage to trigger the "storage" event in the parent window.
-                    localStorage.setItem('spotify_auth_code_relay', code);
-                    // Small delay to ensure storage event fires before window closes
-                    setTimeout(() => window.close(), 100);
-                    return; // Stop initialization for the popup
-                }
+                grid = GridStack.init({ column: 12, cellHeight: '85px', margin: 12, float: true, animate: true, disableDrag: true, disableResize: true });
+                grid.off('change added removed'); // IMPORTANT: No saving during init
 
-                // --- MAIN DASHBOARD LOGIC ---
-                // 2. Listen for the "storage" event to catch the code from the popup
-                window.addEventListener('storage', (e) => {
-                    if (e.key === 'spotify_auth_code_relay' && e.newValue) {
-                        Utils.handleSpotifyCode(e.newValue);
-                        localStorage.removeItem('spotify_auth_code_relay'); // Cleanup
-                    }
-                });
-                
-                // 3. Check for Payment Success
-                if (paymentSuccess) {
-                    // We will handle this in Cloud.initAuth to ensure user is logged in first
-                }
+                Cloud.initAuth();
 
-                grid = GridStack.init({ column: 12, cellHeight: '85px', margin: 12, float: true, animate: true, disableDrag: true, disableResize: true });
-                grid.off('change added removed'); // IMPORTANT: No saving during init
+                setInterval(UI.updateTime, 1000);
+                setInterval(() => document.querySelectorAll('.count-container').forEach(el => Utils.updateCountdown(el.id.replace('count-wrap-', ''))), 60000);
+                setInterval(() => { document.querySelectorAll('.timer-container').forEach(el => Utils.updateTimer(el.id.replace('timer-wrap-',''))); }, 1000);
 
-                Cloud.initAuth();
+                document.getElementById('dashboard-wrapper').addEventListener('click', (e) => {
+                    if (editing && !e.target.closest('.grid-stack-item')) { Core.toggleEdit(); }
+                });
+            };
 
-                setInterval(UI.updateTime, 1000);
-                setInterval(() => document.querySelectorAll('.count-container').forEach(el => Utils.updateCountdown(el.id.replace('count-wrap-', ''))), 60000);
-                setInterval(() => { document.querySelectorAll('.timer-container').forEach(el => Utils.updateTimer(el.id.replace('timer-wrap-',''))); }, 1000);
+            const toggleEdit = () => {
+                editing = !editing;
+                grid.enableMove(editing); grid.enableResize(editing);
+                document.body.classList.toggle('editing', editing);
+                const btn = document.getElementById('edit-btn');
+                if(editing) { btn.innerHTML = '<i class="fa-solid fa-check"></i> Done'; btn.classList.add('btn-primary'); } 
+                else { btn.innerHTML = '<i class="fa-solid fa-pen-nib"></i> Edit'; btn.classList.remove('btn-primary'); }
+            };
 
-                document.getElementById('dashboard-wrapper').addEventListener('click', (e) => {
-                    if (editing && !e.target.closest('.grid-stack-item')) { Core.toggleEdit(); }
-                });
-            };
+            const createWidget = (type, w, h, x, y, savedData) => {
+                if (!isPro && grid.getGridItems().length >= 2 && !isDashboardLoaded) { }
 
-            const toggleEdit = () => {
-                editing = !editing;
-                grid.enableMove(editing); grid.enableResize(editing);
-                document.body.classList.toggle('editing', editing);
-                const btn = document.getElementById('edit-btn');
-                if(editing) { btn.innerHTML = '<i class="fa-solid fa-check"></i> Done'; btn.classList.add('btn-primary'); } 
-                else { btn.innerHTML = '<i class="fa-solid fa-pen-nib"></i> Edit'; btn.classList.remove('btn-primary'); }
-            };
+                if (isDashboardLoaded && !isPro && grid.getGridItems().length >= 2) {
+                    alert("Free Tier Limit Reached (2 Widgets). Upgrade to Pro for unlimited access!");
+                    UI.toggleAdd(false);
+                    return;
+                }
 
-            const createWidget = (type, w, h, x, y, savedData) => {
-                if (!isPro && grid.getGridItems().length >= 2 && !isDashboardLoaded) { }
+                const id = 'w-' + Math.random().toString(36).substr(2, 9);
+                const content = Templates.get(type, id, savedData);
+                if (content === '<div>Error</div>') return;
 
-                if (isDashboardLoaded && !isPro && grid.getGridItems().length >= 2) {
-                    alert("Free Tier Limit Reached (2 Widgets). Upgrade to Pro for unlimited access!");
-                    UI.toggleAdd(false);
-                    return;
-                }
+                const el = grid.addWidget({ w, h, x, y, content, minW: 2, minH: 2 });
+                el.setAttribute('data-type', type); 
 
-                const id = 'w-' + Math.random().toString(36).substr(2, 9);
-                const content = Templates.get(type, id, savedData);
-                if (content === '<div>Error</div>') return;
-
-                const el = grid.addWidget({ w, h, x, y, content, minW: 2, minH: 2 });
-                el.setAttribute('data-type', type); 
-
-                const removeBtn = el.querySelector('.remove-widget');
-                if(removeBtn) { el.appendChild(removeBtn); removeBtn.onclick = () => { grid.removeWidget(el); Core.saveLayout(); }; }
-                
-                if (type === 'todo') UI.initTodo(id, savedData);
-                if (type === 'notes') document.getElementById(`nt-${id}`).value = savedData || "";
-                if (type === 'weather') Utils.initWeather(id, savedData);
-                if (type === 'countdown' && savedData) Utils.updateCountdown(id);
-                if (type === 'calendar') Utils.initCalendar(id);
-                if (type === 'battery') Utils.updateBattery(id);
-                if (type === 'clipboard' && savedData) {
-                    savedData.forEach(t => {
-                        const i = document.createElement('div'); i.className='clip-item'; i.innerText=t;
-                        i.onclick = () => { navigator.clipboard.writeText(t); UI.showToast("Copied to Clipboard!"); };
-                        document.getElementById(`clip-${id}`).appendChild(i);
-                    });
-                }
-                if (type === 'timer' && savedData) {
-                    const wrap = document.getElementById(`timer-wrap-${id}`);
-                    wrap.setAttribute('data-end', savedData.end);
-                    document.getElementById(`timer-lbl-${id}`).innerText = savedData.label;
-                }
-                
-                if (type === 'music') {
-                    Utils.fetchSpotifyPlaylists(id);
-                    if(savedData && savedData.current) {
-                        const select = document.getElementById(`ms-sel-${id}`);
-                        if(savedData.currentName) {
-                            const opt = document.createElement('option');
-                            opt.value = savedData.current;
-                            opt.innerText = savedData.currentName;
-                            select.appendChild(opt);
-                        }
-                        select.value = savedData.current;
-                        Utils.changeSpotifySource(id);
-                    }
-                }
-
-                if (type === 'youtube' && savedData && savedData.url) {
-                    const frame = document.getElementById(`yt-frame-${id}`);
-                    const setup = document.getElementById(`yt-setup-${id}`);
-                    const controls = document.getElementById(`yt-controls-${id}`);
-                    frame.src = savedData.url;
-                    frame.style.display = 'block';
-                    controls.style.display = 'block';
-                    setup.style.display = 'none';
-                }
-                if (type === 'spotify') {
-                    const frame = document.getElementById(`sp-frame-${id}`);
-                    const setup = document.getElementById(`sp-setup-${id}`);
-                    const controls = document.getElementById(`sp-controls-${id}`);
-                    frame.src = savedData.url;
-                    frame.style.display = 'block';
-                    controls.style.display = 'block';
-                    setup.style.display = 'none';
-                }
-
-                UI.toggleAdd(false);
-            };
-
-            const saveLayout = debounce(() => {
-                if(!isDashboardLoaded) return; 
-
-                const items = grid.getGridItems().map(el => {
-                    const type = el.getAttribute('data-type');
-                    let data = null;
-                    if (type === 'notes') data = el.querySelector('textarea').value;
-                    if (type === 'todo') data = Array.from(el.querySelectorAll('.task-item')).map(i => ({t: i.querySelector('.task-text').innerText, d: i.classList.contains('done')}));
-                    if (type === 'links') { data = []; el.querySelectorAll('.deck-btn').forEach(btn => data.push(JSON.parse(btn.getAttribute('data-link') || 'null'))); }
-                    if (type === 'countdown') { data = JSON.parse(el.querySelector('.count-container').getAttribute('data-target') || 'null'); }
-                    if (type === 'clipboard') { data = Array.from(el.querySelectorAll('.clip-item')).map(i => i.innerText); }
-                    if (type === 'timer') { const wrap = el.querySelector('.timer-container'); data = { end: wrap.getAttribute('data-end'), label: el.querySelector('.timer-label').innerText }; }
-                    
-                    if (type === 'music') { 
-                        const select = el.querySelector('select');
-                        const name = select.options[select.selectedIndex] ? select.options[select.selectedIndex].innerText : '';
-                        data = { current: select.value, currentName: name }; 
-                    }
-                    
-                    if (type === 'weather') { const unit = el.getAttribute('data-unit') || 'F'; data = { unit }; }
-                    
-                    if (type === 'youtube') {
-                        const frame = el.querySelector('iframe');
-                        if(frame && frame.src && frame.style.display !== 'none') {
-                            data = { url: frame.src };
-                        }
-                    }
-
-                    if (type === 'spotify') {
-                        const frame = el.querySelector('iframe');
-                        if(frame && frame.src && frame.style.display !== 'none') {
-                            data = { url: frame.src };
-                        }
-                    }
-
-                    return { x: el.gridstackNode.x, y: el.gridstackNode.y, w: el.gridstackNode.w, h: el.gridstackNode.h, type, data };
-                });
-                
-                Cloud.save(items);
-            }, 1000);
-
-            const loadData = () => {
-                if(!Cloud.user || !db) return;
-
-                isDashboardLoaded = false;
-                grid.off('change added removed');
-
-                db.collection('users').doc(Cloud.user.uid).get().then(doc => {
-                    grid.removeAll(); 
-                    if(doc.exists) {
-                        const dbData = doc.data();
-                        
-                        isPro = dbData.isPro || false;
-                        if(isPro) {
-                            document.getElementById('upgrade-btn').style.display = 'none';
-                            if(!document.querySelector('.pro-badge')) {
-                                document.getElementById('user-info').innerHTML += '<span class="pro-badge">PRO ⚡</span>';
-                            }
-                        } else {
-                            document.getElementById('upgrade-btn').style.display = 'block';
-                        }
-
-                        try {
-                            const items = JSON.parse(dbData.layout);
-                            if(items && items.length > 0) {
-                                grid.batchUpdate();
-                                items.forEach(s => createWidget(s.type, s.w, s.h, s.x, s.y, s.data));
-                                grid.commit();
-                            } else {
-                                loadDefaults();
-                            }
-                        } catch(e) { loadDefaults(); }
+                const removeBtn = el.querySelector('.remove-widget');
+                if(removeBtn) { el.appendChild(removeBtn); removeBtn.onclick = () => { grid.removeWidget(el); Core.saveLayout(); }; }
+                
+                if (type === 'todo') UI.initTodo(id, savedData);
+                if (type === 'notes') document.getElementById(`nt-${id}`).value = savedData || "";
+                if (type === 'weather') Utils.initWeather(id, savedData);
+                if (type === 'countdown' && savedData) Utils.updateCountdown(id);
+                if (type === 'calendar') Utils.initCalendar(id);
+                if (type === 'battery') Utils.updateBattery(id);
+                if (type === 'clipboard' && savedData) {
+                    savedData.forEach(t => {
+                        const i = document.createElement('div'); i.className='clip-item'; i.innerText=t;
+                        i.onclick = () => { navigator.clipboard.writeText(t); UI.showToast("Copied to Clipboard!"); };
+                        document.getElementById(`clip-${id}`).appendChild(i);
+                    });
+                }
+                if (type === 'timer' && savedData) {
+                    const wrap = document.getElementById(`timer-wrap-${id}`);
+                    wrap.setAttribute('data-end', savedData.end);
+                    document.getElementById(`timer-lbl-${id}`).innerText = savedData.label;
+                }
+                
+                if (type === 'music') {
+                    // Check if token exists, if so init player, if not show login button
+                    const hasToken = localStorage.getItem('sp_token');
+                    const overlay = document.getElementById(`ov-${id}`);
+                    if(hasToken) {
+                        setTimeout(Spotify.initPlayer, 1000); 
                     } else {
-                        loadDefaults();
+                        if(overlay) overlay.classList.add('active');
                     }
-                    
-                    setTimeout(() => {
-                        isDashboardLoaded = true;
-                        grid.on('change added removed', saveLayout);
-                    }, 1000);
-                }).catch(e => {
-                    console.error("Load failed", e);
-                    document.getElementById('error-toast').innerText = "Load Failed: " + e.message;
-                    document.getElementById('error-toast').style.display = 'block';
-                });
-            };
+                }
 
-            const loadDefaults = () => {
-                grid.batchUpdate();
-                createWidget('clock', 4, 2, 0, 0);
-                createWidget('weather', 4, 2, 4, 0);
-                grid.commit();
-                
-                setTimeout(() => {
-                    isDashboardLoaded = true;
-                    saveLayout();
-                    grid.on('change added removed', saveLayout);
-                }, 1000);
-            };
+                if (type === 'youtube' && savedData && savedData.url) {
+                    const frame = document.getElementById(`yt-frame-${id}`);
+                    const setup = document.getElementById(`yt-setup-${id}`);
+                    const controls = document.getElementById(`yt-controls-${id}`);
+                    frame.src = savedData.url;
+                    frame.style.display = 'block';
+                    controls.style.display = 'block';
+                    setup.style.display = 'none';
+                }
 
-            const reset = () => {
-                if(confirm("This will clear your dashboard. Are you sure?")) {
-                    isDashboardLoaded = false;
-                    db.collection('users').doc(Cloud.user.uid).delete().then(() => location.reload());
-                }
-            };
+                UI.toggleAdd(false);
+            };
 
-            return { init, toggleEdit, createWidget, saveLayout, reset, loadData };
-        })();
+            const saveLayout = debounce(() => {
+                if(!isDashboardLoaded) return; 
 
-        const UI = {
-            toggleAdd: (show) => { const m=document.getElementById('add-modal'), o=document.getElementById('modal-overlay'); if(show){m.classList.add('show');o.classList.add('show');}else{m.classList.remove('show');o.classList.remove('show');}},
-            updateTime: () => { const n=new Date(); document.querySelectorAll('.time-big').forEach(e=>e.innerText=n.toLocaleTimeString([],{hour:'numeric',minute:'2-digit',hour12:true})); document.querySelectorAll('.date-sub').forEach(e=>e.innerText=n.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'}));},
-            initTodo: (id, data) => {
-                const list = document.getElementById(`list-${id}`), em = document.getElementById(`empty-${id}`);
-                if (!list || !em) return;
-                const check = () => { em.style.display = list.children.length===0 ? 'block':'none'; };
-                const add = (t, d) => {
-                    const i = document.createElement('div'); i.className=`task-item ${d?'done':''}`;
-                    i.innerHTML=`<div class="task-check"><i class="fa-solid fa-check"></i></div><span class="task-text">${t}</span><i class="fa-solid fa-xmark task-delete" onclick="event.stopPropagation(); this.parentElement.remove(); UI.checkEmpty('${id}'); Core.saveLayout()"></i>`;
-                    i.onclick = (e) => {
-                        if(e.target.classList.contains('task-delete')) return;
-                        i.classList.add('done'); setTimeout(()=>{ i.remove(); check(); Core.saveLayout(); },800);
-                    };
-                    list.prepend(i); check();
+                const items = grid.getGridItems().map(el => {
+                    const type = el.getAttribute('data-type');
+                    let data = null;
+                    if (type === 'notes') data = el.querySelector('textarea').value;
+                    if (type === 'todo') data = Array.from(el.querySelectorAll('.task-item')).map(i => ({t: i.querySelector('.task-text').innerText, d: i.classList.contains('done')}));
+                    if (type === 'links') { data = []; el.querySelectorAll('.deck-btn').forEach(btn => data.push(JSON.parse(btn.getAttribute('data-link') || 'null'))); }
+                    if (type === 'countdown') { data = JSON.parse(el.querySelector('.count-container').getAttribute('data-target') || 'null'); }
+                    if (type === 'clipboard') { data = Array.from(el.querySelectorAll('.clip-item')).map(i => i.innerText); }
+                    if (type === 'timer') { const wrap = el.querySelector('.timer-container'); data = { end: wrap.getAttribute('data-end'), label: el.querySelector('.timer-label').innerText }; }
+                    
+                    if (type === 'music') { 
+                        // No specific state to save for SDK other than its presence
+                        data = {}; 
+                    }
+                    
+                    if (type === 'weather') { const unit = el.getAttribute('data-unit') || 'F'; data = { unit }; }
+                    
+                    if (type === 'youtube') {
+                        const frame = el.querySelector('iframe');
+                        if(frame && frame.src && frame.style.display !== 'none') {
+                            data = { url: frame.src };
+                        }
+                    }
+
+                    return { x: el.gridstackNode.x, y: el.gridstackNode.y, w: el.gridstackNode.w, h: el.gridstackNode.h, type, data };
+                });
+                
+                Cloud.save(items);
+            }, 1000);
+
+            const loadData = () => {
+                if(!Cloud.user || !db) return;
+
+                isDashboardLoaded = false;
+                grid.off('change added removed');
+
+                db.collection('users').doc(Cloud.user.uid).get().then(doc => {
+                    grid.removeAll(); 
+                    if(doc.exists) {
+                        const dbData = doc.data();
+                        
+                        isPro = dbData.isPro || false;
+                        if(isPro) {
+                            document.getElementById('upgrade-btn').style.display = 'none';
+                            if(!document.querySelector('.pro-badge')) {
+                                document.getElementById('user-info').innerHTML += '<span class="pro-badge">PRO ⚡</span>';
+                            }
+                        } else {
+                            document.getElementById('upgrade-btn').style.display = 'block';
+                        }
+
+                        try {
+                            const items = JSON.parse(dbData.layout);
+                            if(items && items.length > 0) {
+                                grid.batchUpdate();
+                                items.forEach(s => createWidget(s.type, s.w, s.h, s.x, s.y, s.data));
+                                grid.commit();
+                            } else {
+                                loadDefaults();
+                            }
+                        } catch(e) { loadDefaults(); }
+                    } else {
+                        loadDefaults();
+                    }
+                    
+                    setTimeout(() => {
+                        isDashboardLoaded = true;
+                        grid.on('change added removed', saveLayout);
+                    }, 1000);
+                }).catch(e => {
+                    console.error("Load failed", e);
+                    document.getElementById('error-toast').innerText = "Load Failed: " + e.message;
+                    document.getElementById('error-toast').style.display = 'block';
+                });
+            };
+
+            const loadDefaults = () => {
+                grid.batchUpdate();
+                createWidget('clock', 4, 2, 0, 0);
+                createWidget('weather', 4, 2, 4, 0);
+                grid.commit();
+                
+                setTimeout(() => {
+                    isDashboardLoaded = true;
+                    saveLayout();
+                    grid.on('change added removed', saveLayout);
+                }, 1000);
+            };
+
+            const reset = () => {
+                if(confirm("This will clear your dashboard. Are you sure?")) {
+                    isDashboardLoaded = false;
+                    db.collection('users').doc(Cloud.user.uid).delete().then(() => location.reload());
+                }
+            };
+
+            return { init, toggleEdit, createWidget, saveLayout, reset, loadData };
+        })();
+
+        const UI = {
+            toggleAdd: (show) => { const m=document.getElementById('add-modal'), o=document.getElementById('modal-overlay'); if(show){m.classList.add('show');o.classList.add('show');}else{m.classList.remove('show');o.classList.remove('show');}},
+            updateTime: () => { const n=new Date(); document.querySelectorAll('.time-big').forEach(e=>e.innerText=n.toLocaleTimeString([],{hour:'numeric',minute:'2-digit',hour12:true})); document.querySelectorAll('.date-sub').forEach(e=>e.innerText=n.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'}));},
+            initTodo: (id, data) => {
+                const list = document.getElementById(`list-${id}`), em = document.getElementById(`empty-${id}`);
+                if (!list || !em) return;
+                const check = () => { em.style.display = list.children.length===0 ? 'block':'none'; };
+                const add = (t, d) => {
+                    const i = document.createElement('div'); i.className=`task-item ${d?'done':''}`;
+                    i.innerHTML=`<div class="task-check"><i class="fa-solid fa-check"></i></div><span class="task-text">${t}</span><i class="fa-solid fa-xmark task-delete" onclick="event.stopPropagation(); this.parentElement.remove(); UI.checkEmpty('${id}'); Core.saveLayout()"></i>`;
+                    i.onclick = (e) => {
+                        if(e.target.classList.contains('task-delete')) return;
+                        i.classList.add('done'); setTimeout(()=>{ i.remove(); check(); Core.saveLayout(); },800);
+                    };
+                    list.prepend(i); check();
+                };
+                const input = document.getElementById(`in-${id}`);
+                if(input) input.onkeypress = (e) => { if(e.key==='Enter'&&e.target.value.trim()){ add(e.target.value,false); e.target.value=''; Core.saveLayout(); } };
+                if(data) data.forEach(d => { if(!d.d) add(d.t, false); }); check();
+                UI.checkEmpty = check;
+            },
+            showToast: (msg) => {
+                const el = document.getElementById('action-toast');
+                el.innerText = msg;
+                el.style.display = 'block';
+                el.style.animation = 'none';
+                el.offsetHeight; 
+                el.style.animation = 'popUpFade 2s ease forwards';
+                setTimeout(() => { el.style.display = 'none'; }, 2000);
+            }
+        };
+
+        const Templates = {
+            get: (type, id, data) => {
+                const validTypes = ['clock', 'links', 'countdown', 'calc', 'weather', 'todo', 'notes', 'calendar', 'music', 'timer', 'battery', 'password', 'clipboard', 'youtube', 'spotify'];
+                if(!validTypes.includes(type)) return `<div>Error</div>`;
+
+                const wrap = (l, c) => `<div class="remove-widget">✕</div><div class="w-header" data-type="${type}"><span class="w-label">${l}</span></div><div class="w-content" data-type="${type}">${c}</div>`;
+                const getLink = (idx, s) => { const h = s&&s.url; const icon = h ? `<img src="https://www.google.com/s2/favicons?domain=${s.domain}&sz=64" class="deck-favicon"><span class="deck-label">${s.name}</span>` : `<i class="fa-solid fa-plus deck-icon deck-unset"></i>`; return `<div class="deck-btn" onclick="Utils.linkAction('${id}', ${idx}, this)" oncontextmenu="event.preventDefault(); Utils.editLink('${id}', ${idx}, this)" data-link='${h?JSON.stringify(s):""}'>${icon}</div>`; };
+
+                const map = {
+                    clock: `<div class="remove-widget">✕</div><div class="clock-container"><div class="time-big">00:00</div><div class="date-sub">Loading...</div></div>`,
+                    links: wrap('Quick Links', `<div class="deck-grid">${getLink(0,data?.[0])}${getLink(1,data?.[1])}${getLink(2,data?.[2])}</div>`),
+                    countdown: `<div class="remove-widget">✕</div><div class="count-container" id="count-wrap-${id}" onclick="Utils.setCountdown('${id}')" data-target='${data?JSON.stringify(data):""}'><div class="count-days" id="cd-val-${id}">${data?'--':'+'}</div><div class="count-label" id="cd-lbl-${id}">${data?'Loading...':'Set Date'}</div><div class="count-progress"><div class="count-fill" id="cd-bar-${id}"></div></div></div>`,
+                    calc: wrap('Calculator', `<div id="scr-${id}" class="calc-screen">0</div><div class="calc-grid">${['C','÷','×','7','8','9','4','5','6','1','2','3','0','.','='].map(k=>`<button class="calc-btn ${['C','÷','×','='].includes(k)?'calc-orange':''}" onclick="Utils.calc('${id}','${k}')">${k}</button>`).join('')}</div>`),
+                    weather: wrap('Weather', `<div style="display:flex;align-items:center;justify-content:center;gap:15px;height:100%"><i class="fa-solid fa-cloud-sun" style="font-size:32px;color:var(--text-main)"></i><div><div id="temp-${id}" class="weather-temp" style="font-size:28px;font-weight:400">--°</div><div style="font-size:11px;color:var(--text-sec)">Mostly Clear</div></div></div>`),
+                    todo: wrap('Reminders', `<div class="task-input-row"><input id="in-${id}" class="task-input" placeholder="Add task..."></div><div id="list-${id}" class="task-list"></div><div id="empty-${id}" class="task-empty">No tasks</div>`),
+                    notes: wrap('Notes', `<textarea id="nt-${id}" style="flex:1;resize:none;background:transparent;border:none;padding:0;font-family:inherit;font-size:14px;line-height:1.4" placeholder="Type here..." oninput="Core.saveLayout()"></textarea>`),
+                    calendar: `<div class="remove-widget">✕</div><div class="cal-wrapper"><div class="cal-header"><i class="fa-solid fa-chevron-left cal-nav" onclick="Utils.changeMonth('${id}', -1)"></i><span id="cal-title-${id}" class="cal-title" onclick="Utils.resetCalendar('${id}')">Month Year</span><i class="fa-solid fa-chevron-right cal-nav" onclick="Utils.changeMonth('${id}', 1)"></i></div><div class="cal-weekdays"><span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span></div><div id="cal-grid-${id}" class="cal-grid"></div></div>`,
+                    
+                    music: `<div class="remove-widget">✕</div>
+                        <div class="music-wrapper" id="ms-${id}">
+                            <div class="music-settings ${localStorage.getItem('sp_token') ? '' : 'active'}" id="ov-${id}">
+                                <div class="music-msg">Connect Spotify Premium</div>
+                                <button class="login-btn" onclick="Spotify.login()">Login</button>
+                            </div>
+
+                            <div class="music-art" id="ms-art-${id}">
+                                <i class="fa-solid fa-music music-art-icon"></i>
+                            </div>
+                            
+                            <div class="music-info">
+                                <div class="music-title" id="ms-title-${id}">Not Playing</div>
+                                <div class="music-artist" id="ms-artist-${id}">Connect a device</div>
+                                
+                                <div class="music-progress">
+                                    <div class="music-fill" id="ms-fill-${id}"></div>
+                                </div>
+                                
+                                <div class="music-controls">
+                                    <button class="ctrl-btn" onclick="Spotify.prev()"><i class="fa-solid fa-backward-step"></i></button>
+                                    <button class="ctrl-btn play-btn" onclick="Spotify.toggle()"><i class="fa-solid fa-play"></i></button>
+                                    <button class="ctrl-btn" onclick="Spotify.next()"><i class="fa-solid fa-forward-step"></i></button>
+                                </div>
+                            </div>
+                        </div>`,
+                    
+                    timer: wrap('Event Timer', `<div class="timer-container" id="timer-wrap-${id}" onclick="Utils.setTimer('${id}')"><div id="timer-val-${id}" class="timer-big">--:--</div><div id="timer-lbl-${id}" class="timer-label">Click to Set</div><div class="timer-bar"><div id="timer-bar-${id}" class="timer-fill"></div></div></div>`),
+                    battery: wrap('Battery', `<div class="batt-container"><div class="batt-icon-shell"><div class="batt-fill" id="batt-fill-${id}"></div></div><div><div id="batt-val-${id}" class="batt-text">--%</div><div id="batt-st-${id}" class="batt-state">Reading...</div></div></div>`),
+                    password: wrap('Passwords', `<div id="pass-${id}" class="pass-display" onclick="Utils.copyPass('${id}')">CLICK GEN</div><div class="pass-controls"><span id="lbl-${id}" style="font-size:11px;color:var(--text-sec);width:60px">Length: 16</span><input type="range" id="rng-${id}" min="8" max="32" value="16" style="flex:1" oninput="Utils.genPass('${id}')"><button class="btn" onclick="Utils.genPass('${id}')">Gen</button></div>`),
+                    clipboard: wrap('Clipboard', `<button class="btn btn-primary" style="width:100%; justify-content:center" onclick="Utils.saveClip('${id}')"><i class="fa-solid fa-paste"></i> Save Recent</button><div id="clip-${id}" class="clip-list"></div>`),
+                    
+                    youtube: `<div class="remove-widget">✕</div><div class="yt-container"><div id="yt-setup-${id}" class="yt-setup"><i class="fa-brands fa-youtube" style="font-size:40px;color:#FF0000;margin-bottom:10px"></i><input id="yt-input-${id}" class="yt-input" placeholder="Paste YouTube Link..." onkeypress="if(event.key==='Enter') Utils.loadYT('${id}')"><button class="btn" onclick="Utils.loadYT('${id}')">Load</button></div><iframe id="yt-frame-${id}" class="yt-frame" style="display:none" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe><div id="yt-controls-${id}" class="yt-controls" style="display:none"><button class="btn btn-danger" onclick="Utils.resetYT('${id}')"><i class="fa-solid fa-xmark"></i></button></div></div>`,
                 };
-                const input = document.getElementById(`in-${id}`);
-                if(input) input.onkeypress = (e) => { if(e.key==='Enter'&&e.target.value.trim()){ add(e.target.value,false); e.target.value=''; Core.saveLayout(); } };
-                if(data) data.forEach(d => { if(!d.d) add(d.t, false); }); check();
-                UI.checkEmpty = check;
-            },
-            showToast: (msg) => {
-                const el = document.getElementById('action-toast');
-                el.innerText = msg;
-                el.style.display = 'block';
-                el.style.animation = 'none';
-                el.offsetHeight; 
-                el.style.animation = 'popUpFade 2s ease forwards';
-                setTimeout(() => { el.style.display = 'none'; }, 2000);
-            }
-        };
+                return map[type] || `<div>Error</div>`;
+            }
+        };
 
-        const Templates = {
-            get: (type, id, data) => {
-                const validTypes = ['clock', 'links', 'countdown', 'calc', 'weather', 'todo', 'notes', 'calendar', 'music', 'timer', 'battery', 'password', 'clipboard', 'youtube', 'spotify'];
-                if(!validTypes.includes(type)) return `<div>Error</div>`;
-
-                const wrap = (l, c) => `<div class="remove-widget">✕</div><div class="w-header" data-type="${type}"><span class="w-label">${l}</span></div><div class="w-content" data-type="${type}">${c}</div>`;
-                const getLink = (idx, s) => { const h = s&&s.url; const icon = h ? `<img src="https://www.google.com/s2/favicons?domain=${s.domain}&sz=64" class="deck-favicon"><span class="deck-label">${s.name}</span>` : `<i class="fa-solid fa-plus deck-icon deck-unset"></i>`; return `<div class="deck-btn" onclick="Utils.linkAction('${id}', ${idx}, this)" oncontextmenu="event.preventDefault(); Utils.editLink('${id}', ${idx}, this)" data-link='${h?JSON.stringify(s):""}'>${icon}</div>`; };
-
-                const map = {
-                    clock: `<div class="remove-widget">✕</div><div class="clock-container"><div class="time-big">00:00</div><div class="date-sub">Loading...</div></div>`,
-                    links: wrap('Quick Links', `<div class="deck-grid">${getLink(0,data?.[0])}${getLink(1,data?.[1])}${getLink(2,data?.[2])}</div>`),
-                    countdown: `<div class="remove-widget">✕</div><div class="count-container" id="count-wrap-${id}" onclick="Utils.setCountdown('${id}')" data-target='${data?JSON.stringify(data):""}'><div class="count-days" id="cd-val-${id}">${data?'--':'+'}</div><div class="count-label" id="cd-lbl-${id}">${data?'Loading...':'Set Date'}</div><div class="count-progress"><div class="count-fill" id="cd-bar-${id}"></div></div></div>`,
-                    calc: wrap('Calculator', `<div id="scr-${id}" class="calc-screen">0</div><div class="calc-grid">${['C','÷','×','7','8','9','4','5','6','1','2','3','0','.','='].map(k=>`<button class="calc-btn ${['C','÷','×','='].includes(k)?'calc-orange':''}" onclick="Utils.calc('${id}','${k}')">${k}</button>`).join('')}</div>`),
-                    weather: wrap('Weather', `<div style="display:flex;align-items:center;justify-content:center;gap:15px;height:100%"><i class="fa-solid fa-cloud-sun" style="font-size:32px;color:var(--text-main)"></i><div><div id="temp-${id}" class="weather-temp" style="font-size:28px;font-weight:400">--°</div><div style="font-size:11px;color:var(--text-sec)">Mostly Clear</div></div></div>`),
-                    todo: wrap('Reminders', `<div class="task-input-row"><input id="in-${id}" class="task-input" placeholder="Add task..."></div><div id="list-${id}" class="task-list"></div><div id="empty-${id}" class="task-empty">No tasks</div>`),
-                    notes: wrap('Notes', `<textarea id="nt-${id}" style="flex:1;resize:none;background:transparent;border:none;padding:0;font-family:inherit;font-size:14px;line-height:1.4" placeholder="Type here..." oninput="Core.saveLayout()"></textarea>`),
-                    calendar: `<div class="remove-widget">✕</div><div class="cal-wrapper"><div class="cal-header"><i class="fa-solid fa-chevron-left cal-nav" onclick="Utils.changeMonth('${id}', -1)"></i><span id="cal-title-${id}" class="cal-title" onclick="Utils.resetCalendar('${id}')">Month Year</span><i class="fa-solid fa-chevron-right cal-nav" onclick="Utils.changeMonth('${id}', 1)"></i></div><div class="cal-weekdays"><span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span></div><div id="cal-grid-${id}" class="cal-grid"></div></div>`,
-                    
-                    music: wrap('Music', `<div class="music-header" style="display:flex;gap:5px;margin-bottom:8px;align-items:center;flex-shrink:0"><select id="ms-sel-${id}" style="flex:1;background:var(--ios-input);color:white;border-radius:8px;border:none;outline:none;font-size:12px;padding:6px" onchange="Utils.changeSpotifySource('${id}')"><option value="">Select Playlist...</option></select><button class="btn" style="background:#1DB954; color:white; font-size:12px; padding:4px 8px; border-radius:6px" onclick="Utils.loginSpotify('${id}')"><i class="fa-brands fa-spotify"></i> Connect</button></div><div style="flex:1;border-radius:12px;overflow:hidden;background:black;position:relative;min-height:0"><div id="ms-setup-${id}" style="display:flex;flex-direction:column;justify-content:center;align-items:center;height:100%;text-align:center;gap:10px"><i class="fa-brands fa-spotify" style="font-size:40px;color:#1DB954"></i><p style="font-size:12px;color:var(--text-sec)">Connect to view playlists</p></div><iframe id="ms-frame-${id}" style="width:100%;height:100%;border:none;display:none" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe></div>`),
-                    
-                    timer: wrap('Event Timer', `<div class="timer-container" id="timer-wrap-${id}" onclick="Utils.setTimer('${id}')"><div id="timer-val-${id}" class="timer-big">--:--</div><div id="timer-lbl-${id}" class="timer-label">Click to Set</div><div class="timer-bar"><div id="timer-bar-${id}" class="timer-fill"></div></div></div>`),
-                    battery: wrap('Battery', `<div class="batt-container"><div class="batt-icon-shell"><div class="batt-fill" id="batt-fill-${id}"></div></div><div><div id="batt-val-${id}" class="batt-text">--%</div><div id="batt-st-${id}" class="batt-state">Reading...</div></div></div>`),
-                    password: wrap('Passwords', `<div id="pass-${id}" class="pass-display" onclick="Utils.copyPass('${id}')">CLICK GEN</div><div class="pass-controls"><span id="lbl-${id}" style="font-size:11px;color:var(--text-sec);width:60px">Length: 16</span><input type="range" id="rng-${id}" min="8" max="32" value="16" style="flex:1" oninput="Utils.genPass('${id}')"><button class="btn" onclick="Utils.genPass('${id}')">Gen</button></div>`),
-                    clipboard: wrap('Clipboard', `<button class="btn btn-primary" style="width:100%; justify-content:center" onclick="Utils.saveClip('${id}')"><i class="fa-solid fa-paste"></i> Save Recent</button><div id="clip-${id}" class="clip-list"></div>`),
-                    
-                    youtube: `<div class="remove-widget">✕</div><div class="yt-container"><div id="yt-setup-${id}" class="yt-setup"><i class="fa-brands fa-youtube" style="font-size:40px;color:#FF0000;margin-bottom:10px"></i><input id="yt-input-${id}" class="yt-input" placeholder="Paste YouTube Link..." onkeypress="if(event.key==='Enter') Utils.loadYT('${id}')"><button class="btn" onclick="Utils.loadYT('${id}')">Load</button></div><iframe id="yt-frame-${id}" class="yt-frame" style="display:none" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe><div id="yt-controls-${id}" class="yt-controls" style="display:none"><button class="btn btn-danger" onclick="Utils.resetYT('${id}')"><i class="fa-solid fa-xmark"></i></button></div></div>`,
-                    
-                    spotify: `<div class="remove-widget">✕</div><div class="sp-container"><div id="sp-setup-${id}" class="sp-setup"><i class="fa-brands fa-spotify" style="font-size:40px;color:#1DB954;margin-bottom:10px"></i><div style="font-size:12px;color:var(--text-sec)">Paste Spotify Song/Playlist Link</div><input id="sp-input-${id}" class="yt-input" placeholder="https://open.spotify.com/..." onkeypress="if(event.key==='Enter') Utils.loadSpotify('${id}')"><button class="btn" onclick="Utils.loadSpotify('${id}')">Load</button></div><iframe id="sp-frame-${id}" class="sp-frame" style="display:none" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe><div id="sp-controls-${id}" class="yt-controls" style="display:none"><button class="btn btn-danger" onclick="Utils.resetSpotify('${id}')"><i class="fa-solid fa-xmark"></i></button></div></div>`
-                };
-                return map[type] || `<div>Error</div>`;
-            }
-        };
-
-        window.onload = Core.init;
-    </script>
+        window.onload = Core.init;
+    </script>
 </body>
 </html>
