@@ -23,11 +23,6 @@
             --text-main: #FFFFFF; --text-sec: rgba(235, 235, 245, 0.6);
             --radius: 22px;
             --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
-            
-            /* Custom Music Theme */
-            --music-bg: #000000;
-            --music-accent: #00E5FF; /* Cyan */
-            --music-art: #FFD600; /* Yellow */
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; user-select: none; }
@@ -51,8 +46,8 @@
         /* ACTION TOAST */
         #action-toast {
             position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%);
-            background: var(--music-accent);
-            color: black; padding: 10px 24px;
+            background: #1DB954; /* Spotify Green */
+            color: white; padding: 10px 24px;
             border-radius: 50px; font-size: 14px; font-weight: 700;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
             display: none; z-index: 6000; pointer-events: none;
@@ -258,7 +253,7 @@
             <button class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;" onclick="UI.toggleAdd(false)">Close</button>
         </div>
         <div class="modal-grid">
-            <div class="add-card" onclick="Core.createWidget('music', 4, 2)"><i class="fa-brands fa-spotify add-icon" style="color:#1DB954"></i><span class="add-label">Music (Auth)</span></div>
+            <div class="add-card" onclick="Core.createWidget('music', 4, 3)"><i class="fa-brands fa-spotify add-icon" style="color:#1DB954"></i><span class="add-label">Music (Auth)</span></div>
             <div class="add-card" onclick="Core.createWidget('youtube', 4, 3)"><i class="fa-brands fa-youtube add-icon" style="color:#FF0000"></i><span class="add-label">YouTube</span></div>
             <div class="add-card" onclick="Core.createWidget('timer', 3, 2)"><i class="fa-solid fa-hourglass-end add-icon" style="color:var(--ios-orange)"></i><span class="add-label">Timer</span></div>
             <div class="add-card" onclick="Core.createWidget('battery', 3, 2)"><i class="fa-solid fa-battery-half add-icon" style="color:var(--ios-green)"></i><span class="add-label">Battery</span></div>
@@ -666,9 +661,11 @@ const Utils = {
                     iframe.src = embedUrl;
                     iframe.style.display = 'block';
                     setup.style.display = 'none';
-                    // Apply special styling to remove padding for music widget when active
+                    
+                    // NEW: Remove padding when player is active to let it fill the card
                     const widgetContent = iframe.closest('.grid-stack-item-content');
                     if(widgetContent) widgetContent.style.padding = '0';
+                    
                 } else {
                     iframe.style.display = 'none';
                     setup.style.display = 'flex';
