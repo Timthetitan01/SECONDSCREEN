@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecondScreen | Pro Tier</title>
+    <title>StudyNest | Pro Tier</title>
     <link rel="icon" type="image/png" href="studynestlogo.png">
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack.min.css" />
@@ -373,7 +373,7 @@
     </div>
 
     <nav>
-        <div class="brand"><i class="fa-brand"></i> SecondScreen Pro</div>
+        <div class="brand"><i class="fa-solid fa-feather"></i> StudyNest Pro</div>
         <div class="nav-actions">
             <button id="upgrade-btn" class="btn btn-gold" onclick="Cloud.upgrade()" style="display:none">
                 <i class="fa-solid fa-star"></i> Upgrade
@@ -558,7 +558,7 @@ const firebaseConfig = {
 
                 window.onSpotifyWebPlaybackSDKReady = () => {
                     player = new Spotify.Player({
-                        name: 'SecondScreen Web Player',
+                        name: 'StudyNest Web Player',
                         getOAuthToken: cb => { cb(Spotify.token); },
                         volume: 0.5
                     });
@@ -1230,28 +1230,26 @@ const Utils = {
                             <button class="calc-btn" onclick="Utils.calc('${id}','7')">7</button>
                             <button class="calc-btn" onclick="Utils.calc('${id}','8')">8</button>
                             <button class="calc-btn" onclick="Utils.calc('${id}','9')">9</button>
-                              <button class="calc-btn calc-sci" onclick="Utils.calc('${id}','^')">^</button>
                             <button class="calc-btn calc-orange" onclick="Utils.calc('${id}','×')">×</button>
-                          
+                            <button class="calc-btn calc-sci" onclick="Utils.calc('${id}','^')">^</button>
 
                             <button class="calc-btn" onclick="Utils.calc('${id}','4')">4</button>
                             <button class="calc-btn" onclick="Utils.calc('${id}','5')">5</button>
                             <button class="calc-btn" onclick="Utils.calc('${id}','6')">6</button>
-                            <button class="calc-btn calc-sci" onclick="Utils.calc('${id}','√')">√</button>
                             <button class="calc-btn calc-orange" onclick="Utils.calc('${id}','-')">-</button>
+                            <button class="calc-btn calc-sci" onclick="Utils.calc('${id}','√')">√</button>
 
                             <button class="calc-btn" onclick="Utils.calc('${id}','1')">1</button>
                             <button class="calc-btn" onclick="Utils.calc('${id}','2')">2</button>
                             <button class="calc-btn" onclick="Utils.calc('${id}','3')">3</button>
-                            <button class="calc-btn calc-sci" onclick="Utils.calc('${id}','π')">π</button>
                             <button class="calc-btn calc-orange" onclick="Utils.calc('${id}','+')">+</button>
-
+                            <button class="calc-btn calc-sci" onclick="Utils.calc('${id}','π')">π</button>
 
                             <button class="calc-btn calc-sci" onclick="Utils.calc('${id}','e')">e</button>
                             <button class="calc-btn" onclick="Utils.calc('${id}','0')">0</button>
                             <button class="calc-btn" onclick="Utils.calc('${id}','.')">.</button>
-                            <button class="calc-btn calc-sci" onclick="Utils.calc('${id}','%')">%</button>
                             <button class="calc-btn calc-orange" onclick="Utils.calc('${id}','=')">=</button>
+                            <button class="calc-btn calc-sci" onclick="Utils.calc('${id}','%')">%</button>
                         </div>
                     `),
                     weather: wrap('Weather', `<div style="display:flex;align-items:center;justify-content:center;gap:15px;height:100%"><i class="fa-solid fa-cloud-sun" style="font-size:32px;color:var(--text-main)"></i><div><div id="temp-${id}" class="weather-temp" style="font-size:28px;font-weight:400">--°</div><div style="font-size:11px;color:var(--text-sec)">Mostly Clear</div></div></div>`),
