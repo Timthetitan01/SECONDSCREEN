@@ -26,10 +26,9 @@
             --radius: 22px;
             --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
             
-            /* Custom Music Theme */
             --music-bg: #000000;
-            --music-accent: #00E5FF; /* Cyan */
-            --music-art: #FFD600; /* Yellow */
+            --music-accent: #00E5FF;
+            --music-art: #FFD600;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; user-select: none; }
@@ -42,7 +41,6 @@
             color: var(--text-main); font-family: var(--font); height: 100vh; overflow: hidden; display: flex; flex-direction: column;
         }
 
-        /* STATUS BAR */
         #status-bar {
             position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
             background: rgba(0,0,0,0.8); color: white; padding: 8px 16px;
@@ -50,7 +48,6 @@
             display: none; z-index: 5000; pointer-events: none; transition: opacity 0.3s;
         }
 
-        /* ACTION TOAST */
         #action-toast {
             position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%);
             background: var(--music-accent);
@@ -69,7 +66,6 @@
             100% { opacity: 0; transform: translate(-50%, -10px); }
         }
 
-        /* LOGIN OVERLAY */
         #login-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.9); backdrop-filter: blur(20px);
@@ -137,7 +133,6 @@
         .w-label { font-size: 11px; font-weight: 600; color: var(--ios-blue); text-transform: uppercase; letter-spacing: 0.5px; }
         .w-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
 
-        /* Widget Styles */
         .batt-container { display: flex; align-items: center; justify-content: center; height: 100%; gap: 15px; }
         .batt-icon-shell { width: 50px; height: 26px; border: 3px solid var(--text-sec); border-radius: 6px; padding: 2px; position: relative; }
         .batt-icon-shell::after { content:''; position: absolute; right: -6px; top: 6px; width: 3px; height: 8px; background: var(--text-sec); border-radius: 0 2px 2px 0; }
@@ -171,7 +166,6 @@
         .task-item:hover .task-delete { opacity: 1; }
         .task-empty { text-align: center; color: var(--text-sec); font-size: 12px; margin-top: 20px; font-style: italic; opacity: 0.7; }
 
-        /* === CALCULATOR STYLES === */
         .calc-screen { text-align:right; font-size:32px; font-weight:200; margin-bottom:2px; height:40px; white-space:nowrap; overflow:hidden; letter-spacing: -1px; }
         .calc-hist { text-align:right; font-size:12px; color: var(--text-sec); height: 16px; overflow:hidden; margin-bottom: 4px; }
         .calc-grid-adv { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; flex: 1; }
@@ -224,51 +218,12 @@
         .sp-setup { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; }
         .sp-frame { flex: 1; width: 100%; border: none; border-radius: 12px; }
 
-        /* --- PANDORA WIDGET STYLES --- */
-        .pan-container { 
-            width: 100%; height: 100%; display: flex; flex-direction: column; 
-            align-items: center; justify-content: center; 
-            perspective: 600px; cursor: pointer; position: relative;
-        }
-        .pan-display { 
-            position: absolute; top: 10px; right: 10px; 
-            font-family: 'Courier New', monospace; font-weight: 700; color: #e0e0e0; 
-            text-shadow: 0 0 5px rgba(255,215,0,0.2); pointer-events: none;
-        }
-        .pan-box { 
-            width: 100px; height: 60px; position: relative; transform-style: preserve-3d; margin-top: 20px;
-        }
-        .pan-body { 
-            position: absolute; width: 100%; height: 100%; 
-            background: linear-gradient(135deg, #3e2723, #281a16); 
-            border: 2px solid #ffd700; border-radius: 0 0 6px 6px; 
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5); z-index: 2;
-        }
-        .pan-lid { 
-            position: absolute; width: 108px; height: 25px; 
-            background: linear-gradient(135deg, #4e342e, #3e2723); 
-            border: 2px solid #ffd700; border-radius: 6px 6px 0 0; 
-            top: -20px; left: -4px; z-index: 3; 
-            transform-origin: bottom center; transition: transform 0.5s ease; 
-        }
-        .pan-hope { 
-            position: absolute; width: 20px; height: 20px; background: white; 
-            border-radius: 50%; top: 20px; left: 40px; 
-            box-shadow: 0 0 15px 5px rgba(255,255,255,0.8); z-index: 1; opacity: 0; 
-            transition: all 2s ease; transform: scale(0);
-        }
-        .pan-particle { 
-            position: absolute; width: 6px; height: 6px; border-radius: 50%; pointer-events: none; z-index: 5; opacity: 0; 
-        }
-        /* Animations */
-        @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-2px) rotate(-1deg)} 75%{transform:translateX(2px) rotate(1deg)} }
-        .shake-mild { animation: shake 0.5s infinite; }
-        .shake-intense { animation: shake 0.1s infinite; filter: drop-shadow(0 0 5px red); }
-        .pan-open .pan-lid { transform: rotateX(120deg); }
-        .pan-open .pan-hope { opacity: 1; transform: translateY(-50px) scale(1.5); }
-        @keyframes flyOut { 0% { transform: translate(0,0) scale(1); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; } }
+        .pan-container { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
+        .pan-time { font-size: 36px; font-weight: 700; font-variant-numeric: tabular-nums; }
+        .pan-label { font-size: 12px; color: var(--text-sec); margin-top: 5px; }
+        .pan-finished { color: var(--ios-green); animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0.5; } }
 
-        /* --- CUSTOM POPUP STYLES --- */
         #popup-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px);
@@ -301,7 +256,6 @@
         .p-confirm { background: var(--ios-blue); color: white; }
         .p-danger { background: rgba(255, 69, 58, 0.2); color: var(--ios-red); }
 
-        /* --- ADDED: MUSIC WIDGET STYLES (For SDK) --- */
         .music-wrapper { width: 100%; height: 100%; background: var(--music-bg); display: flex; align-items: center; padding: 20px; gap: 20px; position: relative; }
         .music-art { width: 90px; height: 90px; background-color: var(--music-art); border-radius: 16px; flex-shrink: 0; background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; }
         .music-art-icon { font-size: 32px; color: black; opacity: 0.3; }
@@ -319,7 +273,6 @@
         .music-settings.active { opacity: 1; pointer-events: all; }
         .login-btn { background: var(--music-accent); color: black; border: none; padding: 10px 20px; border-radius: 50px; font-weight: 700; font-size:12px; cursor: pointer; margin-top:10px; }
 
-        /* Modal */
         #modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); z-index: 1999; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
         #modal-overlay.show { opacity: 1; pointer-events: all; }
         #add-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); width: 90%; max-width: 500px; max-height: 80vh; background: rgba(28, 28, 30, 0.95); border: 1px solid var(--ios-card-border); border-radius: 24px; padding: 24px; z-index: 2000; display: flex; flex-direction: column; opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1); box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
@@ -371,7 +324,7 @@
             <button class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;" onclick="UI.toggleAdd(false)">Close</button>
         </div>
         <div class="modal-grid">
-            <div class="add-card" onclick="Core.createWidget('pandora', 3, 3)"><i class="fa-solid fa-box-open add-icon" style="color:#ffd700"></i><span class="add-label">Pandora Box</span></div>
+            <div class="add-card" onclick="Core.createWidget('pandora', 3, 2)"><i class="fa-solid fa-box-open add-icon" style="color:#ffd700"></i><span class="add-label">Pandora Box</span></div>
             <div class="add-card" onclick="Core.createWidget('music', 4, 2)"><i class="fa-brands fa-spotify add-icon" style="color:#1DB954"></i><span class="add-label">Spotify</span></div>
             <div class="add-card" onclick="Core.createWidget('youtube', 4, 3)"><i class="fa-brands fa-youtube add-icon" style="color:#FF0000"></i><span class="add-label">YouTube</span></div>
             <div class="add-card" onclick="Core.createWidget('timer', 3, 2)"><i class="fa-solid fa-hourglass-end add-icon" style="color:var(--ios-orange)"></i><span class="add-label">Timer</span></div>
@@ -411,9 +364,7 @@
     
     <script>
         
-// === SPOTIFY CONFIGURATION ===
 const SPOTIFY_CLIENT_ID = "2aea224b957a49e0ade20938094a2170"; 
-// SDK Scopes
 const SPOTIFY_SCOPES = "streaming user-read-email user-read-private user-modify-playback-state user-read-currently-playing user-read-playback-state";
 
 const firebaseConfig = {
@@ -426,7 +377,6 @@ const firebaseConfig = {
   measurementId: "G-QTQZ0ET1KJ"
 };
 
-        // --- 2. STRIPE CONFIG ---
         const STRIPE_LINK = "https://buy.stripe.com/test_dRm9AV1EkbVkcke21Mcwg00"; 
 
         try {
@@ -438,11 +388,10 @@ const firebaseConfig = {
             }
         } catch(e) { console.warn("Firebase not configured."); }
 
-        // GLOBAL LOADING LOCK & PRO STATUS
         let isDashboardLoaded = false;
         let isPro = false;
-        let player = null; // SDK Player Global
-        let activePandoras = {}; // Store intervals
+        let player = null;
+        let activePandoras = {};
 
         const Cloud = {
             user: null,
@@ -462,13 +411,11 @@ const firebaseConfig = {
                         setTimeout(() => document.getElementById('login-overlay').style.display = 'none', 500);
                         Core.loadData();
                         
-                        // Check for payment success URL param
                         const params = new URLSearchParams(window.location.search);
                         if (params.get('payment_success') === 'true') {
                             Cloud.activatePro();
                         }
 
-                        // Auto-init player if token exists
                         if(localStorage.getItem('sp_token')) setTimeout(Spotify.initPlayer, 1000);
 
                     } else {
@@ -523,7 +470,6 @@ const firebaseConfig = {
             };
         }
 
-        // --- SPOTIFY SDK IMPLEMENTATION ---
         const Spotify = {
             token: null,
             deviceId: null,
@@ -574,7 +520,7 @@ const firebaseConfig = {
                 const t = localStorage.getItem('sp_token');
                 if(!t) return;
                 Spotify.token = t;
-                if(player) return; // Prevent double init
+                if(player) return;
 
                 window.onSpotifyWebPlaybackSDKReady = () => {
                     player = new Spotify.Player({
@@ -843,9 +789,8 @@ const Utils = {
                 let val = raw; if(unit === 'F') val = (raw * 9/5) + 32; el.innerText = Math.round(val) + '°' + unit;
             },
 
-            // --- PANDORA LOGIC ---
             setPandora: (id) => {
-                if(activePandoras[id]) return; // Timer running
+                if(activePandoras[id]) return; 
                 UI.askInput("Open Pandora's Box", [{label: "Minutes", value: "1", type: "number", placeholder: "1"}], (values) => {
                     const mins = parseInt(values[0]);
                     if(!mins || mins <= 0) return;
@@ -855,13 +800,12 @@ const Utils = {
             startPandora: (id, totalSeconds) => {
                 const container = document.getElementById(`pan-${id}`);
                 const display = document.getElementById(`pan-time-${id}`);
-                const lid = document.getElementById(`pan-lid-${id}`);
-                const hope = document.getElementById(`pan-hope-${id}`);
+                const state = document.getElementById(`pan-state-${id}`);
                 let remaining = totalSeconds;
                 
-                // Reset State
-                container.classList.remove('shake-mild', 'shake-intense', 'pan-open');
-                display.style.color = "#e0e0e0";
+                container.classList.remove('pan-finished');
+                display.innerText = "00:00";
+                display.style.color = "#FFFFFF";
                 
                 if(activePandoras[id]) clearInterval(activePandoras[id]);
                 
@@ -873,40 +817,18 @@ const Utils = {
                     
                     const pct = remaining / totalSeconds;
                     
-                    container.classList.remove('shake-mild', 'shake-intense');
                     if(pct < 0.1 && pct > 0) { 
-                        container.classList.add('shake-intense'); 
                         display.style.color = "#FF453A"; 
-                    } else if(pct < 0.5 && pct > 0) { 
-                        container.classList.add('shake-mild'); 
                     }
 
                     if(remaining <= 0) {
                         clearInterval(activePandoras[id]);
                         delete activePandoras[id];
-                        container.classList.remove('shake-intense');
-                        container.classList.add('pan-open');
-                        Utils.pandoraParticles(id);
+                        display.classList.add('pan-finished');
+                        display.innerText = "DONE";
+                        state.innerText = "Time's up!";
                     }
                 }, 1000);
-            },
-            pandoraParticles: (id) => {
-                const container = document.getElementById(`pan-${id}`);
-                for(let i=0; i<30; i++) {
-                    const p = document.createElement('div');
-                    p.className = 'pan-particle';
-                    p.style.left = '50%'; p.style.top = '50%';
-                    p.style.background = ['#b39ddb', '#80cbc4', '#ef9a9a'][Math.floor(Math.random()*3)];
-                    
-                    const angle = Math.random() * Math.PI * 2;
-                    const vel = 100 + Math.random() * 150;
-                    p.style.setProperty('--tx', `${Math.cos(angle)*vel}px`);
-                    p.style.setProperty('--ty', `${Math.sin(angle)*vel}px`);
-                    p.style.animation = `flyOut ${1+Math.random()}s ease-out forwards`;
-                    
-                    container.appendChild(p);
-                    setTimeout(() => p.remove(), 2000);
-                }
             }
         };
 
@@ -1096,12 +1018,8 @@ const Utils = {
                 const map = {
                     pandora: `<div class="remove-widget">✕</div>
                         <div class="pan-container" id="pan-${id}" onclick="Utils.setPandora('${id}')">
-                           <div class="pan-display" id="pan-time-${id}">SET</div>
-                           <div class="pan-box">
-                              <div class="pan-lid" id="pan-lid-${id}"></div>
-                              <div class="pan-body"></div>
-                              <div class="pan-hope" id="pan-hope-${id}"></div>
-                           </div>
+                           <div class="pan-time" id="pan-time-${id}">SET</div>
+                           <div class="pan-label" id="pan-state-${id}">Click to Start</div>
                         </div>`,
                     clock: `<div class="remove-widget">✕</div><div class="clock-container"><div class="time-big">00:00</div><div class="date-sub">Loading...</div></div>`,
                     links: wrap('Quick Links', `<div class="deck-grid">${getLink(0,data?.[0])}${getLink(1,data?.[1])}${getLink(2,data?.[2])}</div>`),
