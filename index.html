@@ -170,7 +170,7 @@
         .task-item:hover .task-delete { opacity: 1; }
         .task-empty { text-align: center; color: var(--text-sec); font-size: 12px; margin-top: 20px; font-style: italic; opacity: 0.7; }
 
-        /* === UPDATED CALCULATOR STYLES === */
+        /* === CALCULATOR STYLES === */
         .calc-screen { text-align:right; font-size:32px; font-weight:200; margin-bottom:2px; height:40px; white-space:nowrap; overflow:hidden; letter-spacing: -1px; }
         .calc-hist { text-align:right; font-size:12px; color: var(--text-sec); height: 16px; overflow:hidden; margin-bottom: 4px; }
         .calc-grid-adv { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; flex: 1; }
@@ -312,7 +312,6 @@
             cursor: pointer; margin-top:10px;
         }
 
-
         /* Modal */
         #modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); z-index: 1999; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
         #modal-overlay.show { opacity: 1; pointer-events: all; }
@@ -326,6 +325,39 @@
         .add-card:active { transform: scale(0.96); }
         .add-label { font-size: 11px; font-weight: 500; color: white; }
         .add-icon { font-size: 28px; margin-bottom: 2px; }
+
+        /* === NEW POPUP STYLES === */
+        #popup-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px);
+            z-index: 8000; opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease;
+            display: flex; align-items: center; justify-content: center;
+        }
+        #popup-overlay.show { opacity: 1; pointer-events: all; }
+
+        .popup-card {
+            background: rgba(28, 28, 30, 0.95);
+            border: 1px solid var(--ios-card-border);
+            width: 90%; max-width: 320px;
+            border-radius: 20px; padding: 20px;
+            transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            text-align: center;
+        }
+        #popup-overlay.show .popup-card { transform: scale(1); }
+
+        .popup-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: white; }
+        .popup-msg { font-size: 13px; color: var(--text-sec); margin-bottom: 20px; line-height: 1.4; }
+        
+        .popup-inputs { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; text-align: left; }
+        .popup-input-label { font-size: 11px; font-weight: 600; color: var(--ios-blue); margin-left: 4px; margin-bottom: 2px; }
+        
+        .popup-actions { display: flex; gap: 10px; margin-top: 10px; }
+        .popup-btn { flex: 1; padding: 10px; border-radius: 12px; font-weight: 600; font-size: 14px; cursor: pointer; border: none; }
+        .p-cancel { background: rgba(255,255,255,0.1); color: white; }
+        .p-confirm { background: var(--ios-blue); color: white; }
+        .p-danger { background: rgba(255, 69, 58, 0.2); color: var(--ios-red); }
 
         ::-webkit-scrollbar { width: 0px; } 
     </style>
@@ -345,6 +377,20 @@
             <button class="btn btn-primary" style="font-size:16px; padding:12px 24px" onclick="Cloud.login()">
                 <i class="fa-brands fa-google"></i> Sign in with Google
             </button>
+        </div>
+    </div>
+
+    <div id="popup-overlay">
+        <div class="popup-card">
+            <div id="popup-title" class="popup-title">Title</div>
+            <div id="popup-msg" class="popup-msg">Message goes here</div>
+            
+            <div id="popup-inputs" class="popup-inputs" style="display:none"></div>
+
+            <div class="popup-actions">
+                <button class="popup-btn p-cancel" onclick="UI.closePopup()">Cancel</button>
+                <button id="popup-confirm-btn" class="popup-btn p-confirm">Confirm</button>
+            </div>
         </div>
     </div>
 
@@ -432,7 +478,10 @@ const firebaseConfig = {
                 auth.signInWithPopup(provider).catch(e => alert(e.message));
             },
             logout: () => {
-                auth.signOut().then(() => location.reload());
+                // CHANGED: Using custom confirmation popup
+                UI.confirmAction("Sign Out", "Are you sure you want to log out?", () => {
+                    auth.signOut().then(() => location.reload());
+                });
             },
             initAuth: () => {
                 auth.onAuthStateChanged(user => {
@@ -748,16 +797,24 @@ const Utils = {
                 else { Utils.editLink(id, index, btn); }
             },
             editLink: (id, index, btn) => {
-                let url = prompt("Enter URL (e.g., google.com):", "");
-                if (url) {
+                // CHANGED: Using custom input popup
+                const currentData = JSON.parse(btn.getAttribute('data-link') || 'null');
+                const defaultUrl = currentData ? currentData.url : '';
+                const defaultName = currentData ? currentData.name : '';
+
+                UI.askInput("Edit Shortcut", [
+                    { label: "Website URL", value: defaultUrl, placeholder: "google.com" },
+                    { label: "Label", value: defaultName, placeholder: "Google" }
+                ], (values) => {
+                    let [url, name] = values;
                     if (!url.startsWith('http://') && !url.startsWith('https://')) { url = 'https://' + url; }
                     let domain; try { domain = new URL(url).hostname; } catch(e) { domain = url; }
-                    const name = prompt("Label:", "Link");
+                    
                     const data = { url, name, domain };
                     btn.setAttribute('data-link', JSON.stringify(data));
                     btn.innerHTML = `<img src="https://www.google.com/s2/favicons?domain=${domain}&sz=64" class="deck-favicon"><span class="deck-label">${name}</span>`;
                     Core.saveLayout();
-                }
+                });
             },
             setCountdown: (id) => {
                 const date = prompt("YYYY-MM-DD:");
@@ -801,15 +858,23 @@ const Utils = {
                 }
             },
             setTimer: (id) => {
-                const time = prompt("Enter Time (e.g. 5:00 PM or 17:00):");
-                if(!time) return;
-                const d = new Date(); const [timeStr, mod] = time.split(' '); let [h, m] = timeStr.split(':');
-                if (h === '12') h = '00'; if (mod && (mod.toLowerCase() === 'pm')) h = parseInt(h, 10) + 12;
-                d.setHours(h, m, 0, 0);
-                if(d < new Date()) { alert("Time passed!"); return; }
-                document.getElementById(`timer-wrap-${id}`).setAttribute('data-end', d.getTime());
-                document.getElementById(`timer-lbl-${id}`).innerText = `Until ${time}`;
-                Utils.updateTimer(id); Core.saveLayout();
+                // CHANGED: Using custom input popup
+                UI.askInput("Set Timer", [
+                    { label: "Time (e.g. 5:00 PM or 17:00)", value: "", placeholder: "17:00" }
+                ], (values) => {
+                    const time = values[0];
+                    if(!time) return;
+                    
+                    const d = new Date(); const [timeStr, mod] = time.split(' '); let [h, m] = timeStr.split(':');
+                    if (h === '12') h = '00'; if (mod && (mod.toLowerCase() === 'pm')) h = parseInt(h, 10) + 12;
+                    d.setHours(h, m, 0, 0);
+                    
+                    if(d < new Date()) { UI.showToast("Time must be in the future!"); return; }
+                    
+                    document.getElementById(`timer-wrap-${id}`).setAttribute('data-end', d.getTime());
+                    document.getElementById(`timer-lbl-${id}`).innerText = `Until ${time}`;
+                    Utils.updateTimer(id); Core.saveLayout();
+                });
             },
             updateTimer: (id) => {
                 const el = document.getElementById(`timer-wrap-${id}`); if(!el) return;
@@ -1170,6 +1235,74 @@ const Utils = {
         const UI = {
             toggleAdd: (show) => { const m=document.getElementById('add-modal'), o=document.getElementById('modal-overlay'); if(show){m.classList.add('show');o.classList.add('show');}else{m.classList.remove('show');o.classList.remove('show');}},
             updateTime: () => { const n=new Date(); document.querySelectorAll('.time-big').forEach(e=>e.innerText=n.toLocaleTimeString([],{hour:'numeric',minute:'2-digit',hour12:true})); document.querySelectorAll('.date-sub').forEach(e=>e.innerText=n.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'}));},
+            
+            // --- NEW POPUP HANDLERS ---
+            closePopup: () => {
+                document.getElementById('popup-overlay').classList.remove('show');
+            },
+            
+            // For Logout
+            confirmAction: (title, msg, onConfirm) => {
+                const el = document.getElementById('popup-overlay');
+                document.getElementById('popup-title').innerText = title;
+                document.getElementById('popup-msg').innerText = msg;
+                document.getElementById('popup-inputs').style.display = 'none';
+                
+                const btn = document.getElementById('popup-confirm-btn');
+                btn.innerText = "Log Out";
+                btn.className = "popup-btn p-danger"; // Red button for logout
+                btn.onclick = () => { onConfirm(); UI.closePopup(); };
+                
+                el.classList.add('show');
+            },
+
+            // For Inputs (Timer / Links)
+            askInput: (title, inputsConfig, onSave) => {
+                const el = document.getElementById('popup-overlay');
+                document.getElementById('popup-title').innerText = title;
+                document.getElementById('popup-msg').style.display = 'none';
+                
+                const container = document.getElementById('popup-inputs');
+                container.innerHTML = '';
+                container.style.display = 'flex';
+
+                // Generate Inputs
+                const resIds = [];
+                inputsConfig.forEach((cfg, idx) => {
+                    const wrap = document.createElement('div');
+                    const label = document.createElement('div');
+                    label.className = 'popup-input-label';
+                    label.innerText = cfg.label;
+                    
+                    const inp = document.createElement('input');
+                    inp.value = cfg.value || '';
+                    inp.placeholder = cfg.placeholder || '';
+                    inp.id = `pop-in-${idx}`;
+                    resIds.push(inp.id);
+
+                    wrap.appendChild(label);
+                    wrap.appendChild(inp);
+                    container.appendChild(wrap);
+                });
+
+                const btn = document.getElementById('popup-confirm-btn');
+                btn.innerText = "Save";
+                btn.className = "popup-btn p-confirm";
+                
+                // Save Action
+                btn.onclick = () => {
+                    const values = resIds.map(id => document.getElementById(id).value);
+                    if(values.some(v => !v)) { UI.showToast("Please fill all fields"); return; }
+                    onSave(values);
+                    UI.closePopup();
+                };
+
+                el.classList.add('show');
+                
+                // Focus first input
+                setTimeout(() => document.getElementById(resIds[0]).focus(), 100);
+            },
+
             initTodo: (id, data) => {
                 const list = document.getElementById(`list-${id}`), em = document.getElementById(`empty-${id}`);
                 if (!list || !em) return;
