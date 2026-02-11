@@ -479,7 +479,7 @@ const firebaseConfig = {
             },
             logout: () => {
                 // CHANGED: Using custom confirmation popup
-                UI.confirmAction("Sign Out", "Are you sure you want to log out?", () => {
+                UI.confirmAction("Log Out", "Are you sure you want to log out?", () => {
                     auth.signOut().then(() => location.reload());
                 });
             },
