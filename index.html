@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StudyNest</title>
+    <title>StudyNest | Pro Tier</title>
     <link rel="icon" type="image/png" href="studynestlogo.png">
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack.min.css" />
@@ -153,11 +153,11 @@
         .clip-item:hover { background: rgba(255,255,255,0.1); color: white; }
         .clip-item:active { transform: scale(0.98); }
 
-        .timer-container { display: flex; flex-direction: column; justify-content: center; height: 100%; cursor: pointer; }
-        .timer-big { font-size: 36px; font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; line-height: 1; margin-bottom: 5px; }
-        .timer-label { font-size: 12px; color: var(--text-sec); text-align: center; }
-        .timer-bar { height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 10px; overflow: hidden; }
-        .timer-fill { height: 100%; background: var(--ios-orange); width: 100%; transition: width 1s linear; }
+        .timer-container, .timing-container { display: flex; flex-direction: column; justify-content: center; height: 100%; cursor: pointer; }
+        .timer-big, .timing-big { font-size: 36px; font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; line-height: 1; margin-bottom: 5px; }
+        .timer-label, .timing-label { font-size: 12px; color: var(--text-sec); text-align: center; }
+        .timer-bar, .timing-bar { height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 10px; overflow: hidden; }
+        .timer-fill, .timing-fill { height: 100%; background: var(--ios-orange); width: 100%; transition: width 1s linear; }
 
         .task-input-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
         .task-list { flex: 1; overflow-y: auto; padding-right: 2px; }
@@ -357,6 +357,7 @@
         <div class="modal-grid">
             <div class="add-card" onclick="Core.createWidget('music', 4, 2)"><i class="fa-brands fa-spotify add-icon" style="color:#1DB954"></i><span class="add-label">Spotify (SDK)</span></div>
             <div class="add-card" onclick="Core.createWidget('youtube', 4, 3)"><i class="fa-brands fa-youtube add-icon" style="color:#FF0000"></i><span class="add-label">YouTube</span></div>
+            <div class="add-card" onclick="Core.createWidget('timing', 2, 2)"><i class="fa-solid fa-stopwatch add-icon" style="color:var(--ios-blue)"></i><span class="add-label">Quick Timer</span></div>
             <div class="add-card" onclick="Core.createWidget('timer', 3, 2)"><i class="fa-solid fa-hourglass-end add-icon" style="color:var(--ios-orange)"></i><span class="add-label">Timer</span></div>
             <div class="add-card" onclick="Core.createWidget('battery', 3, 2)"><i class="fa-solid fa-battery-half add-icon" style="color:var(--ios-green)"></i><span class="add-label">Battery</span></div>
             <div class="add-card" onclick="Core.createWidget('password', 4, 3)"><i class="fa-solid fa-key add-icon" style="color:var(--ios-purple)"></i><span class="add-label">Passwords</span></div>
@@ -373,7 +374,7 @@
     </div>
 
     <nav>
-        <div class="brand"><i class="fa-solid"></i> StudyNest</div>
+        <div class="brand"><i class="fa-solid fa-feather"></i> StudyNest Pro</div>
         <div class="nav-actions">
             <button id="upgrade-btn" class="btn btn-gold" onclick="Cloud.upgrade()" style="display:none">
                 <i class="fa-solid fa-star"></i> Upgrade
@@ -820,6 +821,57 @@ const Utils = {
                 const mn = Math.floor((diff % (3600000)) / 60000);
                 document.getElementById(`timer-val-${id}`).innerText = `${hr}h ${mn}m`;
             },
+            setTiming: (id) => {
+                const mins = prompt("Enter minutes to count down:");
+                if(!mins || isNaN(mins)) return;
+                const duration = parseFloat(mins) * 60 * 1000;
+                const now = Date.now();
+                const end = now + duration;
+                
+                const widget = document.getElementById(`timing-wrap-${id}`);
+                widget.setAttribute('data-end', end);
+                widget.setAttribute('data-total', duration); // Store total to calculate progress bar width
+                
+                Utils.updateTiming(id);
+                Core.saveLayout();
+            },
+            updateTiming: (id) => {
+                const el = document.getElementById(`timing-wrap-${id}`);
+                if(!el) return;
+                const end = parseInt(el.getAttribute('data-end'));
+                const total = parseInt(el.getAttribute('data-total'));
+                if(!end) return;
+
+                const diff = end - Date.now();
+                
+                if(diff <= 0) {
+                    document.getElementById(`timing-val-${id}`).innerText = "00:00";
+                    document.getElementById(`timing-lbl-${id}`).innerText = "Time's Up!";
+                     document.getElementById(`timing-bar-${id}`).style.width = '0%';
+                    return;
+                }
+
+                // Format MM:SS or HH:MM:SS
+                const hours = Math.floor(diff / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+                let timeStr = "";
+                if(hours > 0) {
+                    timeStr = `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                } else {
+                    timeStr = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                }
+
+                document.getElementById(`timing-val-${id}`).innerText = timeStr;
+                document.getElementById(`timing-lbl-${id}`).innerText = "Remaining";
+                
+                // Progress Bar
+                if(total) {
+                    const pct = (diff / total) * 100;
+                    document.getElementById(`timing-bar-${id}`).style.width = pct + '%';
+                }
+            },
             updateBattery: async (id) => {
                 if(navigator.getBattery) {
                     try {
@@ -988,6 +1040,7 @@ const Utils = {
                 setInterval(UI.updateTime, 1000);
                 setInterval(() => document.querySelectorAll('.count-container').forEach(el => Utils.updateCountdown(el.id.replace('count-wrap-', ''))), 60000);
                 setInterval(() => { document.querySelectorAll('.timer-container').forEach(el => Utils.updateTimer(el.id.replace('timer-wrap-',''))); }, 1000);
+                setInterval(() => { document.querySelectorAll('.timing-container').forEach(el => Utils.updateTiming(el.id.replace('timing-wrap-',''))); }, 1000);
 
                 document.getElementById('dashboard-wrapper').addEventListener('click', (e) => {
                     if (editing && !e.target.closest('.grid-stack-item')) { Core.toggleEdit(); }
@@ -1040,6 +1093,12 @@ const Utils = {
                     wrap.setAttribute('data-end', savedData.end);
                     document.getElementById(`timer-lbl-${id}`).innerText = savedData.label;
                 }
+
+                if (type === 'timing' && savedData) {
+                    const wrap = document.getElementById(`timing-wrap-${id}`);
+                    wrap.setAttribute('data-end', savedData.end);
+                    wrap.setAttribute('data-total', savedData.total);
+                }
                 
                 if (type === 'music') { 
                     // Check if token exists, if so init player, if not show login button
@@ -1077,6 +1136,7 @@ const Utils = {
                     if (type === 'countdown') { data = JSON.parse(el.querySelector('.count-container').getAttribute('data-target') || 'null'); }
                     if (type === 'clipboard') { data = Array.from(el.querySelectorAll('.clip-item')).map(i => i.innerText); }
                     if (type === 'timer') { const wrap = el.querySelector('.timer-container'); data = { end: wrap.getAttribute('data-end'), label: el.querySelector('.timer-label').innerText }; }
+                    if (type === 'timing') { const wrap = el.querySelector('.timing-container'); data = { end: wrap.getAttribute('data-end'), total: wrap.getAttribute('data-total') }; }
                     
                     if (type === 'music') { 
                         // No specific state to save for SDK other than its presence
@@ -1167,41 +1227,9 @@ const Utils = {
             return { init, toggleEdit, createWidget, saveLayout, reset, loadData };
         })();
 
-        const UI = {
-            toggleAdd: (show) => { const m=document.getElementById('add-modal'), o=document.getElementById('modal-overlay'); if(show){m.classList.add('show');o.classList.add('show');}else{m.classList.remove('show');o.classList.remove('show');}},
-            updateTime: () => { const n=new Date(); document.querySelectorAll('.time-big').forEach(e=>e.innerText=n.toLocaleTimeString([],{hour:'numeric',minute:'2-digit',hour12:true})); document.querySelectorAll('.date-sub').forEach(e=>e.innerText=n.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'}));},
-            initTodo: (id, data) => {
-                const list = document.getElementById(`list-${id}`), em = document.getElementById(`empty-${id}`);
-                if (!list || !em) return;
-                const check = () => { em.style.display = list.children.length===0 ? 'block':'none'; };
-                const add = (t, d) => {
-                    const i = document.createElement('div'); i.className=`task-item ${d?'done':''}`;
-                    i.innerHTML=`<div class="task-check"><i class="fa-solid fa-check"></i></div><span class="task-text">${t}</span><i class="fa-solid fa-xmark task-delete" onclick="event.stopPropagation(); this.parentElement.remove(); UI.checkEmpty('${id}'); Core.saveLayout()"></i>`;
-                    i.onclick = (e) => {
-                        if(e.target.classList.contains('task-delete')) return;
-                        i.classList.add('done'); setTimeout(()=>{ i.remove(); check(); Core.saveLayout(); },800);
-                    };
-                    list.prepend(i); check();
-                };
-                const input = document.getElementById(`in-${id}`);
-                if(input) input.onkeypress = (e) => { if(e.key==='Enter'&&e.target.value.trim()){ add(e.target.value,false); e.target.value=''; Core.saveLayout(); } };
-                if(data) data.forEach(d => { if(!d.d) add(d.t, false); }); check();
-                UI.checkEmpty = check;
-            },
-            showToast: (msg) => {
-                const el = document.getElementById('action-toast');
-                el.innerText = msg;
-                el.style.display = 'block';
-                el.style.animation = 'none';
-                el.offsetHeight; 
-                el.style.animation = 'popUpFade 2s ease forwards';
-                setTimeout(() => { el.style.display = 'none'; }, 2000);
-            }
-        };
-
         const Templates = {
             get: (type, id, data) => {
-                const validTypes = ['clock', 'links', 'countdown', 'calc', 'weather', 'todo', 'notes', 'calendar', 'music', 'timer', 'battery', 'password', 'clipboard', 'youtube', 'spotify'];
+                const validTypes = ['clock', 'links', 'countdown', 'calc', 'weather', 'todo', 'notes', 'calendar', 'music', 'timer', 'timing', 'battery', 'password', 'clipboard', 'youtube', 'spotify'];
                 if(!validTypes.includes(type)) return `<div>Error</div>`;
 
                 const wrap = (l, c) => `<div class="remove-widget">✕</div><div class="w-header" data-type="${type}"><span class="w-label">${l}</span></div><div class="w-content" data-type="${type}">${c}</div>`;
@@ -1285,6 +1313,7 @@ const Utils = {
                         </div>`,
                     
                     timer: wrap('Event Timer', `<div class="timer-container" id="timer-wrap-${id}" onclick="Utils.setTimer('${id}')"><div id="timer-val-${id}" class="timer-big">--:--</div><div id="timer-lbl-${id}" class="timer-label">Click to Set</div><div class="timer-bar"><div id="timer-bar-${id}" class="timer-fill"></div></div></div>`),
+                    timing: wrap('Quick Timer', `<div class="timing-container" id="timing-wrap-${id}" onclick="Utils.setTiming('${id}')"><div id="timing-val-${id}" class="timing-big">--:--</div><div id="timing-lbl-${id}" class="timing-label">Click to Start</div><div class="timing-bar"><div id="timing-bar-${id}" class="timing-fill"></div></div></div>`),
                     battery: wrap('Battery', `<div class="batt-container"><div class="batt-icon-shell"><div class="batt-fill" id="batt-fill-${id}"></div></div><div><div id="batt-val-${id}" class="batt-text">--%</div><div id="batt-st-${id}" class="batt-state">Reading...</div></div></div>`),
                     password: wrap('Passwords', `<div id="pass-${id}" class="pass-display" onclick="Utils.copyPass('${id}')">CLICK GEN</div><div class="pass-controls"><span id="lbl-${id}" style="font-size:11px;color:var(--text-sec);width:60px">Length: 16</span><input type="range" id="rng-${id}" min="8" max="32" value="16" style="flex:1" oninput="Utils.genPass('${id}')"><button class="btn" onclick="Utils.genPass('${id}')">Gen</button></div>`),
                     clipboard: wrap('Clipboard', `<button class="btn btn-primary" style="width:100%; justify-content:center" onclick="Utils.saveClip('${id}')"><i class="fa-solid fa-paste"></i> Save Recent</button><div id="clip-${id}" class="clip-list"></div>`),
