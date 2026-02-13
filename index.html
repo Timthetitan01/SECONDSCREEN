@@ -92,10 +92,10 @@
 
         input, textarea { 
             user-select: text !important; -webkit-user-select: text !important; cursor: text; 
-            background: var(--ios-input); border: none; border-radius: 8px; 
+            background: var(--ios-input); border: 1px solid transparent; border-radius: 8px; 
             padding: 8px 12px; color: white; width: 100%; font-size: 13px; outline: none;
         }
-        input:focus, textarea:focus { background: rgba(118, 118, 128, 0.4); }
+        input:focus, textarea:focus { background: rgba(118, 118, 128, 0.4); border-color: var(--ios-blue); }
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
 
         nav { height: 50px; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; background: rgba(20, 20, 20, 0.4); backdrop-filter: blur(20px); border-bottom: 1px solid var(--ios-card-border); z-index: 1000; }
@@ -384,13 +384,15 @@
                 if ('mediaSession' in navigator) {
                     switch(action) {
                         case 'playpause':
-                            document.dispatchEvent(new KeyboardEvent('keydown', {'key': 'MediaPlayPause'}));
+                            document.dispatchEvent(new KeyboardEvent('keydown', {'keyCode': 179}));
                             UI.showToast("Toggle Play/Pause");
                             break;
                         case 'next':
+                            document.dispatchEvent(new KeyboardEvent('keydown', {'keyCode': 176}));
                             UI.showToast("Next Track");
                             break;
                         case 'prev':
+                            document.dispatchEvent(new KeyboardEvent('keydown', {'keyCode': 177}));
                             UI.showToast("Previous Track");
                             break;
                     }
@@ -642,7 +644,7 @@ const Utils = {
                 }
                 if (s.innerText === '0' && !['.', '+', '-', '×', '÷', '^', ')', '%'].includes(val)) { s.innerText = ''; expr = ''; }
                 let displayVal = val; let mathVal = val;
-                if(val === 'sin') { displayVal='sin('; mathVal='sin('; } else if(val === 'cos') { displayVal='cos('; mathVal='cos('; } else if(val === 'tan') { displayVal='tan('; mathVal='tan('; } else if(val === 'log') { displayVal='log('; mathVal='log('; } else if(val === 'ln') { displayVal='ln('; mathVal='ln('; } else if(val === '√') { displayVal='√('; mathVal='√('; }
+                if(val === 'sin') { displayVal='sin('; mathVal='sin('; } else if(val === 'cos') { displayVal='cos('; mathVal='sin('; } else if(val === 'tan') { displayVal='tan('; mathVal='tan('; } else if(val === 'log') { displayVal='log('; mathVal='log('; } else if(val === 'ln') { displayVal='ln('; mathVal='ln('; } else if(val === '√') { displayVal='√('; mathVal='√('; }
                 s.innerText += displayVal; s.setAttribute('data-expr', expr + mathVal);
             },
             linkAction: (id, index, btn) => {
@@ -995,21 +997,40 @@ const Utils = {
                 inputsConfig.forEach((cfg, idx) => {
                     const wrap = document.createElement('div');
                     const label = document.createElement('div'); label.className = 'popup-input-label'; label.innerText = cfg.label;
-                    const inp = document.createElement('input'); inp.value = cfg.value || ''; inp.placeholder = cfg.placeholder || ''; inp.type = cfg.type || 'text'; inp.id = `pop-in-${idx}`;
+                    const inp = document.createElement('input'); 
+                    inp.value = cfg.value || ''; 
+                    inp.placeholder = cfg.placeholder || ''; 
+                    inp.type = cfg.type || 'text'; 
+                    inp.id = `pop-in-${idx}`;
                     
-                    inp.onkeydown = (e) => { 
-                        if(e.key === 'Enter') { 
-                            e.preventDefault(); // STOP popup from closing instantly
-                            const nextInp = document.getElementById(`pop-in-${idx + 1}`);
-                            if(nextInp) {
-                                nextInp.focus(); // Jump to next box
+                    // Fixed Navigation Logic
+                    inp.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            
+                            const currentIdNum = parseInt(e.target.id.split('-')[2]);
+                            const nextInput = document.getElementById(`pop-in-${currentIdNum + 1}`);
+                            
+                            if (nextInput) {
+                                nextInput.focus(); // Jump to Title tab
                             } else {
-                                document.getElementById('popup-confirm-btn').click(); // Submit
+                                // Final check: trigger save logic
+                                const allValues = resIds.map(id => document.getElementById(id).value);
+                                if(allValues.some(v => !v)) {
+                                    UI.showToast("Please fill all fields");
+                                } else {
+                                    onSave(allValues);
+                                    UI.closePopup();
+                                }
                             }
-                        } 
-                    };
+                        }
+                    });
 
-                    resIds.push(inp.id); wrap.appendChild(label); wrap.appendChild(inp); container.appendChild(wrap);
+                    resIds.push(inp.id); 
+                    wrap.appendChild(label); 
+                    wrap.appendChild(inp); 
+                    container.appendChild(wrap);
                 });
                 
                 const btn = document.getElementById('popup-confirm-btn');
@@ -1021,7 +1042,7 @@ const Utils = {
                     UI.closePopup(); 
                 };
                 el.classList.add('show');
-                setTimeout(() => document.getElementById(resIds[0]).focus(), 100);
+                setTimeout(() => document.getElementById(resIds[0]).focus(), 150);
             },
             initTodo: (id, data) => {
                 const list = document.getElementById(`list-${id}`), em = document.getElementById(`empty-${id}`);
