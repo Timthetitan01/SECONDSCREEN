@@ -1,1067 +1,1080 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StudyNest</title>
-    <link rel="icon" type="image/png" href="studynestlogo.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyNest</title>
+    <link rel="icon" type="image/png" href="studynestlogo.png">
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    
-    <script src="https://sdk.scdn.co/spotify-player.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    
+    <script src="https://sdk.scdn.co/spotify-player.js"></script>
 
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-    <style>
-        :root {
-            --bg-body: #000000;
-            --ios-card: rgba(28, 28, 30, 0.65);
-            --ios-card-border: rgba(255, 255, 255, 0.12);
-            --ios-input: rgba(118, 118, 128, 0.24);
-            --ios-blue: #0A84FF; --ios-green: #30D158; --ios-red: #FF453A;
-            --text-main: #FFFFFF; --text-sec: rgba(235, 235, 245, 0.6);
-            --radius: 22px;
-            --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
-            
-            --music-bg: #000000;
-            --music-accent: #00E5FF;
-            --music-art: #FFD600;
-        }
+    <style>
+        :root {
+            --bg-body: #000000;
+            --ios-card: rgba(28, 28, 30, 0.65);
+            --ios-card-border: rgba(255, 255, 255, 0.12);
+            --ios-input: rgba(118, 118, 128, 0.24);
+            --ios-blue: #0A84FF; --ios-green: #30D158; --ios-red: #FF453A;
+            --text-main: #FFFFFF; --text-sec: rgba(235, 235, 245, 0.6);
+            --radius: 22px;
+            --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+            
+            --music-bg: #000000;
+            --music-accent: #00E5FF;
+            --music-art: #FFD600;
+        }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; user-select: none; }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; user-select: none; }
 
-        body {
-            background-color: var(--bg-body);
-            background-image: 
-                radial-gradient(circle at 20% 0%, rgba(94, 92, 230, 0.25) 0%, transparent 50%),
-                radial-gradient(circle at 80% 100%, rgba(10, 132, 255, 0.2) 0%, transparent 50%);
-            color: var(--text-main); font-family: var(--font); height: 100vh; overflow: hidden; display: flex; flex-direction: column;
-        }
+        body {
+            background-color: var(--bg-body);
+            background-image: 
+                radial-gradient(circle at 20% 0%, rgba(94, 92, 230, 0.25) 0%, transparent 50%),
+                radial-gradient(circle at 80% 100%, rgba(10, 132, 255, 0.2) 0%, transparent 50%);
+            color: var(--text-main); font-family: var(--font); height: 100vh; overflow: hidden; display: flex; flex-direction: column;
+        }
 
-        #status-bar {
-            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-            background: rgba(0,0,0,0.8); color: white; padding: 8px 16px;
-            border-radius: 20px; font-size: 12px; border: 1px solid var(--ios-card-border);
-            display: none; z-index: 5000; pointer-events: none; transition: opacity 0.3s;
-        }
+        #status-bar {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.8); color: white; padding: 8px 16px;
+            border-radius: 20px; font-size: 12px; border: 1px solid var(--ios-card-border);
+            display: none; z-index: 5000; pointer-events: none; transition: opacity 0.3s;
+        }
 
-        #action-toast {
-            position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%);
-            background: var(--music-accent);
-            color: black; padding: 10px 24px;
-            border-radius: 50px; font-size: 14px; font-weight: 700;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            display: none; z-index: 6000; pointer-events: none;
-            backdrop-filter: blur(10px);
-            animation: popUpFade 2s ease forwards;
-        }
+        #action-toast {
+            position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%);
+            background: var(--music-accent);
+            color: black; padding: 10px 24px;
+            border-radius: 50px; font-size: 14px; font-weight: 700;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: none; z-index: 6000; pointer-events: none;
+            backdrop-filter: blur(10px);
+            animation: popUpFade 2s ease forwards;
+        }
 
-        @keyframes popUpFade {
-            0% { opacity: 0; transform: translate(-50%, 10px); }
-            10% { opacity: 1; transform: translate(-50%, 0); }
-            80% { opacity: 1; transform: translate(-50%, 0); }
-          100% { opacity: 0; transform: translate(-50%, -10px); }
-        }
+        @keyframes popUpFade {
+            0% { opacity: 0; transform: translate(-50%, 10px); }
+            10% { opacity: 1; transform: translate(-50%, 0); }
+            80% { opacity: 1; transform: translate(-50%, 0); }
+            100% { opacity: 0; transform: translate(-50%, -10px); }
+        }
 
-        #login-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); backdrop-filter: blur(20px);
-            z-index: 9999; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; gap: 20px;
-            transition: opacity 0.5s ease;
-        }
-        .login-card {
-            background: #1c1c1e; border: 1px solid var(--ios-card-border);
-            padding: 40px; border-radius: 24px; text-align: center;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            max-width: 400px; width: 90%;
-        }
-        .login-title { font-size: 24px; font-weight: 700; margin-bottom: 10px; }
-        .login-sub { color: var(--text-sec); font-size: 14px; margin-bottom: 25px; line-height: 1.4; }
-        
-        #error-toast {
-            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-            background: rgba(255, 69, 58, 0.9); color: white; padding: 10px 20px;
-            border-radius: 50px; font-size: 13px; z-index: 10000;
-            display: none; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
+        #login-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); backdrop-filter: blur(20px);
+            z-index: 9999; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 20px;
+            transition: opacity 0.5s ease;
+        }
+        .login-card {
+            background: #1c1c1e; border: 1px solid var(--ios-card-border);
+            padding: 40px; border-radius: 24px; text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            max-width: 400px; width: 90%;
+        }
+        .login-title { font-size: 24px; font-weight: 700; margin-bottom: 10px; }
+        .login-sub { color: var(--text-sec); font-size: 14px; margin-bottom: 25px; line-height: 1.4; }
+        
+        #error-toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background: rgba(255, 69, 58, 0.9); color: white; padding: 10px 20px;
+            border-radius: 50px; font-size: 13px; z-index: 10000;
+            display: none; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
 
-        input, textarea { 
-            user-select: text !important; -webkit-user-select: text !important; cursor: text; 
-            background: var(--ios-input); border: none; border-radius: 8px; 
-            padding: 8px 12px; color: white; width: 100%; font-size: 13px; outline: none;
-        }
-        input:focus, textarea:focus { background: rgba(118, 118, 128, 0.4); }
-        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
+        input, textarea { 
+            user-select: text !important; -webkit-user-select: text !important; cursor: text; 
+            background: var(--ios-input); border: none; border-radius: 8px; 
+            padding: 8px 12px; color: white; width: 100%; font-size: 13px; outline: none;
+        }
+        input:focus, textarea:focus { background: rgba(118, 118, 128, 0.4); }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
 
-        nav { height: 50px; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; background: rgba(20, 20, 20, 0.4); backdrop-filter: blur(20px); border-bottom: 1px solid var(--ios-card-border); z-index: 1000; }
-        .brand { font-size: 15px; font-weight: 600; font-family: -apple-system; display: flex; align-items: center; gap: 8px; }
-        .nav-actions { display: flex; gap: 10px; align-items: center; }
+        nav { height: 50px; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; background: rgba(20, 20, 20, 0.4); backdrop-filter: blur(20px); border-bottom: 1px solid var(--ios-card-border); z-index: 1000; }
+        .brand { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        .nav-actions { display: flex; gap: 10px; align-items: center; }
 
-        .btn { background: rgba(255, 255, 255, 0.1); border: none; color: white; padding: 6px 14px; border-radius: 99px; font-size: 13px; font-weight: 500; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px; }
-        .btn:hover { background: rgba(255, 255, 255, 0.2); }
-        .btn:active { transform: scale(0.95); opacity: 0.8; }
-        .btn-primary { background: var(--ios-blue); }
-        .btn-danger { background: rgba(255, 69, 58, 0.15); color: var(--ios-red); }
-        .btn-gold { background: linear-gradient(135deg, #FFD700, #FFA500); color: black; border: 1px solid #FFD700; font-weight: 700; text-shadow: 0 1px 0 rgba(255,255,255,0.4); }
-        .btn-gold:hover { transform: scale(1.05); box-shadow: 0 0 15px rgba(255, 215, 0, 0.4); }
+        .btn { background: rgba(255, 255, 255, 0.1); border: none; color: white; padding: 6px 14px; border-radius: 99px; font-size: 13px; font-weight: 500; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px; }
+        .btn:hover { background: rgba(255, 255, 255, 0.2); }
+        .btn:active { transform: scale(0.95); opacity: 0.8; }
+        .btn-primary { background: var(--ios-blue); }
+        .btn-danger { background: rgba(255, 69, 58, 0.15); color: var(--ios-red); }
+        .btn-gold { background: linear-gradient(135deg, #FFD700, #FFA500); color: black; border: 1px solid #FFD700; font-weight: 700; text-shadow: 0 1px 0 rgba(255,255,255,0.4); }
+        .btn-gold:hover { transform: scale(1.05); box-shadow: 0 0 15px rgba(255, 215, 0, 0.4); }
 
-        .user-pill { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.3); padding: 4px 12px 4px 4px; border-radius: 99px; }
-        .user-avatar { width: 24px; height: 24px; border-radius: 50%; background: #555; }
-        .user-name { font-size: 12px; font-weight: 500; }
-        .pro-badge { background: #0A84FF; color: black; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 800; margin-left: 5px; }
+        .user-pill { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.3); padding: 4px 12px 4px 4px; border-radius: 99px; }
+        .user-avatar { width: 24px; height: 24px; border-radius: 50%; background: #555; }
+        .user-name { font-size: 12px; font-weight: 500; }
+        .pro-badge { background: #0A84FF; color: black; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 800; margin-left: 5px; }
 
-        #dashboard-wrapper { flex: 1; padding: 20px; overflow-y: auto; overflow-x: hidden; cursor: default; }
-        .grid-stack-item { overflow: visible !important; }
-        .grid-stack-item-content { background: var(--ios-card) !important; backdrop-filter: var(--blur) !important; border: 1px solid var(--ios-card-border) !important; border-radius: var(--radius) !important; padding: 16px; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.2); overflow: hidden; }
+        #dashboard-wrapper { flex: 1; padding: 20px; overflow-y: auto; overflow-x: hidden; cursor: default; }
+        .grid-stack-item { overflow: visible !important; }
+        .grid-stack-item-content { background: var(--ios-card) !important; backdrop-filter: var(--blur) !important; border: 1px solid var(--ios-card-border) !important; border-radius: var(--radius) !important; padding: 16px; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.2); overflow: hidden; }
 
-        .remove-widget { position: absolute; top: -10px; right: -10px; width: 26px; height: 26px; background: #8e8e93; border: 2px solid var(--bg-body); border-radius: 50%; color: white; display: none; justify-content: center; align-items: center; font-size: 12px; cursor: pointer; z-index: 9999; box-shadow: 0 2px 6px rgba(0,0,0,0.4); }
-        .editing .remove-widget { display: flex; animation: popIn 0.2s; }
-        .editing .grid-stack-item-content { cursor: grab; animation: jiggle 0.3s infinite ease-in-out; border-color: var(--ios-blue) !important; }
-        .editing .grid-stack-item-content:active { cursor: grabbing; }
-        .editing input, .editing textarea { cursor: text !important; }
-        .editing .weather-temp { cursor: pointer; color: var(--ios-blue) !important; text-decoration: underline; text-decoration-style: dotted; }
+        .remove-widget { position: absolute; top: -10px; right: -10px; width: 26px; height: 26px; background: #8e8e93; border: 2px solid var(--bg-body); border-radius: 50%; color: white; display: none; justify-content: center; align-items: center; font-size: 12px; cursor: pointer; z-index: 9999; box-shadow: 0 2px 6px rgba(0,0,0,0.4); }
+        .editing .remove-widget { display: flex; animation: popIn 0.2s; }
+        .editing .grid-stack-item-content { cursor: grab; animation: jiggle 0.3s infinite ease-in-out; border-color: var(--ios-blue) !important; }
+        .editing .grid-stack-item-content:active { cursor: grabbing; }
+        .editing input, .editing textarea { cursor: text !important; }
+        .editing .weather-temp { cursor: pointer; color: var(--ios-blue) !important; text-decoration: underline; text-decoration-style: dotted; }
 
-        @keyframes jiggle { 0% { transform: rotate(-0.8deg); } 50% { transform: rotate(0.8deg); } 100% { transform: rotate(-0.8deg); } }
-        @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
+        @keyframes jiggle { 0% { transform: rotate(-0.8deg); } 50% { transform: rotate(0.8deg); } 100% { transform: rotate(-0.8deg); } }
+        @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
 
-        .w-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; height: 16px; flex-shrink: 0; transition: 0.2s; }
-        .w-label { font-size: 11px; font-weight: 600; color: var(--ios-blue); text-transform: uppercase; letter-spacing: 0.5px; }
-        .w-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+        .w-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; height: 16px; flex-shrink: 0; transition: 0.2s; }
+        .w-label { font-size: 11px; font-weight: 600; color: var(--ios-blue); text-transform: uppercase; letter-spacing: 0.5px; }
+        .w-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
 
-        .batt-container { display: flex; align-items: center; justify-content: center; height: 100%; gap: 15px; }
-        .batt-icon-shell { width: 50px; height: 26px; border: 3px solid var(--text-sec); border-radius: 6px; padding: 2px; position: relative; }
-        .batt-icon-shell::after { content:''; position: absolute; right: -6px; top: 6px; width: 3px; height: 8px; background: var(--text-sec); border-radius: 0 2px 2px 0; }
-        .batt-fill { height: 100%; background: var(--ios-green); border-radius: 2px; width: 0%; transition: width 0.5s; }
-        .batt-text { font-size: 28px; font-weight: 600; }
-        .batt-state { font-size: 11px; color: var(--text-sec); text-align: center; margin-top: 5px; }
+        .batt-container { display: flex; align-items: center; justify-content: center; height: 100%; gap: 15px; }
+        .batt-icon-shell { width: 50px; height: 26px; border: 3px solid var(--text-sec); border-radius: 6px; padding: 2px; position: relative; }
+        .batt-icon-shell::after { content:''; position: absolute; right: -6px; top: 6px; width: 3px; height: 8px; background: var(--text-sec); border-radius: 0 2px 2px 0; }
+        .batt-fill { height: 100%; background: var(--ios-green); border-radius: 2px; width: 0%; transition: width 0.5s; }
+        .batt-text { font-size: 28px; font-weight: 600; }
+        .batt-state { font-size: 11px; color: var(--text-sec); text-align: center; margin-top: 5px; }
 
-        .pass-display { font-family: monospace; font-size: 16px; text-align: center; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-bottom: 10px; color: var(--ios-green); word-break: break-all; cursor: pointer; transition: background 0.2s; }
-        .pass-display:hover { background: rgba(0,0,0,0.5); }
-        .pass-controls { display: flex; gap: 10px; align-items: center; }
-        
-        .clip-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
-        .clip-item { background: rgba(255,255,255,0.05); padding: 8px; border-radius: 8px; font-size: 11px; cursor: pointer; color: var(--text-sec); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .clip-item:hover { background: rgba(255,255,255,0.1); color: white; }
-        .clip-item:active { transform: scale(0.98); }
+        .pass-display { font-family: monospace; font-size: 16px; text-align: center; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-bottom: 10px; color: var(--ios-green); word-break: break-all; cursor: pointer; transition: background 0.2s; }
+        .pass-display:hover { background: rgba(0,0,0,0.5); }
+        .pass-controls { display: flex; gap: 10px; align-items: center; }
+        
+        .clip-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+        .clip-item { background: rgba(255,255,255,0.05); padding: 8px; border-radius: 8px; font-size: 11px; cursor: pointer; color: var(--text-sec); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .clip-item:hover { background: rgba(255,255,255,0.1); color: white; }
+        .clip-item:active { transform: scale(0.98); }
 
-        .timer-container { display: flex; flex-direction: column; justify-content: center; height: 100%; cursor: pointer; }
-        .timer-big { font-size: 36px; font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; line-height: 1; margin-bottom: 5px; }
-        .timer-label { font-size: 12px; color: var(--text-sec); text-align: center; }
-  000    .timer-bar { height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 10px; overflow: hidden; }
-        .timer-fill { height: 100%; background: var(--ios-orange); width: 100%; transition: width 1s linear; }
+        .timer-container { display: flex; flex-direction: column; justify-content: center; height: 100%; cursor: pointer; }
+        .timer-big { font-size: 36px; font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; line-height: 1; margin-bottom: 5px; }
+        .timer-label { font-size: 12px; color: var(--text-sec); text-align: center; }
+        .timer-bar { height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 10px; overflow: hidden; }
+        .timer-fill { height: 100%; background: var(--ios-orange); width: 100%; transition: width 1s linear; }
 
-        .task-input-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-        .task-list { flex: 1; overflow-y: auto; padding-right: 2px; }
-        .task-item { display: flex; align-items: center; gap: 10px; padding: 10px 8px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: 0.3s; }
-        .task-item.done .task-check { background: var(--ios-blue); border-color: var(--ios-blue); color: white; }
-        .task-item.done .task-text { text-decoration: line-through; color: var(--text-sec); }
-        .task-text { font-size: 13px; flex: 1; pointer-events: none; transition: color 0.2s; }
-        .task-check { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #636366; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: transparent; font-size: 10px; }
-        .task-delete { color: var(--text-sec); opacity: 0; transition: 0.2s; font-size: 12px; padding: 4px; }
-        .task-item:hover .task-delete { opacity: 1; }
-        .task-empty { text-align: center; color: var(--text-sec); font-size: 12px; margin-top: 20px; font-style: italic; opacity: 0.7; }
+        .task-input-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+        .task-list { flex: 1; overflow-y: auto; padding-right: 2px; }
+        .task-item { display: flex; align-items: center; gap: 10px; padding: 10px 8px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: 0.3s; }
+        .task-item.done .task-check { background: var(--ios-blue); border-color: var(--ios-blue); color: white; }
+        .task-item.done .task-text { text-decoration: line-through; color: var(--text-sec); }
+        .task-text { font-size: 13px; flex: 1; pointer-events: none; transition: color 0.2s; }
+        .task-check { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #636366; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: transparent; font-size: 10px; }
+        .task-delete { color: var(--text-sec); opacity: 0; transition: 0.2s; font-size: 12px; padding: 4px; }
+        .task-item:hover .task-delete { opacity: 1; }
+        .task-empty { text-align: center; color: var(--text-sec); font-size: 12px; margin-top: 20px; font-style: italic; opacity: 0.7; }
 
-        .calc-screen { text-align:right; font-size:32px; font-weight:200; margin-bottom:2px; height:40px; white-space:nowrap; overflow:hidden; letter-spacing: -1px; }
-        .calc-hist { text-align:right; font-size:12px; color: var(--text-sec); height: 16px; overflow:hidden; margin-bottom: 4px; }
-        .calc-grid-adv { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; flex: 1; }
-        .calc-btn { background: rgba(255,255,255,0.12); border:none; color:white; border-radius:8px; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition: background 0.1s; }
-        .calc-btn:active { background: rgba(255,255,255,0.3); }
-        .calc-orange { background: var(--ios-orange); font-weight: 600; }
-        .calc-sci { background: rgba(10, 132, 255, 0.25); font-size: 13px; font-weight: 500; }
-        .calc-sci:active { background: rgba(10, 132, 255, 0.45); }
-        .calc-wide { grid-column: span 2; }
-        
-        .clock-container { display: flex; flex-direction: column; justify-content: center; height: 100%; text-align: center; }
-        .time-big { font-size: 48px; font-weight: 200; letter-spacing: -1px; line-height: 1; margin-bottom: 5px; white-space: nowrap; }
-        .date-sub { font-size: 15px; color: var(--ios-red); font-weight: 500; text-transform: uppercase; }
+        .calc-screen { text-align:right; font-size:32px; font-weight:200; margin-bottom:2px; height:40px; white-space:nowrap; overflow:hidden; letter-spacing: -1px; }
+        .calc-hist { text-align:right; font-size:12px; color: var(--text-sec); height: 16px; overflow:hidden; margin-bottom: 4px; }
+        .calc-grid-adv { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; flex: 1; }
+        .calc-btn { background: rgba(255,255,255,0.12); border:none; color:white; border-radius:8px; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition: background 0.1s; }
+        .calc-btn:active { background: rgba(255,255,255,0.3); }
+        .calc-orange { background: var(--ios-orange); font-weight: 600; }
+        .calc-sci { background: rgba(10, 132, 255, 0.25); font-size: 13px; font-weight: 500; }
+        .calc-sci:active { background: rgba(10, 132, 255, 0.45); }
+        .calc-wide { grid-column: span 2; }
+        
+        .clock-container { display: flex; flex-direction: column; justify-content: center; height: 100%; text-align: center; }
+        .time-big { font-size: 48px; font-weight: 200; letter-spacing: -1px; line-height: 1; margin-bottom: 5px; white-space: nowrap; }
+        .date-sub { font-size: 15px; color: var(--ios-red); font-weight: 500; text-transform: uppercase; }
 
-        .deck-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; height: 100%; }
-        .deck-btn { background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05)); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; position: relative; }
-        .deck-btn:active { transform: scale(0.95); background: rgba(255,255,255,0.15); box-shadow: 0 0 15px var(--ios-blue); border-color: var(--ios-blue); }
-        .deck-icon { font-size: 24px; color: var(--text-main); }
-        .deck-favicon { width: 32px; height: 32px; border-radius: 8px; margin-bottom: 2px; object-fit: contain; pointer-events: none; }
-        .deck-label { font-size: 10px; font-weight: 600; color: var(--text-sec); text-align: center; width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .deck-unset { color: var(--text-sec); opacity: 0.5; font-size: 20px; }
+        .deck-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; height: 100%; }
+        .deck-btn { background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05)); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; position: relative; }
+        .deck-btn:active { transform: scale(0.95); background: rgba(255,255,255,0.15); box-shadow: 0 0 15px var(--ios-blue); border-color: var(--ios-blue); }
+        .deck-icon { font-size: 24px; color: var(--text-main); }
+        .deck-favicon { width: 32px; height: 32px; border-radius: 8px; margin-bottom: 2px; object-fit: contain; pointer-events: none; }
+        .deck-label { font-size: 10px; font-weight: 600; color: var(--text-sec); text-align: center; width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .deck-unset { color: var(--text-sec); opacity: 0.5; font-size: 20px; }
 
-        .count-container { display: flex; flex-direction: column; justify-content: center; height: 100%; text-align: center; cursor: pointer; }
-        .count-days { font-size: 42px; font-weight: 700; line-height: 1; margin-bottom: 4px; }
-        .count-label { font-size: 12px; color: var(--text-sec); font-weight: 500; }
-        .count-progress { height: 4px; background: rgba(255,255,255,0.1); margin-top: 10px; border-radius: 2px; width: 80%; margin-left: auto; margin-right: auto; overflow: hidden; }
-        .count-fill { height: 100%; background: var(--ios-indigo); width: 0%; transition: width 1s ease; }
+        .count-container { display: flex; flex-direction: column; justify-content: center; height: 100%; text-align: center; cursor: pointer; }
+        .count-days { font-size: 42px; font-weight: 700; line-height: 1; margin-bottom: 4px; }
+        .count-label { font-size: 12px; color: var(--text-sec); font-weight: 500; }
+        .count-progress { height: 4px; background: rgba(255,255,255,0.1); margin-top: 10px; border-radius: 2px; width: 80%; margin-left: auto; margin-right: auto; overflow: hidden; }
+        .count-fill { height: 100%; background: var(--ios-indigo); width: 0%; transition: width 1s ease; }
 
-        .cal-wrapper { height: 100%; display: flex; flex-direction: column; }
-        .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-weight: 600; font-size: 14px; }
-        .cal-title { cursor: pointer; transition: color 0.2s; }
-        .cal-title:hover { color: var(--ios-red); }
-        .cal-nav { cursor: pointer; padding: 4px; color: var(--ios-red); font-size: 14px; transition: transform 0.2s; }
-        .cal-nav:hover { transform: scale(1.2); }
-        .cal-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 10px; font-weight: 600; color: var(--text-sec); margin-bottom: 6px; }
-        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; flex: 1; align-content: start; }
-        .cal-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 12px; border-radius: 50%; cursor: default; transition: 0.2s; }
-        .cal-day:hover:not(.empty) { background: rgba(255,255,255,0.1); }
-        .cal-day.today { background: var(--ios-red); color: white; font-weight: 700; }
-        .cal-day.empty { pointer-events: none; }
-        
-        .yt-container { height: 100%; display: flex; flex-direction: column; position: relative; }
-        .yt-setup { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
-        .yt-frame { flex: 1; width: 100%; border: none; border-radius: 12px; }
-        .yt-input { background: var(--ios-input); border: none; color: white; padding: 8px; border-radius: 8px; width: 80%; text-align: center; }
-        .yt-controls { position: absolute; top: 5px; right: 5px; z-index: 10; opacity: 0; transition: 0.2s; }
-  000    .grid-stack-item:hover .yt-controls { opacity: 1; }
-        
-        .sp-container { height: 100%; display: flex; flex-direction: column; position: relative; }
-        .sp-setup { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; }
-        .sp-frame { flex: 1; width: 100%; border: none; border-radius: 12px; }
+        .cal-wrapper { height: 100%; display: flex; flex-direction: column; }
+        .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-weight: 600; font-size: 14px; }
+        .cal-title { cursor: pointer; transition: color 0.2s; }
+        .cal-title:hover { color: var(--ios-red); }
+        .cal-nav { cursor: pointer; padding: 4px; color: var(--ios-red); font-size: 14px; transition: transform 0.2s; }
+        .cal-nav:hover { transform: scale(1.2); }
+        .cal-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 10px; font-weight: 600; color: var(--text-sec); margin-bottom: 6px; }
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; flex: 1; align-content: start; }
+        .cal-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 12px; border-radius: 50%; cursor: default; transition: 0.2s; }
+        .cal-day:hover:not(.empty) { background: rgba(255,255,255,0.1); }
+        .cal-day.today { background: var(--ios-red); color: white; font-weight: 700; }
+        .cal-day.empty { pointer-events: none; }
+        
+        .yt-container { height: 100%; display: flex; flex-direction: column; position: relative; }
+        .yt-setup { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+        .yt-frame { flex: 1; width: 100%; border: none; border-radius: 12px; }
+        .yt-input { background: var(--ios-input); border: none; color: white; padding: 8px; border-radius: 8px; width: 80%; text-align: center; }
+        .yt-controls { position: absolute; top: 5px; right: 5px; z-index: 10; opacity: 0; transition: 0.2s; }
+        .grid-stack-item:hover .yt-controls { opacity: 1; }
+        
+        .sp-container { height: 100%; display: flex; flex-direction: column; position: relative; }
+        .sp-setup { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; }
+        .sp-frame { flex: 1; width: 100%; border: none; border-radius: 12px; }
 
-        .pan-container { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
-        .pan-time { font-size: 36px; font-weight: 700; font-variant-numeric: tabular-nums; }
-        .pan-label { font-size: 12px; color: var(--text-sec); margin-top: 5px; }
-        .pan-finished { color: var(--ios-green); animation: blink 1s infinite; }
-        @keyframes blink { 50% { opacity: 0.5; } }
+        .pan-container { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
+        .pan-time { font-size: 36px; font-weight: 700; font-variant-numeric: tabular-nums; }
+        .pan-label { font-size: 12px; color: var(--text-sec); margin-top: 5px; }
+        .pan-finished { color: var(--ios-green); animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0.5; } }
 
-        #popup-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px);
-            z-index: 8000; opacity: 0; pointer-events: none;
-            transition: opacity 0.3s ease;
-            display: flex; align-items: center; justify-content: center;
-        }
-        #popup-overlay.show { opacity: 1; pointer-events: all; }
+        #popup-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px);
+            z-index: 8000; opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease;
+            display: flex; align-items: center; justify-content: center;
+        }
+        #popup-overlay.show { opacity: 1; pointer-events: all; }
 
-        .popup-card {
-            background: rgba(28, 28, 30, 0.95);
-            border: 1px solid var(--ios-card-border);
-            width: 90%; max-width: 320px;
-            border-radius: 20px; padding: 20px;
-            transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.19, 1, 0.22, 1);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
-            text-align: center;
-        }
-        #popup-overlay.show .popup-card { transform: scale(1); }
+        .popup-card {
+            background: rgba(28, 28, 30, 0.95);
+            border: 1px solid var(--ios-card-border);
+            width: 90%; max-width: 320px;
+            border-radius: 20px; padding: 20px;
+            transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            text-align: center;
+        }
+        #popup-overlay.show .popup-card { transform: scale(1); }
 
-        .popup-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: white; }
-        .popup-msg { font-size: 13px; color: var(--text-sec); margin-bottom: 20px; line-height: 1.4; }
-        
-        .popup-inputs { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; text-align: left; }
-        .popup-input-label { font-size: 11px; font-weight: 600; color: var(--ios-blue); margin-left: 4px; margin-bottom: 2px; }
-        
-        .popup-actions { display: flex; gap: 10px; margin-top: 10px; }
-        .popup-btn { flex: 1; padding: 10px; border-radius: 12px; font-weight: 600; font-size: 14px; cursor: pointer; border: none; }
-        .p-cancel { background: rgba(255,255,255,0.1); color: white; }
-        .p-confirm { background: var(--ios-blue); color: white; }
-        .p-danger { background: rgba(255, 69, 58, 0.2); color: var(--ios-red); }
+        .popup-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: white; }
+        .popup-msg { font-size: 13px; color: var(--text-sec); margin-bottom: 20px; line-height: 1.4; }
+        
+        .popup-inputs { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; text-align: left; }
+        .popup-input-label { font-size: 11px; font-weight: 600; color: var(--ios-blue); margin-left: 4px; margin-bottom: 2px; }
+        
+        .popup-actions { display: flex; gap: 10px; margin-top: 10px; }
+        .popup-btn { flex: 1; padding: 10px; border-radius: 12px; font-weight: 600; font-size: 14px; cursor: pointer; border: none; }
+        .p-cancel { background: rgba(255,255,255,0.1); color: white; }
+        .p-confirm { background: var(--ios-blue); color: white; }
+        .p-danger { background: rgba(255, 69, 58, 0.2); color: var(--ios-red); }
 
-        .music-wrapper { width: 100%; height: 100%; background: var(--music-bg); display: flex; align-items: center; padding: 20px; gap: 20px; position: relative; }
-        .music-art { width: 90px; height: 90px; background-color: var(--music-art); border-radius: 16px; flex-shrink: 0; background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; }
-        .music-art-icon { font-size: 32px; color: black; opacity: 0.3; }
-        .music-info { flex: 1; display: flex; flex-direction: column; justify-content: center; min-width: 0; }
-        .music-title { font-size: 18px; font-weight: 700; color: var(--music-accent); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .music-artist { font-size: 13px; font-weight: 500; color: var(--music-accent); opacity: 0.7; margin-bottom: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .music-progress { width: 100%; height: 4px; background: rgba(0, 229, 255, 0.2); border-radius: 4px; margin-bottom: 15px; position: relative; }
-        .music-fill { height: 100%; width: 0%; background: var(--music-accent); border-radius: 4px; position: relative; transition: width 0.3s linear; }
-        .music-controls { display: flex; align-items: center; gap: 20px; }
-        .ctrl-btn { background: none; border: none; color: var(--music-accent); font-size: 20px; cursor: pointer; transition: transform 0.1s; }
-        .ctrl-btn:active { transform: scale(0.9); opacity: 0.7; }
-        .play-btn { width: 40px; height: 40px; background: var(--music-accent); color: black; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; padding-left: 2px; }
-        .play-btn.paused { padding-left: 0; } 
-        .music-settings { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 40; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: 0.3s; }
-        .music-settings.active { opacity: 1; pointer-events: all; }
-        .login-btn { background: var(--music-accent); color: black; border: none; padding: 10px 20px; border-radius: 50px; font-weight: 700; font-size:12px; cursor: pointer; margin-top:10px; }
+        .music-wrapper { width: 100%; height: 100%; background: var(--music-bg); display: flex; align-items: center; padding: 20px; gap: 20px; position: relative; }
+        .music-art { width: 90px; height: 90px; background-color: var(--music-art); border-radius: 16px; flex-shrink: 0; background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; }
+        .music-art-icon { font-size: 32px; color: black; opacity: 0.3; }
+        .music-info { flex: 1; display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+        .music-title { font-size: 18px; font-weight: 700; color: var(--music-accent); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .music-artist { font-size: 13px; font-weight: 500; color: var(--music-accent); opacity: 0.7; margin-bottom: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .music-progress { width: 100%; height: 4px; background: rgba(0, 229, 255, 0.2); border-radius: 4px; margin-bottom: 15px; position: relative; }
+        .music-fill { height: 100%; width: 0%; background: var(--music-accent); border-radius: 4px; position: relative; transition: width 0.3s linear; }
+        .music-controls { display: flex; align-items: center; gap: 20px; }
+        .ctrl-btn { background: none; border: none; color: var(--music-accent); font-size: 20px; cursor: pointer; transition: transform 0.1s; }
+        .ctrl-btn:active { transform: scale(0.9); opacity: 0.7; }
+        .play-btn { width: 40px; height: 40px; background: var(--music-accent); color: black; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; padding-left: 2px; }
+        .play-btn.paused { padding-left: 0; } 
+        .music-settings { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 40; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: 0.3s; }
+        .music-settings.active { opacity: 1; pointer-events: all; }
+        .login-btn { background: var(--music-accent); color: black; border: none; padding: 10px 20px; border-radius: 50px; font-weight: 700; font-size:12px; cursor: pointer; margin-top:10px; }
 
-        #modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); z-index: 1999; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
-        #modal-overlay.show { opacity: 1; pointer-events: all; }
-        #add-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); width: 90%; max-width: 500px; max-height: 80vh; background: rgba(28, 28, 30, 0.95); border: 1px solid var(--ios-card-border); border-radius: 24px; padding: 24px; z-index: 2000; display: flex; flex-direction: column; opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1); box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
-        #add-modal.show { opacity: 1; pointer-events: all; transform: translate(-50%, -50%) scale(1); }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .modal-title { font-size: 20px; font-weight: 700; color: white; }
-        .modal-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 15px; overflow-y: auto; padding: 2px; }
-        .add-card { background: rgba(255,255,255,0.08); padding: 15px; border-radius: 18px; text-align: center; cursor: pointer; transition: 0.2s; display:flex; flex-direction:column; align-items:center; gap:10px; height: 100px; justify-content: center; }
-        .add-card:hover { background: rgba(255,255,255,0.12); transform: translateY(-2px); }
-        .add-card:active { transform: scale(0.96); }
-        .add-label { font-size: 11px; font-weight: 500; color: white; }
-        .add-icon { font-size: 28px; margin-bottom: 2px; }
+        #modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); z-index: 1999; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+        #modal-overlay.show { opacity: 1; pointer-events: all; }
+        #add-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); width: 90%; max-width: 500px; max-height: 80vh; background: rgba(28, 28, 30, 0.95); border: 1px solid var(--ios-card-border); border-radius: 24px; padding: 24px; z-index: 2000; display: flex; flex-direction: column; opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1); box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
+        #add-modal.show { opacity: 1; pointer-events: all; transform: translate(-50%, -50%) scale(1); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-title { font-size: 20px; font-weight: 700; color: white; }
+        .modal-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 15px; overflow-y: auto; padding: 2px; }
+        .add-card { background: rgba(255,255,255,0.08); padding: 15px; border-radius: 18px; text-align: center; cursor: pointer; transition: 0.2s; display:flex; flex-direction:column; align-items:center; gap:10px; height: 100px; justify-content: center; }
+        .add-card:hover { background: rgba(255,255,255,0.12); transform: translateY(-2px); }
+        .add-card:active { transform: scale(0.96); }
+        .add-label { font-size: 11px; font-weight: 500; color: white; }
+        .add-icon { font-size: 28px; margin-bottom: 2px; }
 
-        ::-webkit-scrollbar { width: 0px; } 
+        ::-webkit-scrollbar { width: 0px; } 
 
-        .media-widget { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 10px; text-align: center; }
-        .media-btn-group { display: flex; gap: 20px; align-items: center; }
-        .media-btn { background: rgba(255,255,255,0.1); border: none; color: white; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; transition: 0.2s; }
-        .media-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.2); }
-        .media-play { background: var(--ios-blue); width: 54px; height: 54px; font-size: 22px; }
-    </style>
+        .media-widget { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 10px; text-align: center; }
+        .media-btn-group { display: flex; gap: 20px; align-items: center; }
+        .media-btn { background: rgba(255,255,255,0.1); border: none; color: white; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; transition: 0.2s; }
+        .media-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.2); }
+        .media-play { background: var(--ios-blue); width: 54px; height: 54px; font-size: 22px; }
+    </style>
 </head>
 <body>
 
-    <div id="status-bar">Syncing...</div>
-    <div id="action-toast">Copied!</div>
-    <div id="error-toast"></div>
+    <div id="status-bar">Syncing...</div>
+    <div id="action-toast">Copied!</div>
+    <div id="error-toast"></div>
 
-    <div id="login-overlay">
-        <div class="login-card">
-            <div class="login-title"><i class="fa-brands"></i> StudyNest</div>
-            <div class="login-sub">Sign in with Google to load your dashboard.</div>
-            <button class="btn btn-primary" style="font-size:16px; padding:12px 24px" onclick="Cloud.login()">
-                <i class="fa-brands fa-google"></i> Sign in with Google
-            </button>
-        </div>
-    </div>
+    <div id="login-overlay">
+        <div class="login-card">
+            <div class="login-title"><i class="fa-brands"></i> StudyNest</div>
+            <div class="login-sub">Sign in with Google to load your dashboard.</div>
+            <button class="btn btn-primary" style="font-size:16px; padding:12px 24px" onclick="Cloud.login()">
+                <i class="fa-brands fa-google"></i> Sign in with Google
+            </button>
+        </div>
+    </div>
 
-    <div id="popup-overlay">
-        <div class="popup-card">
-            <div id="popup-title" class="popup-title">Title</div>
-            <div id="popup-msg" class="popup-msg">Message goes here</div>
-            <div id="popup-inputs" class="popup-inputs" style="display:none"></div>
-            <div class="popup-actions">
-                <button class="popup-btn p-cancel" onclick="UI.closePopup()">Cancel</button>
-                <button id="popup-confirm-btn" class="popup-btn p-confirm">Confirm</button>
-            </div>
-        </div>
-    </div>
+    <div id="popup-overlay">
+        <div class="popup-card">
+            <div id="popup-title" class="popup-title">Title</div>
+            <div id="popup-msg" class="popup-msg">Message goes here</div>
+            <div id="popup-inputs" class="popup-inputs" style="display:none"></div>
+            <div class="popup-actions">
+                <button class="popup-btn p-cancel" onclick="UI.closePopup()">Cancel</button>
+                <button id="popup-confirm-btn" class="popup-btn p-confirm">Confirm</button>
+            </div>
+        </div>
+    </div>
 
-    <div id="modal-overlay" onclick="UI.toggleAdd(false)"></div>
-    <div id="add-modal">
-        <div class="modal-header">
-            <div class="modal-title">Gallery</div>
-            <button class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;" onclick="UI.toggleAdd(false)">Close</button>
-        </div>
-        <div class="modal-grid">
-            <div class="add-card" onclick="Core.createWidget('media', 4, 2)"><i class="fa-solid fa-play add-icon" style="color:var(--ios-blue)"></i><span class="add-label">Universal Media</span></div>
-            <div class="add-card" onclick="Core.createWidget('pandora', 3, 2)"><i class="fa-solid fa-hourglass-end add-icon" style="color:#ffd700"></i><span class="add-label">Minutes</span></div>
-            <div class="add-card" onclick="Core.createWidget('music', 4, 2)"><i class="fa-brands fa-spotify add-icon" style="color:#1DB954"></i><span class="add-label">Spotify</span></div>
-            <div class="add-card" onclick="Core.createWidget('youtube', 4, 3)"><i class="fa-brands fa-youtube add-icon" style="color:#FF0000"></i><span class="add-label">YouTube</span></div>
-            <div class="add-card" onclick="Core.createWidget('timer', 3, 2)"><i class="fa-solid fa-hourglass-end add-icon" style="color:var(--ios-orange)"></i><span class="add-label">Timer</span></div>
-            <div class="add-card" onclick="Core.createWidget('battery', 3, 2)"><i class="fa-solid fa-battery-half add-icon" style="color:var(--ios-green)"></i><span class="add-label">Battery</span></div>
-            <div class="add-card" onclick="Core.createWidget('password', 4, 3)"><i class="fa-solid fa-key add-icon" style="color:var(--ios-purple)"></i><span class="add-label">Passwords</span></div>
-            <div class="add-card" onclick="Core.createWidget('clipboard', 3, 4)"><i class="fa-solid fa-clipboard add-icon" style="color:var(--ios-teal)"></i><span class="add-label">Clipboard</span></div>
-            <div class="add-card" onclick="Core.createWidget('calendar', 4, 4)"><i class="fa-regular fa-calendar add-icon" style="color:var(--ios-red)"></i><span class="add-label">Calendar</span></div>
-            <div class="add-card" onclick="Core.createWidget('links', 4, 2)"><i class="fa-solid fa-gamepad add-icon" style="color:var(--ios-blue)"></i><span class="add-label">Quick Links</span></div>
-            <div class="add-card" onclick="Core.createWidget('countdown', 2, 2)"><i class="fa-solid fa-hourglass-half add-icon" style="color:var(--ios-indigo)"></i><span class="add-label">Countdown</span></div>
-            <div class="add-card" onclick="Core.createWidget('clock', 4, 2)"><i class="fa-regular fa-clock add-icon" style="color:white"></i><span class="add-label">Clock</span></div>
-            <div class="add-card" onclick="Core.createWidget('weather', 3, 2)"><i class="fa-solid fa-cloud-sun add-icon" style="color:var(--ios-yellow)"></i><span class="add-label">Weather</span></div>
-            <div class="add-card" onclick="Core.createWidget('todo', 3, 4)"><i class="fa-solid fa-check-circle add-icon" style="color:var(--ios-orange)"></i><span class="add-label">Reminders</span></div>
-            <div class="add-card" onclick="Core.createWidget('calc', 3, 5)"><i class="fa-solid fa-calculator add-icon" style="color:var(--ios-green)"></i><span class="add-label">Calculator</span></div>
-            <div class="add-card" onclick="Core.createWidget('notes', 6, 3)"><i class="fa-solid fa-note-sticky add-icon" style="color:var(--ios-yellow)"></i><span class="add-label">Notes</span></div>
-        </div>
-    </div>
+    <div id="modal-overlay" onclick="UI.toggleAdd(false)"></div>
+    <div id="add-modal">
+        <div class="modal-header">
+            <div class="modal-title">Gallery</div>
+            <button class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;" onclick="UI.toggleAdd(false)">Close</button>
+        </div>
+        <div class="modal-grid">
+            <div class="add-card" onclick="Core.createWidget('media', 4, 2)"><i class="fa-solid fa-play add-icon" style="color:var(--ios-blue)"></i><span class="add-label">Universal Media</span></div>
+            <div class="add-card" onclick="Core.createWidget('pandora', 3, 2)"><i class="fa-solid fa-hourglass-end add-icon" style="color:#ffd700"></i><span class="add-label">Minutes</span></div>
+            <div class="add-card" onclick="Core.createWidget('music', 4, 2)"><i class="fa-brands fa-spotify add-icon" style="color:#1DB954"></i><span class="add-label">Spotify</span></div>
+            <div class="add-card" onclick="Core.createWidget('youtube', 4, 3)"><i class="fa-brands fa-youtube add-icon" style="color:#FF0000"></i><span class="add-label">YouTube</span></div>
+            <div class="add-card" onclick="Core.createWidget('timer', 3, 2)"><i class="fa-solid fa-hourglass-end add-icon" style="color:var(--ios-orange)"></i><span class="add-label">Timer</span></div>
+            <div class="add-card" onclick="Core.createWidget('battery', 3, 2)"><i class="fa-solid fa-battery-half add-icon" style="color:var(--ios-green)"></i><span class="add-label">Battery</span></div>
+            <div class="add-card" onclick="Core.createWidget('password', 4, 3)"><i class="fa-solid fa-key add-icon" style="color:var(--ios-purple)"></i><span class="add-label">Passwords</span></div>
+            <div class="add-card" onclick="Core.createWidget('clipboard', 3, 4)"><i class="fa-solid fa-clipboard add-icon" style="color:var(--ios-teal)"></i><span class="add-label">Clipboard</span></div>
+            <div class="add-card" onclick="Core.createWidget('calendar', 4, 4)"><i class="fa-regular fa-calendar add-icon" style="color:var(--ios-red)"></i><span class="add-label">Calendar</span></div>
+            <div class="add-card" onclick="Core.createWidget('links', 4, 2)"><i class="fa-solid fa-gamepad add-icon" style="color:var(--ios-blue)"></i><span class="add-label">Quick Links</span></div>
+            <div class="add-card" onclick="Core.createWidget('countdown', 2, 2)"><i class="fa-solid fa-hourglass-half add-icon" style="color:var(--ios-indigo)"></i><span class="add-label">Countdown</span></div>
+            <div class="add-card" onclick="Core.createWidget('clock', 4, 2)"><i class="fa-regular fa-clock add-icon" style="color:white"></i><span class="add-label">Clock</span></div>
+            <div class="add-card" onclick="Core.createWidget('weather', 3, 2)"><i class="fa-solid fa-cloud-sun add-icon" style="color:var(--ios-yellow)"></i><span class="add-label">Weather</span></div>
+            <div class="add-card" onclick="Core.createWidget('todo', 3, 4)"><i class="fa-solid fa-check-circle add-icon" style="color:var(--ios-orange)"></i><span class="add-label">Reminders</span></div>
+            <div class="add-card" onclick="Core.createWidget('calc', 3, 5)"><i class="fa-solid fa-calculator add-icon" style="color:var(--ios-green)"></i><span class="add-label">Calculator</span></div>
+            <div class="add-card" onclick="Core.createWidget('notes', 6, 3)"><i class="fa-solid fa-note-sticky add-icon" style="color:var(--ios-yellow)"></i><span class="add-label">Notes</span></div>
+        </div>
+    </div>
 
-    <nav>
-        <div class="brand">StudyNest</div>
-        <div class="nav-actions">
-            <button id="upgrade-btn" class="btn btn-gold" onclick="Cloud.upgrade()" style="display:none">
-                <i class="fa-solid fa-star"></i> Upgrade
-            </button>
-            <button class="btn btn-primary" onclick="UI.toggleAdd(true)"><i class="fa-solid fa-plus"></i> Add</button>
-            <button id="edit-btn" class="btn" onclick="Core.toggleEdit()"><i class="fa-solid fa-pen-nib"></i> Edit</button>
-            <button class="btn" onclick="Cloud.logout()"><i class="fa-solid fa-power-off"></i></button>
-            <div id="user-info"></div>
-            <div class="user-pill"></div>
-        </div>
-    </nav>
+    <nav>
+        <div class="brand">StudyNest</div>
+        <div class="nav-actions">
+            <button id="upgrade-btn" class="btn btn-gold" onclick="Cloud.upgrade()" style="display:none">
+                <i class="fa-solid fa-star"></i> Upgrade
+            </button>
+            <button class="btn btn-primary" onclick="UI.toggleAdd(true)"><i class="fa-solid fa-plus"></i> Add</button>
+            <button id="edit-btn" class="btn" onclick="Core.toggleEdit()"><i class="fa-solid fa-pen-nib"></i> Edit</button>
+            <button class="btn" onclick="Cloud.logout()"><i class="fa-solid fa-power-off"></i></button>
+            <div id="user-info"></div>
+            <div class="user-pill"></div>
+        </div>
+    </nav>
 
-    <div id="dashboard-wrapper">
-        <div class="grid-stack"></div>
-    </div>
+    <div id="dashboard-wrapper">
+        <div class="grid-stack"></div>
+    </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack-all.js"></script>
-    
-    <script>
+    <script src="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack-all.js"></script>
+    
+    <script>
 
         const GlobalMedia = {
-            // Sends standard Media Key commands to the browser session
+            // Sends standard Media Session commands to the browser session
             send: (action) => {
+                // Creates a hidden element to ensure we have media session context
+                let hiddenMedia = document.getElementById('hidden-media-trigger');
+                if (!hiddenMedia) {
+                    hiddenMedia = document.createElement('audio');
+                    hiddenMedia.id = 'hidden-media-trigger';
+                    hiddenMedia.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA='; // Silent snippet
+                    document.body.appendChild(hiddenMedia);
+                }
+
                 if ('mediaSession' in navigator) {
                     switch(action) {
                         case 'playpause':
-                            // This toggles play/pause on whatever tab is currently playing media
-                            document.dispatchEvent(new KeyboardEvent('keydown', {'key': 'MediaPlayPause'}));
-                            UI.showToast("Command: Toggle Play");
+                            // Simulates system play/pause key
+                            document.dispatchEvent(new KeyboardEvent('keydown', {'keyCode': 179}));
+                            UI.showToast("Toggle Play/Pause");
                             break;
                         case 'next':
-                            UI.showToast("Command: Next Track");
+                            // Simulates system next key
+                            document.dispatchEvent(new KeyboardEvent('keydown', {'keyCode': 176}));
+                            UI.showToast("Next Track");
                             break;
                         case 'prev':
-                            UI.showToast("Command: Previous Track");
+                            // Simulates system previous key
+                            document.dispatchEvent(new KeyboardEvent('keydown', {'keyCode': 177}));
+                            UI.showToast("Previous Track");
                             break;
                     }
                 }
             }
         };
-        
-const SPOTIFY_CLIENT_ID = "2aea224b957a49e0ade20938094a2170"; 
+        
+const SPOTIFY_CLIENT_ID = "2aea224b957a49e0ade20938094a2170"; 
 const SPOTIFY_SCOPES = "streaming user-read-email user-read-private user-modify-playback-state user-read-currently-playing user-read-playback-state";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyArqMp658OSK8u46cjCefyVKiDJe4oe8-g",
-  authDomain: "secondscreen-f7cd9.firebaseapp.com",
-  projectId: "secondscreen-f7cd9",
-  storageBucket: "secondscreen-f7cd9.firebasestorage.app",
-  messagingSenderId: "233696091813",
-  appId: "1:233696091813:web:734ed34d527ba05dbbf74c",
-  measurementId: "G-QTQZ0ET1KJ"
+  apiKey: "AIzaSyArqMp658OSK8u46cjCefyVKiDJe4oe8-g",
+  authDomain: "secondscreen-f7cd9.firebaseapp.com",
+  projectId: "secondscreen-f7cd9",
+  storageBucket: "secondscreen-f7cd9.firebasestorage.app",
+  messagingSenderId: "233696091813",
+  appId: "1:233696091813:web:734ed34d527ba05dbbf74c",
+  measurementId: "G-QTQZ0ET1KJ"
 };
 
-        const STRIPE_LINK = "https://buy.stripe.com/fZu28r2I2cJi24N0oOfEk00"; 
+        const STRIPE_LINK = "https://buy.stripe.com/fZu28r2I2cJi24N0oOfEk00"; 
 
-        try {
-            if(firebaseConfig.apiKey !== "YOUR_API_KEY_HERE") {
-                firebase.initializeApp(firebaseConfig);
-                var db = firebase.firestore();
-                var auth = firebase.auth();
-                var provider = new firebase.auth.GoogleAuthProvider();
-            }
-        } catch(e) { console.warn("Firebase not configured."); }
+        try {
+            if(firebaseConfig.apiKey !== "YOUR_API_KEY_HERE") {
+                firebase.initializeApp(firebaseConfig);
+                var db = firebase.firestore();
+                var auth = firebase.auth();
+                var provider = new firebase.auth.GoogleAuthProvider();
+            }
+        } catch(e) { console.warn("Firebase not configured."); }
 
-        let isDashboardLoaded = false;
-        let isPro = false;
-        let player = null;
-        let activePandoras = {};
+        let isDashboardLoaded = false;
+        let isPro = false;
+        let player = null;
+        let activePandoras = {};
 
-        const Cloud = {
-            user: null,
-            login: () => {
-                auth.signInWithPopup(provider).catch(e => alert(e.message));
-            },
-            logout: () => {
-                UI.confirmAction("Sign Out", "Are you sure you want to log out?", () => {
-                    auth.signOut().then(() => location.reload());
-                });
-            },
-            initAuth: () => {
-                auth.onAuthStateChanged(user => {
-                    if (user) {
-  000                    Cloud.user = user;
-                        document.getElementById('login-overlay').style.opacity = '0';
-                        setTimeout(() => document.getElementById('login-overlay').style.display = 'none', 500);
-                        Core.loadData();
-                        
-                        if(localStorage.getItem('sp_token')) setTimeout(Spotify.initPlayer, 1000);
+        const Cloud = {
+            user: null,
+            login: () => {
+                auth.signInWithPopup(provider).catch(e => alert(e.message));
+            },
+            logout: () => {
+                UI.confirmAction("Sign Out", "Are you sure you want to log out?", () => {
+                    auth.signOut().then(() => location.reload());
+                });
+            },
+            initAuth: () => {
+                auth.onAuthStateChanged(user => {
+                    if (user) {
+                        Cloud.user = user;
+                        document.getElementById('login-overlay').style.opacity = '0';
+                        setTimeout(() => document.getElementById('login-overlay').style.display = 'none', 500);
+                        Core.loadData();
+                        
+                        if(localStorage.getItem('sp_token')) setTimeout(Spotify.initPlayer, 1000);
 
-                    } else {
-                        document.getElementById('login-overlay').style.display = 'flex';
-                        document.getElementById('login-overlay').style.opacity = '1';
-                    }
-                });
-            },
-            save: (data) => {
-                if(Cloud.user && db) {
-                    const status = document.getElementById('status-bar');
-                    status.style.display = 'block';
-                    status.innerText = "Saving...";
-                    
-                    db.collection('users').doc(Cloud.user.uid).set({ 
-                        layout: JSON.stringify(data), 
-                        updated: Date.now() 
-                    }, { merge: true }).then(() => {
-                        status.innerText = "Saved";
-                        setTimeout(() => status.style.display = 'none', 1500);
-                    }).catch(e => {
-                        console.error(e);
-                        status.innerText = "Error Saving";
-                    });
-                }
-            },
-            upgrade: () => {
-                if(!Cloud.user) return alert("Please sign in first");
-                const finalLink = `${STRIPE_LINK}?client_reference_id=${Cloud.user.uid}`;
-                window.location.href = finalLink;
-            }
-        };
+                    } else {
+                        document.getElementById('login-overlay').style.display = 'flex';
+                        document.getElementById('login-overlay').style.opacity = '1';
+                    }
+                });
+            },
+            save: (data) => {
+                if(Cloud.user && db) {
+                    const status = document.getElementById('status-bar');
+                    status.style.display = 'block';
+                    status.innerText = "Saving...";
+                    
+                    db.collection('users').doc(Cloud.user.uid).set({ 
+                        layout: JSON.stringify(data), 
+                        updated: Date.now() 
+                    }, { merge: true }).then(() => {
+                        status.innerText = "Saved";
+                        setTimeout(() => status.style.display = 'none', 1500);
+                    }).catch(e => {
+                        console.error(e);
+                        status.innerText = "Error Saving";
+                    });
+                }
+            },
+            upgrade: () => {
+                if(!Cloud.user) return alert("Please sign in first");
+                const finalLink = `${STRIPE_LINK}?client_reference_id=${Cloud.user.uid}`;
+                window.location.href = finalLink;
+            }
+        };
 
-        function debounce(func, wait) {
-            let timeout;
-            return function(...args) {
-                clearTimeout(timeout);
-                timeout = setTimeout(() => func.apply(this, args), wait);
-            };
-        }
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
 
-        const Spotify = {
-            token: null,
-            deviceId: null,
+        const Spotify = {
+            token: null,
+            deviceId: null,
 
-            login: () => {
-                const generateRandomString = (l) => {
-                    const p = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-                    return crypto.getRandomValues(new Uint8Array(l)).reduce((a, x) => a + p[x % p.length], "");
-                };
-                const sha256 = async (p) => window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(p));
-                const base64encode = (i) => btoa(String.fromCharCode.apply(null, new Uint8Array(i))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+            login: () => {
+                const generateRandomString = (l) => {
+                    const p = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+                    return crypto.getRandomValues(new Uint8Array(l)).reduce((a, x) => a + p[x % p.length], "");
+                };
+                const sha256 = async (p) => window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(p));
+                const base64encode = (i) => btoa(String.fromCharCode.apply(null, new Uint8Array(i))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 
-                const start = async () => {
-                    const v = generateRandomString(64);
-                    localStorage.setItem('spotify_verifier', v);
-                    const hash = await sha256(v);
-                    const challenge = base64encode(hash);
-                    const url = new URL("https://accounts.spotify.com/authorize");
-                    url.search = new URLSearchParams({
-                        response_type: 'code', client_id: SPOTIFY_CLIENT_ID, scope: SPOTIFY_SCOPES,
-                        code_challenge_method: 'S256', code_challenge: challenge,
-                        redirect_uri: window.location.origin + window.location.pathname
-                    }).toString();
-                    window.open(url, 'Spotify', 'width=500,height=800');
-                };
-                start();
-            },
+                const start = async () => {
+                    const v = generateRandomString(64);
+                    localStorage.setItem('spotify_verifier', v);
+                    const hash = await sha256(v);
+                    const challenge = base64encode(hash);
+                    const url = new URL("https://accounts.spotify.com/authorize");
+                    url.search = new URLSearchParams({
+                        response_type: 'code', client_id: SPOTIFY_CLIENT_ID, scope: SPOTIFY_SCOPES,
+                        code_challenge_method: 'S256', code_challenge: challenge,
+                        redirect_uri: window.location.origin + window.location.pathname
+                    }).toString();
+                    window.open(url, 'Spotify', 'width=500,height=800');
+                };
+                start();
+            },
 
-            handleCode: async (code) => {
-                const v = localStorage.getItem('spotify_verifier');
-                const res = await fetch("https://accounts.spotify.com/api/token", {
-                    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams({
-                        client_id: SPOTIFY_CLIENT_ID, grant_type: 'authorization_code',
-                        code, redirect_uri: window.location.origin + window.location.pathname, code_verifier: v
-                    })
-                });
-                const d = await res.json();
-                if(d.access_token) {
-                    Spotify.token = d.access_token;
-                    localStorage.setItem('sp_token', d.access_token);
-                    UI.showToast("Connected! Loading Player...");
-                    Spotify.initPlayer();
-                }
-            },
+            handleCode: async (code) => {
+                const v = localStorage.getItem('spotify_verifier');
+                const res = await fetch("https://accounts.spotify.com/api/token", {
+                    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({
+                        client_id: SPOTIFY_CLIENT_ID, grant_type: 'authorization_code',
+                        code, redirect_uri: window.location.origin + window.location.pathname, code_verifier: v
+                    })
+                });
+                const d = await res.json();
+                if(d.access_token) {
+                    Spotify.token = d.access_token;
+                    localStorage.setItem('sp_token', d.access_token);
+                    UI.showToast("Connected! Loading Player...");
+                    Spotify.initPlayer();
+                }
+            },
 
-            initPlayer: () => {
-                const t = localStorage.getItem('sp_token');
-                if(!t) return;
-                Spotify.token = t;
-                if(player) return;
+            initPlayer: () => {
+                const t = localStorage.getItem('sp_token');
+                if(!t) return;
+                Spotify.token = t;
+                if(player) return;
 
-                window.onSpotifyWebPlaybackSDKReady = () => {
-                    player = new Spotify.Player({
-                        name: 'StudyNest Web Player',
-                        getOAuthToken: cb => { cb(Spotify.token); },
-                        volume: 0.5
-                    });
+                window.onSpotifyWebPlaybackSDKReady = () => {
+                    player = new Spotify.Player({
+                        name: 'StudyNest Web Player',
+                        getOAuthToken: cb => { cb(Spotify.token); },
+                        volume: 0.5
+                    });
 
-                    player.addListener('ready', ({ device_id }) => {
-                        console.log('Ready with Device ID', device_id);
-                        Spotify.deviceId = device_id;
-                        document.querySelectorAll('.music-settings').forEach(el => {
-                            el.classList.add('active');
-                            el.innerHTML = `<div class="music-msg">Player Ready</div><button class="login-btn" onclick="Spotify.transfer()">Start Player</button>`;
-                        });
-                    });
+                    player.addListener('ready', ({ device_id }) => {
+                        console.log('Ready with Device ID', device_id);
+                        Spotify.deviceId = device_id;
+                        document.querySelectorAll('.music-settings').forEach(el => {
+                            el.classList.add('active');
+                            el.innerHTML = `<div class="music-msg">Player Ready</div><button class="login-btn" onclick="Spotify.transfer()">Start Player</button>`;
+                        });
+                    });
 
-                    player.addListener('player_state_changed', state => {
-                        if (!state) return;
-                        Spotify.updateUI(state);
-                    });
-                    
-                    player.addListener('authentication_error', () => {
-                          UI.showToast("Auth Error. Re-login");
-                          localStorage.removeItem('sp_token');
-                    });
+                    player.addListener('player_state_changed', state => {
+                        if (!state) return;
+                        Spotify.updateUI(state);
+                    });
+                    
+                    player.addListener('authentication_error', () => {
+                          UI.showToast("Auth Error. Re-login");
+                          localStorage.removeItem('sp_token');
+                    });
 
-                    player.connect();
-                };
-            },
+                    player.connect();
+                };
+            },
 
-            transfer: async () => {
-                if(!Spotify.deviceId || !Spotify.token) return;
-                await fetch(`https://api.spotify.com/v1/...`, {
-                    method: 'PUT',
-                    headers: { 'Authorization': `Bearer ${Spotify.token}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ device_ids: [Spotify.deviceId], play: true })
-                });
-                document.querySelectorAll('.music-settings').forEach(el => el.classList.remove('active'));
-            },
+            transfer: async () => {
+                if(!Spotify.deviceId || !Spotify.token) return;
+                await fetch(`https://api.spotify.com/v1/...`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${Spotify.token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ device_ids: [Spotify.deviceId], play: true })
+                });
+                document.querySelectorAll('.music-settings').forEach(el => el.classList.remove('active'));
+            },
 
-            toggle: () => { if(player) player.togglePlay(); },
-            next: () => { if(player) player.nextTrack(); },
-            prev: () => { if(player) player.previousTrack(); },
+            toggle: () => { if(player) player.togglePlay(); },
+            next: () => { if(player) player.nextTrack(); },
+            prev: () => { if(player) player.previousTrack(); },
 
-            updateUI: (state) => {
-                const track = state.track_window.current_track;
-                if(!track) return;
-                const title = track.name;
-                const artist = track.artists[0].name;
-                const art = track.album.images[0]?.url;
-                const progress = (state.position / state.duration) * 100;
-                
-                document.querySelectorAll('.music-wrapper').forEach(el => {
-                    el.querySelector('.music-title').innerText = title;
-                    el.querySelector('.music-artist').innerText = artist;
-                    const artEl = el.querySelector('.music-art');
-                    artEl.style.backgroundImage = `url('${art}')`;
-                    artEl.innerHTML = ''; 
-                    el.querySelector('.music-fill').style.width = `${progress}%`;
-                    const btn = el.querySelector('.play-btn');
-                    btn.innerHTML = state.paused ? '<i class="fa-solid fa-play"></i>' : '<i class="fa-solid fa-pause"></i>';
-                    btn.classList.toggle('paused', state.paused);
-                    const overlay = el.querySelector('.music-settings');
-                    if(overlay && !state.paused) overlay.classList.remove('active');
-                });
+            updateUI: (state) => {
+                const track = state.track_window.current_track;
+                if(!track) return;
+                const title = track.name;
+                const artist = track.artists[0].name;
+                const art = track.album.images[0]?.url;
+                const progress = (state.position / state.duration) * 100;
+                
+                document.querySelectorAll('.music-wrapper').forEach(el => {
+                    el.querySelector('.music-title').innerText = title;
+                    el.querySelector('.music-artist').innerText = artist;
+                    const artEl = el.querySelector('.music-art');
+                    artEl.style.backgroundImage = `url('${art}')`;
+                    artEl.innerHTML = ''; 
+                    el.querySelector('.music-fill').style.width = `${progress}%`;
+                    const btn = el.querySelector('.play-btn');
+                    btn.innerHTML = state.paused ? '<i class="fa-solid fa-play"></i>' : '<i class="fa-solid fa-pause"></i>';
+                    btn.classList.toggle('paused', state.paused);
+                    const overlay = el.querySelector('.music-settings');
+                    if(overlay && !state.paused) overlay.classList.remove('active');
+                });
 
-                document.querySelectorAll('.media-play').forEach(btn => {
-                    btn.innerHTML = state.paused ? '<i class="fa-solid fa-play"></i>' : '<i class="fa-solid fa-pause"></i>';
-                });
-            }
-        };
+                document.querySelectorAll('.media-play').forEach(btn => {
+                    btn.innerHTML = state.paused ? '<i class="fa-solid fa-play"></i>' : '<i class="fa-solid fa-pause"></i>';
+                });
+            }
+        };
 
 const Utils = {
-            calc: (id, val) => {
-                const s = document.getElementById(`scr-${id}`);
-                const h = document.getElementById(`hist-${id}`);
-                let expr = s.getAttribute('data-expr') || ''; 
-                let isRes = s.getAttribute('data-res') === 'true';
+            calc: (id, val) => {
+                const s = document.getElementById(`scr-${id}`);
+                const h = document.getElementById(`hist-${id}`);
+                let expr = s.getAttribute('data-expr') || ''; 
+                let isRes = s.getAttribute('data-res') === 'true';
 
-                const update = (txt, raw) => { s.innerText = txt; s.setAttribute('data-expr', raw); s.setAttribute('data-res', 'false'); };
+                const update = (txt, raw) => { s.innerText = txt; s.setAttribute('data-expr', raw); s.setAttribute('data-res', 'false'); };
 
-                if (val === 'AC') { s.innerText = '0'; h.innerText = ''; s.setAttribute('data-expr', ''); s.setAttribute('data-res', 'false'); return; }
-                if (val === 'DEL') {
-                    if (isRes) { update('0', ''); return; }
-                    let vTxt = s.innerText.toString();
-                    let vExpr = expr.toString();
-                    if (vTxt.length <= 1 || vTxt === 'Error') { update('0', ''); }
-                    else { update(vTxt.slice(0, -1), vExpr.slice(0, -1)); }
-                    return;
-                }
-                if (val === '=') {
-                    try {
-                        h.innerText = s.innerText + ' =';
-                        let evalStr = expr.replace(/×/g, '*').replace(/÷/g, '/').replace(/\^/g, '**').replace(/π/g, 'Math.PI').replace(/e/g, 'Math.E').replace(/√/g, 'Math.sqrt').replace(/log/g, 'Math.log10').replace(/ln/g, 'Math.log').replace(/sin/g, 'Math.sin').replace(/cos/g, 'Math.cos').replace(/tan/g, 'Math.tan');
-                        let res = eval(evalStr);
-                        res = Math.round(res * 10000000000) / 10000000000;
-                        s.innerText = res; s.setAttribute('data-expr', res.toString()); s.setAttribute('data-res', 'true');
-                    } catch (e) { s.innerText = "Error"; setTimeout(() => update('0', ''), 1000); }
-                    return;
-                }
-                if (isRes) {
-                    if (['+', '-', '×', '÷', '^', '%'].includes(val)) { s.setAttribute('data-res', 'false'); } else { expr = ''; s.innerText = ''; isRes = false; s.setAttribute('data-res', 'false'); }
-                }
-                if (s.innerText === '0' && !['.', '+', '-', '×', '÷', '^', ')', '%'].includes(val)) { s.innerText = ''; expr = ''; }
-                let displayVal = val; let mathVal = val;
-                if(val === 'sin') { displayVal='sin('; mathVal='sin('; } else if(val === 'cos') { displayVal='cos('; mathVal='cos('; } else if(val === 'tan') { displayVal='tan('; mathVal='tan('; } else if(val === 'log') { displayVal='log('; mathVal='log('; } else if(val === 'ln') { displayVal='ln('; mathVal='ln('; } else if(val === '√') { displayVal='√('; mathVal='√('; }
-                s.innerText += displayVal; s.setAttribute('data-expr', expr + mathVal);
-            },
-            linkAction: (id, index, btn) => {
-                const saved = JSON.parse(btn.getAttribute('data-link') || 'null');
-                if (saved && saved.url) { window.open(saved.url, '_blank'); } 
-                else { Utils.editLink(id, index, btn); }
-            },
-            editLink: (id, index, btn) => {
-                const currentData = JSON.parse(btn.getAttribute('data-link') || 'null');
-                const defaultUrl = currentData ? currentData.url : '';
-               const defaultName = currentData ? currentData.name : '';
-                UI.askInput("Edit Shortcut", [{ label: "Website URL", value: defaultUrl, placeholder: "google.com" }, { label: "Label", value: defaultName, placeholder: "Google" }], (values) => {
-                    let [url, name] = values;
-                    if (!url.startsWith('http://') && !url.startsWith('https://')) { url = 'https://' + url; }
-                    let domain; try { domain = new URL(url).hostname; } catch(e) { domain = url; }
-                    const data = { url, name, domain };
-                    btn.setAttribute('data-link', JSON.stringify(data));
-                    btn.innerHTML = `<img src="https://www.google.com/s2/favicons?domain=${domain}&sz=64" class="deck-favicon"><span class="deck-label">${name}</span>`;
-                    Core.saveLayout();
-                });
-            },
-            setCountdown: (id) => {
-                const widget = document.getElementById(`count-wrap-${id}`);
-                const currentData = JSON.parse(widget.getAttribute('data-target') || 'null');
-                const defaultDate = currentData ? currentData.date : '';
-                const defaultName = currentData ? currentData.name : '';
-                UI.askInput("Set Countdown", [{ label: "Target Date", value: defaultDate, placeholder: "YYYY-MM-DD", type: "date" }, { label: "Event Name", value: defaultName, placeholder: "My Event" }], (values) => {
-                    const [date, name] = values;
-                    if (!date) return;
-                    widget.setAttribute('data-target', JSON.stringify({date, name: name || 'Event'}));
-                    Utils.updateCountdown(id);
-                    Core.saveLayout();
-                });
-            },
-            updateCountdown: (id) => {
-                const widget = document.getElementById(`count-wrap-${id}`);
-                if (!widget) return;
-                const data = JSON.parse(widget.getAttribute('data-target') || 'null');
-                if (data) {
-                    const diff = Math.ceil((new Date(data.date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-                    document.getElementById(`cd-val-${id}`).innerText = diff > 0 ? diff : 0;
-                    document.getElementById(`cd-lbl-${id}`).innerText = diff > 0 ? `Days until ${data.name}` : `${data.name} is here!`;
-                    const pct = Math.max(0, Math.min(100, (diff / 30) * 100));
-                    document.getElementById(`cd-bar-${id}`).style.width = (100 - pct) + '%';
-                }
-            },
-            initCalendar: (id) => { if(!window[`cal_date_${id}`]) { window[`cal_date_${id}`] = new Date(); } Utils.renderCalendar(id); },
-            changeMonth: (id, offset) => { const currentDate = window[`cal_date_${id}`]; currentDate.setMonth(currentDate.getMonth() + offset); Utils.renderCalendar(id); },
-            resetCalendar: (id) => { window[`cal_date_${id}`] = new Date(); Utils.renderCalendar(id); },
-            renderCalendar: (id) => {
-                const date = window[`cal_date_${id}`];
-                const year = date.getFullYear();
-                const month = date.getMonth();
-                document.getElementById(`cal-title-${id}`).innerText = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-                const daysContainer = document.getElementById(`cal-grid-${id}`);
-                daysContainer.innerHTML = '';
-                const firstDayIndex = new Date(year, month, 1).getDay();
-      000        const lastDay = new Date(year, month + 1, 0).getDate();
-                const today = new Date();
-                for (let i = 0; i < firstDayIndex; i++) { const empty = document.createElement('div'); empty.classList.add('cal-day', 'empty'); daysContainer.appendChild(empty); }
-                for (let i = 1; i <= lastDay; i++) {
-                    const dayEl = document.createElement('div'); dayEl.classList.add('cal-day'); dayEl.innerText = i;
-                    if (i === today.getDate() && month === today.getMonth() && year === today.getFullYear()) { dayEl.classList.add('today'); }
-                    daysContainer.appendChild(dayEl);
-                }
-            },
-            setTimer: (id) => {
-                UI.askInput("Set Timer", [{ label: "Time (e.g. 5:00 PM or 17:00)", value: "", placeholder: "17:00" }], (values) => {
-                    const time = values[0]; if(!time) return;
-                    const d = new Date(); const [timeStr, mod] = time.split(' '); let [h, m] = timeStr.split(':');
-                    if (h === '12') h = '00'; if (mod && (mod.toLowerCase() === 'pm')) h = parseInt(h, 10) + 12;
-                    d.setHours(h, m, 0, 0);
-                    if(d < new Date()) { UI.showToast("Time must be in the future!"); return; }
-                    document.getElementById(`timer-wrap-${id}`).setAttribute('data-end', d.getTime());
-                    document.getElementById(`timer-lbl-${id}`).innerText = `Until ${time}`;
-                    Utils.updateTimer(id); Core.saveLayout();
-                });
-            },
-            updateTimer: (id) => {
-                const el = document.getElementById(`timer-wrap-${id}`); if(!el) return;
-                const end = parseInt(el.getAttribute('data-end')); if(!end) return;
-                const diff = end - Date.now();
-                if(diff <= 0) { document.getElementById(`timer-val-${id}`).innerText = "Done"; return; }
-                const hr = Math.floor((diff % (86400000)) / (3600000));
-                const mn = Math.floor((diff % (3600000)) / 60000);
-                document.getElementById(`timer-val-${id}`).innerText = `${hr}h ${mn}m`;
-            },
-            updateBattery: async (id) => {
-                if(navigator.getBattery) {
-                    try {
-                        const batt = await navigator.getBattery();
-                        const up = () => {
-                            const lvl = Math.round(batt.level * 100);
-                            const valEl = document.getElementById(`batt-val-${id}`);
-                            const fillEl = document.getElementById(`batt-fill-${id}`);
-                            const stEl = document.getElementById(`batt-st-${id}`);
-                            if(valEl) valEl.innerText = lvl + '%';
-                            if(fillEl) { fillEl.style.width = lvl + '%'; fillEl.style.background = batt.charging ? 'var(--ios-green)' : (lvl<20?'var(--ios-red)':'var(--text-main)'); }
-                            if(stEl) stEl.innerText = batt.charging ? 'Charging ⚡' : 'On Battery';
-                        };
-                        up();
-                        batt.addEventListener('levelchange', up);
-                        batt.addEventListener('chargingchange', up);
-                        setTimeout(up, 500);
-                    } catch(e) { document.getElementById(`batt-st-${id}`).innerText = "Error"; }
-                } else { document.getElementById(`batt-st-${id}`).innerText = "Not Supported"; }
-            },
-            genPass: (id) => {
-                const len = document.getElementById(`rng-${id}`).value;
-                const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%^&*";
-                let pass = ""; for(let i=0; i<len; i++) pass += chars.charAt(Math.floor(Math.random() * chars.length));
-                document.getElementById(`pass-${id}`).innerText = pass; document.getElementById(`lbl-${id}`).innerText = `Length: ${len}`;
-            },
-            saveClip: async (id) => {
-                try {
-                    const text = await navigator.clipboard.readText(); if(!text) return;
-                    const list = document.getElementById(`clip-${id}`);
-                    const item = document.createElement('div'); item.className = 'clip-item'; item.innerText = text;
-                    item.onclick = () => { navigator.clipboard.writeText(text); UI.showToast("Copied to Clipboard!"); };
-                    list.prepend(item); if(list.children.length > 5) list.lastChild.remove();
-                    Core.saveLayout();
-                } catch(e) { alert("Clipboard permission required"); }
-            },
-            copyPass: (id) => {
-                const text = document.getElementById(`pass-${id}`).innerText;
-                if(text && text !== "CLICK GEN") { navigator.clipboard.writeText(text); UI.showToast("Password Copied!"); }
-            },
-            loadYT: (id) => {
-                const input = document.getElementById(`yt-input-${id}`);
-                const frame = document.getElementById(`yt-frame-${id}`);
-                const setup = document.getElementById(`yt-setup-${id}`);
-                const controls = document.getElementById(`yt-controls-${id}`);
-                let url = input.value; let embedUrl = "";
-                if(url.includes('list=')) { const listId = url.split('list=')[1].split('&')[0]; embedUrl = `https://www.youtube.com/embed/videoseries?list=${listId}`; } 
-                else if(url.includes('v=')) { const vidId = url.split('v=')[1].split('&')[0]; embedUrl = `https://www.youtube.com/embed/${vidId}`; } 
-                else if(url.includes('youtu.be/')) { const vidId = url.split('youtu.be/')[1].split('?')[0]; embedUrl = `https://www.youtube.com/embed/${vidId}`; } 
-                else { return; }
-                frame.src = embedUrl; setup.style.display = 'none'; frame.style.display = 'block'; controls.style.display = 'block'; Core.saveLayout();
-            },
-            resetYT: (id) => {
-                document.getElementById(`yt-frame-${id}`).src = ""; document.getElementById(`yt-frame-${id}`).style.display = "none";
-                document.getElementById(`yt-controls-${id}`).style.display = "none"; document.getElementById(`yt-setup-${id}`).style.display = "flex";
-                document.getElementById(`yt-input-${id}`).value = ""; Core.saveLayout();
-            },
-            initWeather: (id, savedData) => {
-                const el = document.getElementById(`temp-${id}`);
-                const widget = el.closest('.grid-stack-item');
-                let unit = savedData && savedData.unit ? savedData.unit : 'F';
-                widget.setAttribute('data-unit', unit);
-                navigator.geolocation.getCurrentPosition(pos => {
-                    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&current_weather=true`).then(r=>r.json()).then(d => {
-                        const raw = d.current_weather.temperature; widget.setAttribute('data-raw-temp', raw); Utils.renderWeather(id);
-                    });
-                });
-                el.onclick = () => { if(document.body.classList.contains('editing')) { let u = widget.getAttribute('data-unit'); u = u === 'F' ? 'C' : 'F'; widget.setAttribute('data-unit', u); Utils.renderWeather(id); Core.saveLayout(); } };
-            },
-            renderWeather: (id) => {
-                const el = document.getElementById(`temp-${id}`);
-                const widget = el.closest('.grid-stack-item');
-                const raw = parseFloat(widget.getAttribute('data-raw-temp'));
-                const unit = widget.getAttribute('data-unit');
-                if(isNaN(raw)) return;
-                let val = raw; if(unit === 'F') val = (raw * 9/5) + 32; el.innerText = Math.round(val) + '°' + unit;
-            },
+                if (val === 'AC') { s.innerText = '0'; h.innerText = ''; s.setAttribute('data-expr', ''); s.setAttribute('data-res', 'false'); return; }
+                if (val === 'DEL') {
+                    if (isRes) { update('0', ''); return; }
+                    let vTxt = s.innerText.toString();
+                    let vExpr = expr.toString();
+                    if (vTxt.length <= 1 || vTxt === 'Error') { update('0', ''); }
+                    else { update(vTxt.slice(0, -1), vExpr.slice(0, -1)); }
+                    return;
+                }
+                if (val === '=') {
+                    try {
+                        h.innerText = s.innerText + ' =';
+                        let evalStr = expr.replace(/×/g, '*').replace(/÷/g, '/').replace(/\^/g, '**').replace(/π/g, 'Math.PI').replace(/e/g, 'Math.E').replace(/√/g, 'Math.sqrt').replace(/log/g, 'Math.log10').replace(/ln/g, 'Math.log').replace(/sin/g, 'Math.sin').replace(/cos/g, 'Math.cos').replace(/tan/g, 'Math.tan');
+                        let res = eval(evalStr);
+                        res = Math.round(res * 10000000000) / 10000000000;
+                        s.innerText = res; s.setAttribute('data-expr', res.toString()); s.setAttribute('data-res', 'true');
+                    } catch (e) { s.innerText = "Error"; setTimeout(() => update('0', ''), 1000); }
+                    return;
+                }
+                if (isRes) {
+                    if (['+', '-', '×', '÷', '^', '%'].includes(val)) { s.setAttribute('data-res', 'false'); } else { expr = ''; s.innerText = ''; isRes = false; s.setAttribute('data-res', 'false'); }
+                }
+                if (s.innerText === '0' && !['.', '+', '-', '×', '÷', '^', ')', '%'].includes(val)) { s.innerText = ''; expr = ''; }
+                let displayVal = val; let mathVal = val;
+                if(val === 'sin') { displayVal='sin('; mathVal='sin('; } else if(val === 'cos') { displayVal='cos('; mathVal='cos('; } else if(val === 'tan') { displayVal='tan('; mathVal='tan('; } else if(val === 'log') { displayVal='log('; mathVal='log('; } else if(val === 'ln') { displayVal='ln('; mathVal='ln('; } else if(val === '√') { displayVal='√('; mathVal='√('; }
+                s.innerText += displayVal; s.setAttribute('data-expr', expr + mathVal);
+            },
+            linkAction: (id, index, btn) => {
+                const saved = JSON.parse(btn.getAttribute('data-link') || 'null');
+                if (saved && saved.url) { window.open(saved.url, '_blank'); } 
+                else { Utils.editLink(id, index, btn); }
+            },
+            editLink: (id, index, btn) => {
+                const currentData = JSON.parse(btn.getAttribute('data-link') || 'null');
+                const defaultUrl = currentData ? currentData.url : '';
+                const defaultName = currentData ? currentData.name : '';
+                UI.askInput("Edit Shortcut", [{ label: "Website URL", value: defaultUrl, placeholder: "google.com" }, { label: "Label", value: defaultName, placeholder: "Google" }], (values) => {
+                    let [url, name] = values;
+                    if (!url.startsWith('http://') && !url.startsWith('https://')) { url = 'https://' + url; }
+                    let domain; try { domain = new URL(url).hostname; } catch(e) { domain = url; }
+                    const data = { url, name, domain };
+                    btn.setAttribute('data-link', JSON.stringify(data));
+                    btn.innerHTML = `<img src="https://www.google.com/s2/favicons?domain=${domain}&sz=64" class="deck-favicon"><span class="deck-label">${name}</span>`;
+                    Core.saveLayout();
+                });
+            },
+            setCountdown: (id) => {
+                const widget = document.getElementById(`count-wrap-${id}`);
+                const currentData = JSON.parse(widget.getAttribute('data-target') || 'null');
+                const defaultDate = currentData ? currentData.date : '';
+                const defaultName = currentData ? currentData.name : '';
+                UI.askInput("Set Countdown", [{ label: "Target Date", value: defaultDate, placeholder: "YYYY-MM-DD", type: "date" }, { label: "Event Name", value: defaultName, placeholder: "My Event" }], (values) => {
+                    const [date, name] = values;
+                    if (!date) return;
+                    widget.setAttribute('data-target', JSON.stringify({date, name: name || 'Event'}));
+                    Utils.updateCountdown(id);
+                    Core.saveLayout();
+                });
+            },
+            updateCountdown: (id) => {
+                const widget = document.getElementById(`count-wrap-${id}`);
+                if (!widget) return;
+                const data = JSON.parse(widget.getAttribute('data-target') || 'null');
+                if (data) {
+                    const diff = Math.ceil((new Date(data.date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                    document.getElementById(`cd-val-${id}`).innerText = diff > 0 ? diff : 0;
+                    document.getElementById(`cd-lbl-${id}`).innerText = diff > 0 ? `Days until ${data.name}` : `${data.name} is here!`;
+                    const pct = Math.max(0, Math.min(100, (diff / 30) * 100));
+                    document.getElementById(`cd-bar-${id}`).style.width = (100 - pct) + '%';
+                }
+            },
+            initCalendar: (id) => { if(!window[`cal_date_${id}`]) { window[`cal_date_${id}`] = new Date(); } Utils.renderCalendar(id); },
+            changeMonth: (id, offset) => { const currentDate = window[`cal_date_${id}`]; currentDate.setMonth(currentDate.getMonth() + offset); Utils.renderCalendar(id); },
+            resetCalendar: (id) => { window[`cal_date_${id}`] = new Date(); Utils.renderCalendar(id); },
+            renderCalendar: (id) => {
+                const date = window[`cal_date_${id}`];
+                const year = date.getFullYear();
+                const month = date.getMonth();
+                document.getElementById(`cal-title-${id}`).innerText = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                const daysContainer = document.getElementById(`cal-grid-${id}`);
+                daysContainer.innerHTML = '';
+                const firstDayIndex = new Date(year, month, 1).getDay();
+                const lastDay = new Date(year, month + 1, 0).getDate();
+                const today = new Date();
+                for (let i = 0; i < firstDayIndex; i++) { const empty = document.createElement('div'); empty.classList.add('cal-day', 'empty'); daysContainer.appendChild(empty); }
+                for (let i = 1; i <= lastDay; i++) {
+                    const dayEl = document.createElement('div'); dayEl.classList.add('cal-day'); dayEl.innerText = i;
+                    if (i === today.getDate() && month === today.getMonth() && year === today.getFullYear()) { dayEl.classList.add('today'); }
+                    daysContainer.appendChild(dayEl);
+                }
+            },
+            setTimer: (id) => {
+                UI.askInput("Set Timer", [{ label: "Time (e.g. 5:00 PM or 17:00)", value: "", placeholder: "17:00" }], (values) => {
+                    const time = values[0]; if(!time) return;
+                    const d = new Date(); const [timeStr, mod] = time.split(' '); let [h, m] = timeStr.split(':');
+                    if (h === '12') h = '00'; if (mod && (mod.toLowerCase() === 'pm')) h = parseInt(h, 10) + 12;
+                    d.setHours(h, m, 0, 0);
+                    if(d < new Date()) { UI.showToast("Time must be in the future!"); return; }
+                    document.getElementById(`timer-wrap-${id}`).setAttribute('data-end', d.getTime());
+                    document.getElementById(`timer-lbl-${id}`).innerText = `Until ${time}`;
+                    Utils.updateTimer(id); Core.saveLayout();
+                });
+            },
+            updateTimer: (id) => {
+                const el = document.getElementById(`timer-wrap-${id}`); if(!el) return;
+                const end = parseInt(el.getAttribute('data-end')); if(!end) return;
+                const diff = end - Date.now();
+                if(diff <= 0) { document.getElementById(`timer-val-${id}`).innerText = "Done"; return; }
+                const hr = Math.floor((diff % (86400000)) / (3600000));
+                const mn = Math.floor((diff % (3600000)) / 60000);
+                document.getElementById(`timer-val-${id}`).innerText = `${hr}h ${mn}m`;
+            },
+            updateBattery: async (id) => {
+                if(navigator.getBattery) {
+                    try {
+                        const batt = await navigator.getBattery();
+                        const up = () => {
+                            const lvl = Math.round(batt.level * 100);
+                            const valEl = document.getElementById(`batt-val-${id}`);
+                            const fillEl = document.getElementById(`batt-fill-${id}`);
+                            const stEl = document.getElementById(`batt-st-${id}`);
+                            if(valEl) valEl.innerText = lvl + '%';
+                            if(fillEl) { fillEl.style.width = lvl + '%'; fillEl.style.background = batt.charging ? 'var(--ios-green)' : (lvl<20?'var(--ios-red)':'var(--text-main)'); }
+                            if(stEl) stEl.innerText = batt.charging ? 'Charging ⚡' : 'On Battery';
+                        };
+                        up();
+                        batt.addEventListener('levelchange', up);
+                        batt.addEventListener('chargingchange', up);
+                        setTimeout(up, 500);
+                    } catch(e) { document.getElementById(`batt-st-${id}`).innerText = "Error"; }
+                } else { document.getElementById(`batt-st-${id}`).innerText = "Not Supported"; }
+            },
+            genPass: (id) => {
+                const len = document.getElementById(`rng-${id}`).value;
+                const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%^&*";
+                let pass = ""; for(let i=0; i<len; i++) pass += chars.charAt(Math.floor(Math.random() * chars.length));
+                document.getElementById(`pass-${id}`).innerText = pass; document.getElementById(`lbl-${id}`).innerText = `Length: ${len}`;
+            },
+            saveClip: async (id) => {
+                try {
+                    const text = await navigator.clipboard.readText(); if(!text) return;
+                    const list = document.getElementById(`clip-${id}`);
+                    const item = document.createElement('div'); item.className = 'clip-item'; item.innerText = text;
+                    item.onclick = () => { navigator.clipboard.writeText(text); UI.showToast("Copied to Clipboard!"); };
+                    list.prepend(item); if(list.children.length > 5) list.lastChild.remove();
+                    Core.saveLayout();
+                } catch(e) { alert("Clipboard permission required"); }
+            },
+            copyPass: (id) => {
+                const text = document.getElementById(`pass-${id}`).innerText;
+                if(text && text !== "CLICK GEN") { navigator.clipboard.writeText(text); UI.showToast("Password Copied!"); }
+            },
+            loadYT: (id) => {
+                const input = document.getElementById(`yt-input-${id}`);
+                const frame = document.getElementById(`yt-frame-${id}`);
+                const setup = document.getElementById(`yt-setup-${id}`);
+                const controls = document.getElementById(`yt-controls-${id}`);
+                let url = input.value; let embedUrl = "";
+                if(url.includes('list=')) { const listId = url.split('list=')[1].split('&')[0]; embedUrl = `https://www.youtube.com/embed/videoseries?list=${listId}`; } 
+                else if(url.includes('v=')) { const vidId = url.split('v=')[1].split('&')[0]; embedUrl = `https://www.youtube.com/embed/${vidId}`; } 
+                else if(url.includes('youtu.be/')) { const vidId = url.split('youtu.be/')[1].split('?')[0]; embedUrl = `https://www.youtube.com/embed/${vidId}`; } 
+                else { return; }
+                frame.src = embedUrl; setup.style.display = 'none'; frame.style.display = 'block'; controls.style.display = 'block'; Core.saveLayout();
+            },
+            resetYT: (id) => {
+                document.getElementById(`yt-frame-${id}`).src = ""; document.getElementById(`yt-frame-${id}`).style.display = "none";
+                document.getElementById(`yt-controls-${id}`).style.display = "none"; document.getElementById(`yt-setup-${id}`).style.display = "flex";
+                document.getElementById(`yt-input-${id}`).value = ""; Core.saveLayout();
+            },
+            initWeather: (id, savedData) => {
+                const el = document.getElementById(`temp-${id}`);
+                const widget = el.closest('.grid-stack-item');
+                let unit = savedData && savedData.unit ? savedData.unit : 'F';
+                widget.setAttribute('data-unit', unit);
+                navigator.geolocation.getCurrentPosition(pos => {
+                    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&current_weather=true`).then(r=>r.json()).then(d => {
+                        const raw = d.current_weather.temperature; widget.setAttribute('data-raw-temp', raw); Utils.renderWeather(id);
+                    });
+                });
+                el.onclick = () => { if(document.body.classList.contains('editing')) { let u = widget.getAttribute('data-unit'); u = u === 'F' ? 'C' : 'F'; widget.setAttribute('data-unit', u); Utils.renderWeather(id); Core.saveLayout(); } };
+            },
+            renderWeather: (id) => {
+                const el = document.getElementById(`temp-${id}`);
+                const widget = el.closest('.grid-stack-item');
+                const raw = parseFloat(widget.getAttribute('data-raw-temp'));
+                const unit = widget.getAttribute('data-unit');
+                if(isNaN(raw)) return;
+                let val = raw; if(unit === 'F') val = (raw * 9/5) + 32; el.innerText = Math.round(val) + '°' + unit;
+            },
 
-            setPandora: (id) => {
-                if(activePandoras[id]) return; 
-                UI.askInput("Open Pandora's Box", [{label: "Minutes", value: "1", type: "number", placeholder: "1"}], (values) => {
-                    const mins = parseInt(values[0]);
-                    if(!mins || mins <= 0) return;
-                    Utils.startPandora(id, mins * 60);
-                });
-            },
-            startPandora: (id, totalSeconds) => {
-                const container = document.getElementById(`pan-${id}`);
-                const display = document.getElementById(`pan-time-${id}`);
-                const state = document.getElementById(`pan-state-${id}`);
-                let remaining = totalSeconds;
-                
-                container.classList.remove('pan-finished');
-                display.innerText = "00:00";
-                display.style.color = "#FFFFFF";
-                
-                if(activePandoras[id]) clearInterval(activePandoras[id]);
-                
-                activePandoras[id] = setInterval(() => {
-                    remaining--;
-                    const m = Math.floor(remaining / 60).toString().padStart(2,'0');
-                    const s = (remaining % 60).toString().padStart(2,'0');
-                    display.innerText = `${m}:${s}`;
-                    
-                    const pct = remaining / totalSeconds;
-                    
-                    if(pct < 0.1 && pct > 0) { 
-                        display.style.color = "#FF453A"; 
-                    }
+            setPandora: (id) => {
+                if(activePandoras[id]) return; 
+                UI.askInput("Open Pandora's Box", [{label: "Minutes", value: "1", type: "number", placeholder: "1"}], (values) => {
+                    const mins = parseInt(values[0]);
+                    if(!mins || mins <= 0) return;
+                    Utils.startPandora(id, mins * 60);
+                });
+            },
+            startPandora: (id, totalSeconds) => {
+                const container = document.getElementById(`pan-${id}`);
+                const display = document.getElementById(`pan-time-${id}`);
+                const state = document.getElementById(`pan-state-${id}`);
+                let remaining = totalSeconds;
+                
+                container.classList.remove('pan-finished');
+                display.innerText = "00:00";
+                display.style.color = "#FFFFFF";
+                
+                if(activePandoras[id]) clearInterval(activePandoras[id]);
+                
+                activePandoras[id] = setInterval(() => {
+                    remaining--;
+                    const m = Math.floor(remaining / 60).toString().padStart(2,'0');
+                    const s = (remaining % 60).toString().padStart(2,'0');
+                    display.innerText = `${m}:${s}`;
+                    
+                    const pct = remaining / totalSeconds;
+                    
+                    if(pct < 0.1 && pct > 0) { 
+                        display.style.color = "#FF453A"; 
+                    }
 
-                    if(remaining <= 0) {
-                        clearInterval(activePandoras[id]);
-                        delete activePandoras[id];
-                        display.classList.add('pan-finished');
-                        display.innerText = "DONE";
-                        state.innerText = "Time's up!";
-                    }
-                }, 1000);
-            }
-        };
+                    if(remaining <= 0) {
+                        clearInterval(activePandoras[id]);
+                        delete activePandoras[id];
+                        display.classList.add('pan-finished');
+                        display.innerText = "DONE";
+                        state.innerText = "Time's up!";
+                    }
+                }, 1000);
+            }
+        };
 
-        const Core = (() => {
-            let grid = null, editing = false;
+        const Core = (() => {
+            let grid = null, editing = false;
 
-            const init = () => {
-                const params = new URLSearchParams(window.location.search);
-                const code = params.get('code');
+            const init = () => {
+                const params = new URLSearchParams(window.location.search);
+                const code = params.get('code');
 
-                if (code) {
-                    localStorage.setItem('spotify_auth_code_relay', code);
-                    setTimeout(() => window.close(), 100);
-                    return; 
-                }
+                if (code) {
+                    localStorage.setItem('spotify_auth_code_relay', code);
+                    setTimeout(() => window.close(), 100);
+                    return; 
+                }
 
-                window.addEventListener('storage', (e) => {
-                    if (e.key === 'spotify_auth_code_relay' && e.newValue) {
-                        Spotify.handleCode(e.newValue);
-                        localStorage.removeItem('spotify_auth_code_relay');
-                    }
-                });
-                
-  000            grid = GridStack.init({ column: 12, cellHeight: '85px', margin: 12, float: true, animate: true, disableDrag: true, disableResize: true });
-                grid.off('change added removed'); 
-                Cloud.initAuth();
-                setInterval(UI.updateTime, 1000);
-                setInterval(() => document.querySelectorAll('.count-container').forEach(el => Utils.updateCountdown(el.id.replace('count-wrap-', ''))), 60000);
-                setInterval(() => { document.querySelectorAll('.timer-container').forEach(el => Utils.updateTimer(el.id.replace('timer-wrap-',''))); }, 1000);
-                document.getElementById('dashboard-wrapper').addEventListener('click', (e) => {
-                    if (editing && !e.target.closest('.grid-stack-item')) { Core.toggleEdit(); }
-                });
-            };
+                window.addEventListener('storage', (e) => {
+                    if (e.key === 'spotify_auth_code_relay' && e.newValue) {
+                        Spotify.handleCode(e.newValue);
+                        localStorage.removeItem('spotify_auth_code_relay');
+                    }
+                });
+                
+                grid = GridStack.init({ column: 12, cellHeight: '85px', margin: 12, float: true, animate: true, disableDrag: true, disableResize: true });
+                grid.off('change added removed'); 
+                Cloud.initAuth();
+                setInterval(UI.updateTime, 1000);
+                setInterval(() => document.querySelectorAll('.count-container').forEach(el => Utils.updateCountdown(el.id.replace('count-wrap-', ''))), 60000);
+                setInterval(() => { document.querySelectorAll('.timer-container').forEach(el => Utils.updateTimer(el.id.replace('timer-wrap-',''))); }, 1000);
+                document.getElementById('dashboard-wrapper').addEventListener('click', (e) => {
+                    if (editing && !e.target.closest('.grid-stack-item')) { Core.toggleEdit(); }
+                });
+            };
 
-            const toggleEdit = () => {
-                editing = !editing;
-                grid.enableMove(editing); grid.enableResize(editing);
-                document.body.classList.toggle('editing', editing);
-                const btn = document.getElementById('edit-btn');
-                if(editing) { btn.innerHTML = '<i class="fa-solid fa-check"></i> Done'; btn.classList.add('btn-primary'); } 
-                else { btn.innerHTML = '<i class="fa-solid fa-pen-nib"></i> Edit'; btn.classList.remove('btn-primary'); }
-            };
+            const toggleEdit = () => {
+                editing = !editing;
+                grid.enableMove(editing); grid.enableResize(editing);
+                document.body.classList.toggle('editing', editing);
+                const btn = document.getElementById('edit-btn');
+                if(editing) { btn.innerHTML = '<i class="fa-solid fa-check"></i> Done'; btn.classList.add('btn-primary'); } 
+                else { btn.innerHTML = '<i class="fa-solid fa-pen-nib"></i> Edit'; btn.classList.remove('btn-primary'); }
+            };
 
-            const createWidget = (type, w, h, x, y, savedData) => {
-                if (!isPro && grid.getGridItems().length >= 2 && !isDashboardLoaded) { }
-                if (isDashboardLoaded && !isPro && grid.getGridItems().length >= 4) { alert("Free Tier Limit Reached (4 Widgets). Upgrade to Pro for unlimited access! Just $3"); UI.toggleAdd(false); return; }
+            const createWidget = (type, w, h, x, y, savedData) => {
+                if (!isPro && grid.getGridItems().length >= 2 && !isDashboardLoaded) { }
+                if (isDashboardLoaded && !isPro && grid.getGridItems().length >= 4) { alert("Free Tier Limit Reached (4 Widgets). Upgrade to Pro for unlimited access! Just $3"); UI.toggleAdd(false); return; }
 
-                const id = 'w-' + Math.random().toString(36).substr(2, 9);
-                const content = Templates.get(type, id, savedData);
-                if (content === '<div>Error</div>') return;
+                const id = 'w-' + Math.random().toString(36).substr(2, 9);
+                const content = Templates.get(type, id, savedData);
+                if (content === '<div>Error</div>') return;
 
-                const el = grid.addWidget({ w, h, x, y, content, minW: 2, minH: 2 });
-                el.setAttribute('data-type', type); 
-                const removeBtn = el.querySelector('.remove-widget');
-                if(removeBtn) { el.appendChild(removeBtn); removeBtn.onclick = () => { grid.removeWidget(el); Core.saveLayout(); }; }
-                
-                if (type === 'todo') UI.initTodo(id, savedData);
-                if (type === 'notes') document.getElementById(`nt-${id}`).value = savedData || "";
-                if (type === 'weather') Utils.initWeather(id, savedData);
-                if (type === 'countdown' && savedData) Utils.updateCountdown(id);
-                if (type === 'calendar') Utils.initCalendar(id);
-                if (type === 'battery') Utils.updateBattery(id);
-                if (type === 'clipboard' && savedData) {
-                    savedData.forEach(t => { const i = document.createElement('div'); i.className='clip-item'; i.innerText=t; i.onclick = () => { navigator.clipboard.writeText(t); UI.showToast("Copied to Clipboard!"); }; document.getElementById(`clip-${id}`).appendChild(i); });
-                }
-                if (type === 'timer' && savedData) {
-                    const wrap = document.getElementById(`timer-wrap-${id}`);
-                    wrap.setAttribute('data-end', savedData.end);
-                    document.getElementById(`timer-lbl-${id}`).innerText = savedData.label;
-                }
-                if (type === 'music') { 
-                    const hasToken = localStorage.getItem('sp_token');
-                    if(hasToken) { setTimeout(Spotify.initPlayer, 1000); } else { const overlay = document.getElementById(`ov-${id}`); if(overlay) overlay.classList.add('active'); }
-                }
-                if (type === 'youtube' && savedData && savedData.url) {
-                    const frame = document.getElementById(`yt-frame-${id}`);
-                    frame.src = savedData.url; frame.style.display = 'block'; document.getElementById(`yt-controls-${id}`).style.display = 'block'; document.getElementById(`yt-setup-${id}`).style.display = 'none';
-                }
-                UI.toggleAdd(false);
-            };
+                const el = grid.addWidget({ w, h, x, y, content, minW: 2, minH: 2 });
+                el.setAttribute('data-type', type); 
+                const removeBtn = el.querySelector('.remove-widget');
+                if(removeBtn) { el.appendChild(removeBtn); removeBtn.onclick = () => { grid.removeWidget(el); Core.saveLayout(); }; }
+                
+                if (type === 'todo') UI.initTodo(id, savedData);
+                if (type === 'notes') document.getElementById(`nt-${id}`).value = savedData || "";
+                if (type === 'weather') Utils.initWeather(id, savedData);
+                if (type === 'countdown' && savedData) Utils.updateCountdown(id);
+                if (type === 'calendar') Utils.initCalendar(id);
+                if (type === 'battery') Utils.updateBattery(id);
+                if (type === 'clipboard' && savedData) {
+                    savedData.forEach(t => { const i = document.createElement('div'); i.className='clip-item'; i.innerText=t; i.onclick = () => { navigator.clipboard.writeText(t); UI.showToast("Copied to Clipboard!"); }; document.getElementById(`clip-${id}`).appendChild(i); });
+                }
+                if (type === 'timer' && savedData) {
+                    const wrap = document.getElementById(`timer-wrap-${id}`);
+                    wrap.setAttribute('data-end', savedData.end);
+                    document.getElementById(`timer-lbl-${id}`).innerText = savedData.label;
+                }
+                if (type === 'music') { 
+                    const hasToken = localStorage.getItem('sp_token');
+                    if(hasToken) { setTimeout(Spotify.initPlayer, 1000); } else { const overlay = document.getElementById(`ov-${id}`); if(overlay) overlay.classList.add('active'); }
+                }
+                if (type === 'youtube' && savedData && savedData.url) {
+                    const frame = document.getElementById(`yt-frame-${id}`);
+                    frame.src = savedData.url; frame.style.display = 'block'; document.getElementById(`yt-controls-${id}`).style.display = 'block'; document.getElementById(`yt-setup-${id}`).style.display = 'none';
+                }
+                UI.toggleAdd(false);
+            };
 
-            const saveLayout = debounce(() => {
-                if(!isDashboardLoaded) return; 
-                const items = grid.getGridItems().map(el => {
-                    const type = el.getAttribute('data-type');
-                    let data = null;
-                    if (type === 'notes') data = el.querySelector('textarea').value;
-                    if (type === 'todo') data = Array.from(el.querySelectorAll('.task-item')).map(i => ({t: i.querySelector('.task-text').innerText, d: i.classList.contains('done')}));
-                    if (type === 'links') { data = []; el.querySelectorAll('.deck-btn').forEach(btn => data.push(JSON.parse(btn.getAttribute('data-link') || 'null'))); }
-                    if (type === 'countdown') { data = JSON.parse(el.querySelector('.count-container').getAttribute('data-target') || 'null'); }
-                    if (type === 'clipboard') { data = Array.from(el.querySelectorAll('.clip-item')).map(i => i.innerText); }
-                    if (type === 'timer') { const wrap = el.querySelector('.timer-container'); data = { end: wrap.getAttribute('data-end'), label: el.querySelector('.timer-label').innerText }; }
-                    if (type === 'music') { data = {}; }
-                    if (type === 'weather') { const unit = el.getAttribute('data-unit') || 'F'; data = { unit }; }
-                    if (type === 'youtube') { const frame = el.querySelector('iframe'); if(frame && frame.src && frame.style.display !== 'none') { data = { url: frame.src }; } }
-                    return { x: el.gridstackNode.x, y: el.gridstackNode.y, w: el.gridstackNode.w, h: el.gridstackNode.h, type, data };
-                });
-                Cloud.save(items);
-            }, 1000);
+            const saveLayout = debounce(() => {
+                if(!isDashboardLoaded) return; 
+                const items = grid.getGridItems().map(el => {
+                    const type = el.getAttribute('data-type');
+                    let data = null;
+                    if (type === 'notes') data = el.querySelector('textarea').value;
+                    if (type === 'todo') data = Array.from(el.querySelectorAll('.task-item')).map(i => ({t: i.querySelector('.task-text').innerText, d: i.classList.contains('done')}));
+                    if (type === 'links') { data = []; el.querySelectorAll('.deck-btn').forEach(btn => data.push(JSON.parse(btn.getAttribute('data-link') || 'null'))); }
+                    if (type === 'countdown') { data = JSON.parse(el.querySelector('.count-container').getAttribute('data-target') || 'null'); }
+                    if (type === 'clipboard') { data = Array.from(el.querySelectorAll('.clip-item')).map(i => i.innerText); }
+                    if (type === 'timer') { const wrap = el.querySelector('.timer-container'); data = { end: wrap.getAttribute('data-end'), label: el.querySelector('.timer-label').innerText }; }
+                    if (type === 'music') { data = {}; }
+                    if (type === 'weather') { const unit = el.getAttribute('data-unit') || 'F'; data = { unit }; }
+                    if (type === 'youtube') { const frame = el.querySelector('iframe'); if(frame && frame.src && frame.style.display !== 'none') { data = { url: frame.src }; } }
+                    return { x: el.gridstackNode.x, y: el.gridstackNode.y, w: el.gridstackNode.w, h: el.gridstackNode.h, type, data };
+                });
+                Cloud.save(items);
+            }, 1000);
 
-            const loadData = () => {
-                if(!Cloud.user || !db) return;
-                isDashboardLoaded = false; grid.off('change added removed');
-                db.collection('users').doc(Cloud.user.uid).get().then(doc => {
-                    grid.removeAll(); 
-      000            if(doc.exists) {
-                        const dbData = doc.data();
-                        isPro = dbData.isPro || false;
-                        if(isPro) { document.getElementById('upgrade-btn').style.display = 'none'; if(!document.querySelector('.pro-badge')) { document.getElementById('user-info').innerHTML += '<span class="pro-badge">PRO ⚡</span>'; } } else { document.getElementById('upgrade-btn').style.display = 'block'; }
-                        try { const items = JSON.parse(dbData.layout); if(items && items.length > 0) { grid.batchUpdate(); items.forEach(s => createWidget(s.type, s.w, s.h, s.x, s.y, s.data)); grid.commit(); } else { loadDefaults(); } } catch(e) { loadDefaults(); }
-                    } else { loadDefaults(); }
-                    setTimeout(() => { isDashboardLoaded = true; grid.on('change added removed', saveLayout); }, 1000);
-                }).catch(e => { console.error("Load failed", e); document.getElementById('error-toast').innerText = "Load Failed: " + e.message; document.getElementById('error-toast').style.display = 'block'; });
-            };
+            const loadData = () => {
+                if(!Cloud.user || !db) return;
+                isDashboardLoaded = false; grid.off('change added removed');
+                db.collection('users').doc(Cloud.user.uid).get().then(doc => {
+                    grid.removeAll(); 
+                    if(doc.exists) {
+                        const dbData = doc.data();
+                        isPro = dbData.isPro || false;
+                        if(isPro) { document.getElementById('upgrade-btn').style.display = 'none'; if(!document.querySelector('.pro-badge')) { document.getElementById('user-info').innerHTML += '<span class="pro-badge">PRO ⚡</span>'; } } else { document.getElementById('upgrade-btn').style.display = 'block'; }
+                        try { const items = JSON.parse(dbData.layout); if(items && items.length > 0) { grid.batchUpdate(); items.forEach(s => createWidget(s.type, s.w, s.h, s.x, s.y, s.data)); grid.commit(); } else { loadDefaults(); } } catch(e) { loadDefaults(); }
+                    } else { loadDefaults(); }
+                    setTimeout(() => { isDashboardLoaded = true; grid.on('change added removed', saveLayout); }, 1000);
+                }).catch(e => { console.error("Load failed", e); document.getElementById('error-toast').innerText = "Load Failed: " + e.message; document.getElementById('error-toast').style.display = 'block'; });
+            };
 
-            const loadDefaults = () => { grid.batchUpdate(); createWidget('clock', 4, 2, 0, 0); createWidget('weather', 4, 2, 4, 0); grid.commit(); setTimeout(() => { isDashboardLoaded = true; saveLayout(); grid.on('change added removed', saveLayout); }, 1000); };
-            const reset = () => { if(confirm("This will clear your dashboard. Are you sure?")) { isDashboardLoaded = false; db.collection('users').doc(Cloud.user.uid).delete().then(() => location.reload()); } };
-            return { init, toggleEdit, createWidget, saveLayout, reset, loadData };
-        })();
+            const loadDefaults = () => { grid.batchUpdate(); createWidget('clock', 4, 2, 0, 0); createWidget('weather', 4, 2, 4, 0); grid.commit(); setTimeout(() => { isDashboardLoaded = true; saveLayout(); grid.on('change added removed', saveLayout); }, 1000); };
+            const reset = () => { if(confirm("This will clear your dashboard. Are you sure?")) { isDashboardLoaded = false; db.collection('users').doc(Cloud.user.uid).delete().then(() => location.reload()); } };
+            return { init, toggleEdit, createWidget, saveLayout, reset, loadData };
+        })();
 
-        const UI = {
-            toggleAdd: (show) => { const m=document.getElementById('add-modal'), o=document.getElementById('modal-overlay'); if(show){m.classList.add('show');o.classList.add('show');}else{m.classList.remove('show');o.classList.remove('show');}},
-            updateTime: () => { const n=new Date(); document.querySelectorAll('.time-big').forEach(e=>e.innerText=n.toLocaleTimeString([],{hour:'numeric',minute:'2-digit',hour12:true})); document.querySelectorAll('.date-sub').forEach(e=>e.innerText=n.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'}));},
-            
-            closePopup: () => { document.getElementById('popup-overlay').classList.remove('show'); },
-            
-            confirmAction: (title, msg, onConfirm) => {
-                const el = document.getElementById('popup-overlay');
-                document.getElementById('popup-title').innerText = title;
-                document.getElementById('popup-msg').innerText = msg;
-                document.getElementById('popup-inputs').style.display = 'none';
-                const btn = document.getElementById('popup-confirm-btn');
-                btn.innerText = "Log Out"; btn.className = "popup-btn p-danger"; 
-                btn.onclick = () => { onConfirm(); UI.closePopup(); };
-                el.classList.add('show');
-            },
-            askInput: (title, inputsConfig, onSave) => {
-                const el = document.getElementById('popup-overlay');
-                document.getElementById('popup-title').innerText = title;
-                document.getElementById('popup-msg').style.display = 'none';
-                const container = document.getElementById('popup-inputs');
-                container.innerHTML = ''; container.style.display = 'flex';
-                const resIds = [];
-                inputsConfig.forEach((cfg, idx) => {
-                    const wrap = document.createElement('div');
-                    const label = document.createElement('div'); label.className = 'popup-input-label'; label.innerText = cfg.label;
-                    const inp = document.createElement('input'); inp.value = cfg.value || ''; inp.placeholder = cfg.placeholder || ''; inp.type = cfg.type || 'text'; inp.id = `pop-in-${idx}`;
-                    inp.onkeydown = (e) => { if(e.key === 'Enter') { document.getElementById('popup-confirm-btn').click(); } };
-                    resIds.push(inp.id); wrap.appendChild(label); wrap.appendChild(inp); container.appendChild(wrap);
-                });
-                const btn = document.getElementById('popup-confirm-btn');
-                btn.innerText = "Save"; btn.className = "popup-btn p-confirm";
-                btn.onclick = () => { const values = resIds.map(id => document.getElementById(id).value); if(values.some(v => !v)) { UI.showToast("Please fill all fields"); return; } onSave(values); UI.closePopup(); };
-                el.classList.add('show');
-                setTimeout(() => document.getElementById(resIds[0]).focus(), 100);
-            },
-            initTodo: (id, data) => {
-                const list = document.getElementById(`list-${id}`), em = document.getElementById(`empty-${id}`);
-                if (!list || !em) return;
-                const check = () => { em.style.display = list.children.length===0 ? 'block':'none'; };
-                const add = (t, d) => {
-                    const i = document.createElement('div'); i.className=`task-item ${d?'done':''}`;
-                    i.innerHTML=`<div class="task-check"><i class="fa-solid fa-check"></i></div><span class="task-text">${t}</span><i class="fa-solid fa-xmark task-delete" onclick="event.stopPropagation(); this.parentElement.remove(); UI.checkEmpty('${id}'); Core.saveLayout()"></i>`;
-                    i.onclick = (e) => { if(e.target.classList.contains('task-delete')) return; i.classList.add('done'); setTimeout(()=>{ i.remove(); check(); Core.saveLayout(); },800); };
-                    list.prepend(i); check();
-                };
-                const input = document.getElementById(`in-${id}`);
-                if(input) input.onkeypress = (e) => { if(e.key==='Enter'&&e.target.value.trim()){ add(e.target.value,false); e.target.value=''; Core.saveLayout(); } };
-                if(data) data.forEach(d => { if(!d.d) add(d.t, false); }); check();
-                UI.checkEmpty = check;
-            },
-            showToast: (msg) => {
-                const el = document.getElementById('action-toast'); el.innerText = msg; el.style.display = 'block'; el.style.animation = 'none'; el.offsetHeight; 
-                el.style.animation = 'popUpFade 2s ease forwards'; setTimeout(() => { el.style.display = 'none'; }, 2000);
-            }
-        };
+        const UI = {
+            toggleAdd: (show) => { const m=document.getElementById('add-modal'), o=document.getElementById('modal-overlay'); if(show){m.classList.add('show');o.classList.add('show');}else{m.classList.remove('show');o.classList.remove('show');}},
+            updateTime: () => { const n=new Date(); document.querySelectorAll('.time-big').forEach(e=>e.innerText=n.toLocaleTimeString([],{hour:'numeric',minute:'2-digit',hour12:true})); document.querySelectorAll('.date-sub').forEach(e=>e.innerText=n.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'}));},
+            
+            closePopup: () => { document.getElementById('popup-overlay').classList.remove('show'); },
+            
+            confirmAction: (title, msg, onConfirm) => {
+                const el = document.getElementById('popup-overlay');
+                document.getElementById('popup-title').innerText = title;
+                document.getElementById('popup-msg').innerText = msg;
+                document.getElementById('popup-inputs').style.display = 'none';
+                const btn = document.getElementById('popup-confirm-btn');
+                btn.innerText = "Log Out"; btn.className = "popup-btn p-danger"; 
+                btn.onclick = () => { onConfirm(); UI.closePopup(); };
+                el.classList.add('show');
+            },
+            askInput: (title, inputsConfig, onSave) => {
+                const el = document.getElementById('popup-overlay');
+                document.getElementById('popup-title').innerText = title;
+                document.getElementById('popup-msg').style.display = 'none';
+                const container = document.getElementById('popup-inputs');
+                container.innerHTML = ''; container.style.display = 'flex';
+                const resIds = [];
+                inputsConfig.forEach((cfg, idx) => {
+                    const wrap = document.createElement('div');
+                    const label = document.createElement('div'); label.className = 'popup-input-label'; label.innerText = cfg.label;
+                    const inp = document.createElement('input'); inp.value = cfg.value || ''; inp.placeholder = cfg.placeholder || ''; inp.type = cfg.type || 'text'; inp.id = `pop-in-${idx}`;
+                    inp.onkeydown = (e) => { if(e.key === 'Enter') { document.getElementById('popup-confirm-btn').click(); } };
+                    resIds.push(inp.id); wrap.appendChild(label); wrap.appendChild(inp); container.appendChild(wrap);
+                });
+                const btn = document.getElementById('popup-confirm-btn');
+                btn.innerText = "Save"; btn.className = "popup-btn p-confirm";
+                btn.onclick = () => { const values = resIds.map(id => document.getElementById(id).value); if(values.some(v => !v)) { UI.showToast("Please fill all fields"); return; } onSave(values); UI.closePopup(); };
+                el.classList.add('show');
+                setTimeout(() => document.getElementById(resIds[0]).focus(), 100);
+            },
+            initTodo: (id, data) => {
+                const list = document.getElementById(`list-${id}`), em = document.getElementById(`empty-${id}`);
+                if (!list || !em) return;
+                const check = () => { em.style.display = list.children.length===0 ? 'block':'none'; };
+                const add = (t, d) => {
+                    const i = document.createElement('div'); i.className=`task-item ${d?'done':''}`;
+                    i.innerHTML=`<div class="task-check"><i class="fa-solid fa-check"></i></div><span class="task-text">${t}</span><i class="fa-solid fa-xmark task-delete" onclick="event.stopPropagation(); this.parentElement.remove(); UI.checkEmpty('${id}'); Core.saveLayout()"></i>`;
+                    i.onclick = (e) => { if(e.target.classList.contains('task-delete')) return; i.classList.add('done'); setTimeout(()=>{ i.remove(); check(); Core.saveLayout(); },800); };
+                    list.prepend(i); check();
+                };
+                const input = document.getElementById(`in-${id}`);
+                if(input) input.onkeypress = (e) => { if(e.key==='Enter'&&e.target.value.trim()){ add(e.target.value,false); e.target.value=''; Core.saveLayout(); } };
+                if(data) data.forEach(d => { if(!d.d) add(d.t, false); }); check();
+                UI.checkEmpty = check;
+            },
+            showToast: (msg) => {
+                const el = document.getElementById('action-toast'); el.innerText = msg; el.style.display = 'block'; el.style.animation = 'none'; el.offsetHeight; 
+                el.style.animation = 'popUpFade 2s ease forwards'; setTimeout(() => { el.style.display = 'none'; }, 2000);
+            }
+        };
 
-        const Templates = {
-            get: (type, id, data) => {
-                const validTypes = ['clock', 'links', 'countdown', 'calc', 'weather', 'todo', 'notes', 'calendar', 'music', 'timer', 'battery', 'password', 'clipboard', 'youtube', 'pandora', 'media'];
-                if(!validTypes.includes(type)) return `<div>Error</div>`;
+        const Templates = {
+            get: (type, id, data) => {
+                const validTypes = ['clock', 'links', 'countdown', 'calc', 'weather', 'todo', 'notes', 'calendar', 'music', 'timer', 'battery', 'password', 'clipboard', 'youtube', 'pandora', 'media'];
+                if(!validTypes.includes(type)) return `<div>Error</div>`;
 
-                const wrap = (l, c) => `<div class="remove-widget">✕</div><div class="w-header" data-type="${type}"><span class="w-label">${l}</span></div><div class="w-content" data-type="${type}">${c}</div>`;
-                const getLink = (idx, s) => { const h = s&&s.url; const icon = h ? `<img src="https://www.google.com/s2/favicons?domain=${s.domain}&sz=64" class="deck-favicon"><span class="deck-label">${s.name}</span>` : `<i class="fa-solid fa-plus deck-icon deck-unset"></i>`; return `<div class="deck-btn" onclick="Utils.linkAction('${id}', ${idx}, this)" oncontextmenu="event.preventDefault(); Utils.editLink('${id}', ${idx}, this)" data-link='${h?JSON.stringify(s):""}'>${icon}</div>`; };
+                const wrap = (l, c) => `<div class="remove-widget">✕</div><div class="w-header" data-type="${type}"><span class="w-label">${l}</span></div><div class="w-content" data-type="${type}">${c}</div>`;
+                const getLink = (idx, s) => { const h = s&&s.url; const icon = h ? `<img src="https://www.google.com/s2/favicons?domain=${s.domain}&sz=64" class="deck-favicon"><span class="deck-label">${s.name}</span>` : `<i class="fa-solid fa-plus deck-icon deck-unset"></i>`; return `<div class="deck-btn" onclick="Utils.linkAction('${id}', ${idx}, this)" oncontextmenu="event.preventDefault(); Utils.editLink('${id}', ${idx}, this)" data-link='${h?JSON.stringify(s):""}'>${icon}</div>`; };
 
-                const map = {
-                    media: wrap('Universal Media', `<div class="media-widget">
-                        <div class="media-btn-group">
-                            <button class="media-btn" onclick="GlobalMedia.send('prev')"><i class="fa-solid fa-backward"></i></button>
-                            <button class="media-btn media-play" onclick="GlobalMedia.send('playpause')"><i class="fa-solid fa-play"></i></button>
-                            <button class="media-btn" onclick="GlobalMedia.send('next')"><i class="fa-solid fa-forward"></i></button>
-                        </div>
+                const map = {
+                    media: wrap('Universal Media', `<div class="media-widget">
+                        <div class="media-btn-group">
+                            <button class="media-btn" onclick="GlobalMedia.send('prev')"><i class="fa-solid fa-backward"></i></button>
+                            <button class="media-btn media-play" onclick="GlobalMedia.send('playpause')"><i class="fa-solid fa-play"></i></button>
+                            <button class="media-btn" onclick="GlobalMedia.send('next')"><i class="fa-solid fa-forward"></i></button>
+                        </div>
                         <div style="font-size:10px; color:var(--text-sec); margin-top:8px">Controls active browser media</div>
-                    </div>`),
-                    pandora: `<div class="remove-widget">✕</div>
-                        <div class="pan-container" id="pan-${id}" onclick="Utils.setPandora('${id}')">
-                           <div class="pan-time" id="pan-time-${id}">SET</div>
-                           <div class="pan-label" id="pan-state-${id}">Click to Start</div>
-                        </div>`,
-                    clock: `<div class="remove-widget">✕</div><div class="clock-container"><div class="time-big">00:00</div><div class="date-sub">Loading...</div></div>`,
-                    links: wrap('Quick Links', `<div class="deck-grid">${getLink(0,data?.[0])}${getLink(1,data?.[1])}${getLink(2,data?.[2])}</div>`),
-                    countdown: `<div class="remove-widget">✕</div><div class="count-container" id="count-wrap-${id}" onclick="Utils.setCountdown('${id}')" data-target='${data?JSON.stringify(data):""}'><div class="count-days" id="cd-val-${id}">${data?'--':'+'}</div><div class="count-label" id="cd-lbl-${id}">${data?'Loading...':'Set Date'}</div><div class="count-progress"><div class="count-fill" id="cd-bar-${id}"></div></div></div>`,
-                    calc: wrap('Scientific', `<div id="hist-${id}" class="calc-hist"></div><div id="scr-${id}" class="calc-screen">0</div><div class="calc-grid-adv"><button class="calc-btn calc-sci" onclick="Utils.calc('${id}','sin')">sin</button><button class="calc-btn calc-sci" onclick="Utils.calc('${id}','cos')">cos</button><button class="calc-btn calc-sci" onclick="Utils.calc('${id}','tan')">tan</button><button class="calc-btn calc-orange" onclick="Utils.calc('${id}','AC')">AC</button><button class="calc-btn calc-orange" onclick="Utils.calc('${id}','DEL')">⌫</button><button class="calc-btn calc-sci" onclick="Utils.calc('${id}','ln')">ln</button><button class="calc-btn calc-sci" onclick="Utils.calc('${id}','log')">log</button><button class="calc-btn calc-sci" onclick="Utils.calc('${id}','(')">(</button><button class="calc-btn calc-sci" onclick="Utils.calc('${id}',')')">)</button><button class="calc-btn calc-orange" onclick="Utils.calc('${id}','÷')">÷</button><button class="calc-btn" onclick="Utils.calc('${id}','7')">7</button><button class="calc-btn" onclick="Utils.calc('${id}','8')">8</button><button class="calc-btn" onclick="Utils.calc('${id}','9')">9</button><button class="calc-btn calc-sci" onclick="Utils.calc('${id}','^')">^</button><button class="calc-btn calc-orange" onclick="Utils.calc('${id}','×')">×</button><button class="calc-btn" onclick="Utils.calc('${id}','4')">4</button><button class="calc-btn" onclick="Utils.calc('${id}','5')">5</button><button class="calc-btn" onclick="Utils.calc('${id}','6')">6</button><button class="calc-btn calc-sci" onclick="Utils.calc('${id}','√')">√</button><button class="calc-btn calc-orange" onclick="Utils.calc('${id}','-')">-</button><button class="calc-btn" onclick="Utils.calc('${id}','1')">1</button><button class="calc-btn" onclick="Utils.calc('${id}','2')">2</button><button class="calc-btn" onclick="Utils.calc('${id}','3')">3</button><button class="calc-btn calc-sci" onclick="Utils.calc('${id}','π')">π</button><button class="calc-btn calc-orange" onclick="Utils.calc('${id}','+')">+</button><button class="calc-btn calc-sci" onclick="Utils.calc('${id}','e')">e</button><button class="calc-btn" onclick="Utils.calc('${id}','0')">0</button><button class="calc-btn" onclick="Utils.calc('${id}','.')">.</button><button class="calc-btn calc-sci" onclick="Utils.calc('${id}','%')">%</button><button class="calc-btn calc-orange" onclick="Utils.calc('${id}','=')">=</button></div>`),
-                    weather: wrap('Weather', `<div style="display:flex;align-items:center;justify-content:center;gap:15px;height:100%"><i class="fa-solid fa-cloud-sun" style="font-size:32px;color:var(--text-main)"></i><div><div id="temp-${id}" class="weather-temp" style="font-size:28px;font-weight:400">--°</div><div style="font-size:11px;color:var(--text-sec)">Mostly Clear</div></div></div>`),
-                    todo: wrap('Reminders', `<div class="task-input-row"><input id="in-${id}" class="task-input" placeholder="Add task..."></div><div id="list-${id}" class="task-list"></div><div id="empty-${id}" class="task-empty">No tasks</div>`),
-                    notes: wrap('Notes', `<textarea id="nt-${id}" style="flex:1;resize:none;background:transparent;border:none;padding:0;font-family:inherit;font-size:14px;line-height:1.4" placeholder="Type here..." oninput="Core.saveLayout()"></textarea>`),
-                    calendar: `<div class="remove-widget">✕</div><div class="cal-wrapper"><div class="cal-header"><i class="fa-solid fa-chevron-left cal-nav" onclick="Utils.changeMonth('${id}', -1)"></i><span id="cal-title-${id}" class="cal-title" onclick="Utils.resetCalendar('${id}')">Month Year</span><i class="fa-solid fa-chevron-right cal-nav" onclick="Utils.changeMonth('${id}', 1)"></i></div><div class="cal-weekdays"><span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span></div><div id="cal-grid-${id}" class="cal-grid"></div></div>`,
-                    music: `<div class="remove-widget">✕</div><div class="music-wrapper" id="ms-${id}"><div class="music-settings ${localStorage.getItem('sp_token') ? '' : 'active'}" id="ov-${id}"><div class="music-msg">Connect Spotify Premium</div><button class="login-btn" onclick="Spotify.login()">Login</button></div><div class="music-art" id="ms-art-${id}"><i class="fa-solid fa-music music-art-icon"></i></div><div class="music-info"><div class="music-title" id="ms-title-${id}">Not Playing</div><div class="music-artist" id="ms-artist-${id}">Connect a device</div><div class="music-progress"><div class="music-fill" id="ms-fill-${id}"></div></div><div class="music-controls"><button class="ctrl-btn" onclick="Spotify.prev()"><i class="fa-solid fa-backward-step"></i></button><button class="ctrl-btn play-btn" onclick="Spotify.toggle()"><i class="fa-solid fa-play"></i></button><button class="ctrl-btn" onclick="Spotify.next()"><i class="fa-solid fa-forward-step"></i></button></div></div></div>`,
-                    timer: wrap('Event Timer', `<div class="timer-container" id="timer-wrap-${id}" onclick="Utils.setTimer('${id}')"><div id="timer-val-${id}" class="timer-big">--:--</div><div id="timer-lbl-${id}" class="timer-label">Click to Set</div><div class="timer-bar"><div id="timer-bar-${id}" class="timer-fill"></div></div></div>`),
-                    battery: wrap('Battery', `<div class="batt-container"><div class="batt-icon-shell"><div class="batt-fill" id="batt-fill-${id}"></div></div><div><div id="batt-val-${id}" class="batt-text">--%</div><div id="batt-st-${id}" class="batt-state">Reading...</div></div></div>`),
-                    password: wrap('Passwords', `<div id="pass-${id}" class="pass-display" onclick="Utils.copyPass('${id}')">CLICK GEN</div><div class="pass-controls"><span id="lbl-${id}" style="font-size:11px;color:var(--text-sec);width:60px">Length: 16</span><input type="range" id="rng-${id}" min="8" max="32" value="16" style="flex:1" oninput="Utils.genPass('${id}')"><button class="btn" onclick="Utils.genPass('${id}')">Gen</button></div>`),
-                    clipboard: wrap('Clipboard', `<button class="btn btn-primary" style="width:100%; justify-content:center" onclick="Utils.saveClip('${id}')"><i class="fa-solid fa-paste"></i> Save Recent</button><div id="clip-${id}" class="clip-list"></div>`),
-                    youtube: `<div class="remove-widget">✕</div><div class="yt-container"><div id="yt-setup-${id}" class="yt-setup"><i class="fa-brands fa-youtube" style="font-size:40px;color:#FF0000;margin-bottom:10px"></i><input id="yt-input-${id}" class="yt-input" placeholder="Paste YouTube Link..." onkeypress="if(event.key==='Enter') Utils.loadYT('${id}')"><button class="btn" onclick="Utils.loadYT('${id}')">Load</button></div><iframe id="yt-frame-${id}" class="yt-frame" style="display:none" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe><div id="yt-controls-${id}" class="yt-controls" style="display:none"><button class="btn btn-danger" onclick="Utils.resetYT('${id}')"><i class="fa-solid fa-xmark"></i></button></div></div>`,
-                };
-                return map[type] || `<div>Error</div>`;
-            }
-        };
+                    </div>`),
+                    pandora: `<div class="remove-widget">✕</div>
+                        <div class="pan-container" id="pan-${id}" onclick="Utils.setPandora('${id}')">
+                           <div class="pan-time" id="pan-time-${id}">SET</div>
+                           <div class="pan-label" id="pan-state-${id}">Click to Start</div>
+                        </div>`,
+                    clock: `<div class="remove-widget">✕</div><div class="clock-container"><div class="time-big">00:00</div><div class="date-sub">Loading...</div></div>`,
+                    links: wrap('Quick Links', `<div class="deck-grid">${getLink(0,data?.[0])}${getLink(1,data?.[1])}${getLink(2,data?.[2])}</div>`),
+                    countdown: `<div class="remove-widget">✕</div><div class="count-container" id="count-wrap-${id}" onclick="Utils.setCountdown('${id}')" data-target='${data?JSON.stringify(data):""}'><div class="count-days" id="cd-val-${id}">${data?'--':'+'}</div><div class="count-label" id="cd-lbl-${id}">${data?'Loading...':'Set Date'}</div><div class="count-progress"><div class="count-fill" id="cd-bar-${id}"></div></div></div>`,
+                    calc: wrap('Scientific', `<div id="hist-${id}" class="calc-hist"></div><div id="scr-${id}" class="calc-screen">0</div><div class="calc-grid-adv"><button class="calc-btn calc-sci" onclick="Utils.calc('${id}','sin')">sin</button><button class="calc-btn calc-sci" onclick="Utils.calc('${id}','cos')">cos</button><button class="calc-btn calc-sci" onclick="Utils.calc('${id}','tan')">tan</button><button class="calc-btn calc-orange" onclick="Utils.calc('${id}','AC')">AC</button><button class="calc-btn calc-orange" onclick="Utils.calc('${id}','DEL')">⌫</button><button class="calc-btn calc-sci" onclick="Utils.calc('${id}','ln')">ln</button><button class="calc-btn calc-sci" onclick="Utils.calc('${id}','log')">log</button><button class="calc-btn calc-sci" onclick="Utils.calc('${id}','(')">(</button><button class="calc-btn calc-sci" onclick="Utils.calc('${id}',')')">)</button><button class="calc-btn calc-orange" onclick="Utils.calc('${id}','÷')">÷</button><button class="calc-btn" onclick="Utils.calc('${id}','7')">7</button><button class="calc-btn" onclick="Utils.calc('${id}','8')">8</button><button class="calc-btn" onclick="Utils.calc('${id}','9')">9</button><button class="calc-btn calc-sci" onclick="Utils.calc('${id}','^')">^</button><button class="calc-btn calc-orange" onclick="Utils.calc('${id}','×')">×</button><button class="calc-btn" onclick="Utils.calc('${id}','4')">4</button><button class="calc-btn" onclick="Utils.calc('${id}','5')">5</button><button class="calc-btn" onclick="Utils.calc('${id}','6')">6</button><button class="calc-btn calc-sci" onclick="Utils.calc('${id}','√')">√</button><button class="calc-btn calc-orange" onclick="Utils.calc('${id}','-')">-</button><button class="calc-btn" onclick="Utils.calc('${id}','1')">1</button><button class="calc-btn" onclick="Utils.calc('${id}','2')">2</button><button class="calc-btn" onclick="Utils.calc('${id}','3')">3</button><button class="calc-btn calc-sci" onclick="Utils.calc('${id}','π')">π</button><button class="calc-btn calc-orange" onclick="Utils.calc('${id}','+')">+</button><button class="calc-btn calc-sci" onclick="Utils.calc('${id}','e')">e</button><button class="calc-btn" onclick="Utils.calc('${id}','0')">0</button><button class="calc-btn" onclick="Utils.calc('${id}','.')">.</button><button class="calc-btn calc-sci" onclick="Utils.calc('${id}','%')">%</button><button class="calc-btn calc-orange" onclick="Utils.calc('${id}','=')">=</button></div>`),
+                    weather: wrap('Weather', `<div style="display:flex;align-items:center;justify-content:center;gap:15px;height:100%"><i class="fa-solid fa-cloud-sun" style="font-size:32px;color:var(--text-main)"></i><div><div id="temp-${id}" class="weather-temp" style="font-size:28px;font-weight:400">--°</div><div style="font-size:11px;color:var(--text-sec)">Mostly Clear</div></div></div>`),
+                    todo: wrap('Reminders', `<div class="task-input-row"><input id="in-${id}" class="task-input" placeholder="Add task..."></div><div id="list-${id}" class="task-list"></div><div id="empty-${id}" class="task-empty">No tasks</div>`),
+                    notes: wrap('Notes', `<textarea id="nt-${id}" style="flex:1;resize:none;background:transparent;border:none;padding:0;font-family:inherit;font-size:14px;line-height:1.4" placeholder="Type here..." oninput="Core.saveLayout()"></textarea>`),
+                    calendar: `<div class="remove-widget">✕</div><div class="cal-wrapper"><div class="cal-header"><i class="fa-solid fa-chevron-left cal-nav" onclick="Utils.changeMonth('${id}', -1)"></i><span id="cal-title-${id}" class="cal-title" onclick="Utils.resetCalendar('${id}')">Month Year</span><i class="fa-solid fa-chevron-right cal-nav" onclick="Utils.changeMonth('${id}', 1)"></i></div><div class="cal-weekdays"><span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span></div><div id="cal-grid-${id}" class="cal-grid"></div></div>`,
+                    music: `<div class="remove-widget">✕</div><div class="music-wrapper" id="ms-${id}"><div class="music-settings ${localStorage.getItem('sp_token') ? '' : 'active'}" id="ov-${id}"><div class="music-msg">Connect Spotify Premium</div><button class="login-btn" onclick="Spotify.login()">Login</button></div><div class="music-art" id="ms-art-${id}"><i class="fa-solid fa-music music-art-icon"></i></div><div class="music-info"><div class="music-title" id="ms-title-${id}">Not Playing</div><div class="music-artist" id="ms-artist-${id}">Connect a device</div><div class="music-progress"><div class="music-fill" id="ms-fill-${id}"></div></div><div class="music-controls"><button class="ctrl-btn" onclick="Spotify.prev()"><i class="fa-solid fa-backward-step"></i></button><button class="ctrl-btn play-btn" onclick="Spotify.toggle()"><i class="fa-solid fa-play"></i></button><button class="ctrl-btn" onclick="Spotify.next()"><i class="fa-solid fa-forward-step"></i></button></div></div></div>`,
+                    timer: wrap('Event Timer', `<div class="timer-container" id="timer-wrap-${id}" onclick="Utils.setTimer('${id}')"><div id="timer-val-${id}" class="timer-big">--:--</div><div id="timer-lbl-${id}" class="timer-label">Click to Set</div><div class="timer-bar"><div id="timer-bar-${id}" class="timer-fill"></div></div></div>`),
+                    battery: wrap('Battery', `<div class="batt-container"><div class="batt-icon-shell"><div class="batt-fill" id="batt-fill-${id}"></div></div><div><div id="batt-val-${id}" class="batt-text">--%</div><div id="batt-st-${id}" class="batt-state">Reading...</div></div></div>`),
+                    password: wrap('Passwords', `<div id="pass-${id}" class="pass-display" onclick="Utils.copyPass('${id}')">CLICK GEN</div><div class="pass-controls"><span id="lbl-${id}" style="font-size:11px;color:var(--text-sec);width:60px">Length: 16</span><input type="range" id="rng-${id}" min="8" max="32" value="16" style="flex:1" oninput="Utils.genPass('${id}')"><button class="btn" onclick="Utils.genPass('${id}')">Gen</button></div>`),
+                    clipboard: wrap('Clipboard', `<button class="btn btn-primary" style="width:100%; justify-content:center" onclick="Utils.saveClip('${id}')"><i class="fa-solid fa-paste"></i> Save Recent</button><div id="clip-${id}" class="clip-list"></div>`),
+                    youtube: `<div class="remove-widget">✕</div><div class="yt-container"><div id="yt-setup-${id}" class="yt-setup"><i class="fa-brands fa-youtube" style="font-size:40px;color:#FF0000;margin-bottom:10px"></i><input id="yt-input-${id}" class="yt-input" placeholder="Paste YouTube Link..." onkeypress="if(event.key==='Enter') Utils.loadYT('${id}')"><button class="btn" onclick="Utils.loadYT('${id}')">Load</button></div><iframe id="yt-frame-${id}" class="yt-frame" style="display:none" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe><div id="yt-controls-${id}" class="yt-controls" style="display:none"><button class="btn btn-danger" onclick="Utils.resetYT('${id}')"><i class="fa-solid fa-xmark"></i></button></div></div>`,
+                };
+                return map[type] || `<div>Error</div>`;
+            }
+        };
 
-        window.onload = Core.init;
-    </script>
+        window.onload = Core.init;
+    </script>
 </body>
 </html>
