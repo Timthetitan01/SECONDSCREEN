@@ -372,31 +372,26 @@
     <script>
 
         const GlobalMedia = {
-            // Sends standard Media Session commands to the browser session
             send: (action) => {
-                // Creates a hidden element to ensure we have media session context
                 let hiddenMedia = document.getElementById('hidden-media-trigger');
                 if (!hiddenMedia) {
                     hiddenMedia = document.createElement('audio');
                     hiddenMedia.id = 'hidden-media-trigger';
-                    hiddenMedia.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA='; // Silent snippet
+                    hiddenMedia.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
                     document.body.appendChild(hiddenMedia);
                 }
 
                 if ('mediaSession' in navigator) {
                     switch(action) {
                         case 'playpause':
-                            // Simulates system play/pause key
                             document.dispatchEvent(new KeyboardEvent('keydown', {'keyCode': 179}));
                             UI.showToast("Toggle Play/Pause");
                             break;
                         case 'next':
-                            // Simulates system next key
                             document.dispatchEvent(new KeyboardEvent('keydown', {'keyCode': 176}));
                             UI.showToast("Next Track");
                             break;
                         case 'prev':
-                            // Simulates system previous key
                             document.dispatchEvent(new KeyboardEvent('keydown', {'keyCode': 177}));
                             UI.showToast("Previous Track");
                             break;
@@ -999,16 +994,35 @@ const Utils = {
                 const container = document.getElementById('popup-inputs');
                 container.innerHTML = ''; container.style.display = 'flex';
                 const resIds = [];
+                
                 inputsConfig.forEach((cfg, idx) => {
                     const wrap = document.createElement('div');
                     const label = document.createElement('div'); label.className = 'popup-input-label'; label.innerText = cfg.label;
                     const inp = document.createElement('input'); inp.value = cfg.value || ''; inp.placeholder = cfg.placeholder || ''; inp.type = cfg.type || 'text'; inp.id = `pop-in-${idx}`;
-                    inp.onkeydown = (e) => { if(e.key === 'Enter') { document.getElementById('popup-confirm-btn').click(); } };
+                    
+                    // NEW: Enter key navigation logic
+                    inp.onkeydown = (e) => { 
+                        if(e.key === 'Enter') { 
+                            const nextInp = document.getElementById(`pop-in-${idx + 1}`);
+                            if(nextInp) {
+                                nextInp.focus();
+                            } else {
+                                document.getElementById('popup-confirm-btn').click(); 
+                            }
+                        } 
+                    };
+
                     resIds.push(inp.id); wrap.appendChild(label); wrap.appendChild(inp); container.appendChild(wrap);
                 });
+                
                 const btn = document.getElementById('popup-confirm-btn');
                 btn.innerText = "Save"; btn.className = "popup-btn p-confirm";
-                btn.onclick = () => { const values = resIds.map(id => document.getElementById(id).value); if(values.some(v => !v)) { UI.showToast("Please fill all fields"); return; } onSave(values); UI.closePopup(); };
+                btn.onclick = () => { 
+                    const values = resIds.map(id => document.getElementById(id).value); 
+                    if(values.some(v => !v)) { UI.showToast("Please fill all fields"); return; } 
+                    onSave(values); 
+                    UI.closePopup(); 
+                };
                 el.classList.add('show');
                 setTimeout(() => document.getElementById(resIds[0]).focus(), 100);
             },
@@ -1044,9 +1058,9 @@ const Utils = {
                 const map = {
                     media: wrap('Universal Media', `<div class="media-widget">
                         <div class="media-btn-group">
-                            <button class="media-btn" onclick="GlobalMedia.send('prev')"><i class="fa-solid fa-backward"></i></button>
-                            <button class="media-btn media-play" onclick="GlobalMedia.send('playpause')"><i class="fa-solid fa-play"></i></button>
-                            <button class="media-btn" onclick="GlobalMedia.send('next')"><i class="fa-solid fa-forward"></i></button>
+                            <button class="media-btn" onclick="Spotify.prev()"><i class="fa-solid fa-backward"></i></button>
+                            <button class="media-btn media-play" onclick="Spotify.toggle()"><i class="fa-solid fa-play"></i></button>
+                            <button class="media-btn" onclick="Spotify.next()"><i class="fa-solid fa-forward"></i></button>
                         </div>
                         <div style="font-size:10px; color:var(--text-sec); margin-top:8px">Controls active browser media</div>
                     </div>`),
