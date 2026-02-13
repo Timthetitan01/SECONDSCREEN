@@ -92,10 +92,10 @@
 
         input, textarea { 
             user-select: text !important; -webkit-user-select: text !important; cursor: text; 
-            background: var(--ios-input); border: 1px solid transparent; border-radius: 8px; 
+            background: var(--ios-input); border: none; border-radius: 8px; 
             padding: 8px 12px; color: white; width: 100%; font-size: 13px; outline: none;
         }
-        input:focus, textarea:focus { background: rgba(118, 118, 128, 0.4); border-color: var(--ios-blue); }
+        input:focus, textarea:focus { background: rgba(118, 118, 128, 0.4); }
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
 
         nav { height: 50px; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; background: rgba(20, 20, 20, 0.4); backdrop-filter: blur(20px); border-bottom: 1px solid var(--ios-card-border); z-index: 1000; }
@@ -1037,8 +1037,9 @@ const Utils = {
                             e.preventDefault(); 
                             e.stopPropagation();
                             
-                            // Simple Logic: if this is Input 0 (URL), go to Input 1 (Title).
-                            // If this is Input 1 (Title), click Save.
+                            // Specific Logic:
+                            // If currently on input 0 (URL), jump to input 1 (Title)
+                            // If on input 1 (Title), click Save
                             if(idx === 0 && inputsConfig.length > 1) {
                                 document.getElementById(`pop-in-1`).focus();
                             } else {
