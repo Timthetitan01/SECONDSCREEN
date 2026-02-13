@@ -377,7 +377,7 @@
                 if (!hiddenMedia) {
                     hiddenMedia = document.createElement('audio');
                     hiddenMedia.id = 'hidden-media-trigger';
-                    hiddenMedia.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
+                    hiddenMedia.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA='; 
                     document.body.appendChild(hiddenMedia);
                 }
 
@@ -548,7 +548,6 @@ const firebaseConfig = {
                     });
 
                     player.addListener('ready', ({ device_id }) => {
-                        console.log('Ready with Device ID', device_id);
                         Spotify.deviceId = device_id;
                         document.querySelectorAll('.music-settings').forEach(el => {
                             el.classList.add('active');
@@ -1000,14 +999,14 @@ const Utils = {
                     const label = document.createElement('div'); label.className = 'popup-input-label'; label.innerText = cfg.label;
                     const inp = document.createElement('input'); inp.value = cfg.value || ''; inp.placeholder = cfg.placeholder || ''; inp.type = cfg.type || 'text'; inp.id = `pop-in-${idx}`;
                     
-                    // NEW: Enter key navigation logic
+                    // Enter key focus logic
                     inp.onkeydown = (e) => { 
                         if(e.key === 'Enter') { 
                             const nextInp = document.getElementById(`pop-in-${idx + 1}`);
                             if(nextInp) {
-                                nextInp.focus();
+                                nextInp.focus(); // Jumps from URL to Title box
                             } else {
-                                document.getElementById('popup-confirm-btn').click(); 
+                                document.getElementById('popup-confirm-btn').click(); // Saves from Title box
                             }
                         } 
                     };
@@ -1058,9 +1057,9 @@ const Utils = {
                 const map = {
                     media: wrap('Universal Media', `<div class="media-widget">
                         <div class="media-btn-group">
-                            <button class="media-btn" onclick="Spotify.prev()"><i class="fa-solid fa-backward"></i></button>
-                            <button class="media-btn media-play" onclick="Spotify.toggle()"><i class="fa-solid fa-play"></i></button>
-                            <button class="media-btn" onclick="Spotify.next()"><i class="fa-solid fa-forward"></i></button>
+                            <button class="media-btn" onclick="GlobalMedia.send('prev')"><i class="fa-solid fa-backward"></i></button>
+                            <button class="media-btn media-play" onclick="GlobalMedia.send('playpause')"><i class="fa-solid fa-play"></i></button>
+                            <button class="media-btn" onclick="GlobalMedia.send('next')"><i class="fa-solid fa-forward"></i></button>
                         </div>
                         <div style="font-size:10px; color:var(--text-sec); margin-top:8px">Controls active browser media</div>
                     </div>`),
