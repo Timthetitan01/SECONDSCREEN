@@ -875,7 +875,7 @@ const Utils = {
 
             const createWidget = (type, w, h, x, y, savedData) => {
                 if (!isPro && grid.getGridItems().length >= 2 && !isDashboardLoaded) { }
-                if (isDashboardLoaded && !isPro && grid.getGridItems().length >= 2) { alert("Free Tier Limit Reached (2 Widgets). Upgrade to Pro for unlimited access!"); UI.toggleAdd(false); return; }
+                if (isDashboardLoaded && !isPro && grid.getGridItems().length >= 4) { alert("Free Tier Limit Reached (4 Widgets). Upgrade to Pro for unlimited access!"); UI.toggleAdd(false); return; }
 
                 const id = 'w-' + Math.random().toString(36).substr(2, 9);
                 const content = Templates.get(type, id, savedData);
