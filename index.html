@@ -377,22 +377,20 @@
                 if (!hiddenMedia) {
                     hiddenMedia = document.createElement('audio');
                     hiddenMedia.id = 'hidden-media-trigger';
-                    hiddenMedia.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA='; 
+                    hiddenMedia.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
                     document.body.appendChild(hiddenMedia);
                 }
 
                 if ('mediaSession' in navigator) {
                     switch(action) {
                         case 'playpause':
-                            document.dispatchEvent(new KeyboardEvent('keydown', {'keyCode': 179}));
+                            document.dispatchEvent(new KeyboardEvent('keydown', {'key': 'MediaPlayPause'}));
                             UI.showToast("Toggle Play/Pause");
                             break;
                         case 'next':
-                            document.dispatchEvent(new KeyboardEvent('keydown', {'keyCode': 176}));
                             UI.showToast("Next Track");
                             break;
                         case 'prev':
-                            document.dispatchEvent(new KeyboardEvent('keydown', {'keyCode': 177}));
                             UI.showToast("Previous Track");
                             break;
                     }
@@ -999,14 +997,14 @@ const Utils = {
                     const label = document.createElement('div'); label.className = 'popup-input-label'; label.innerText = cfg.label;
                     const inp = document.createElement('input'); inp.value = cfg.value || ''; inp.placeholder = cfg.placeholder || ''; inp.type = cfg.type || 'text'; inp.id = `pop-in-${idx}`;
                     
-                    // Enter key focus logic
                     inp.onkeydown = (e) => { 
                         if(e.key === 'Enter') { 
+                            e.preventDefault(); // STOP popup from closing instantly
                             const nextInp = document.getElementById(`pop-in-${idx + 1}`);
                             if(nextInp) {
-                                nextInp.focus(); // Jumps from URL to Title box
+                                nextInp.focus(); // Jump to next box
                             } else {
-                                document.getElementById('popup-confirm-btn').click(); // Saves from Title box
+                                document.getElementById('popup-confirm-btn').click(); // Submit
                             }
                         } 
                     };
