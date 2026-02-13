@@ -411,11 +411,6 @@ const firebaseConfig = {
                         setTimeout(() => document.getElementById('login-overlay').style.display = 'none', 500);
                         Core.loadData();
                         
-                        const params = new URLSearchParams(window.location.search);
-                        if (params.get('payment_success') === 'true') {
-                            Cloud.activatePro();
-                        }
-
                         if(localStorage.getItem('sp_token')) setTimeout(Spotify.initPlayer, 1000);
 
                     } else {
@@ -443,22 +438,12 @@ const firebaseConfig = {
                 }
             },
             upgrade: () => {
-                window.location.href = STRIPE_LINK;
-            },
-            activatePro: () => {
-                if(Cloud.user && db) {
-                    db.collection('users').doc(Cloud.user.uid).set({ 
-                        isPro: true 
-                    }, { merge: true }).then(() => {
-                        isPro = true;
-                        UI.showToast("Pro Activated! ⚡");
-                        document.getElementById('upgrade-btn').style.display = 'none';
-                        if(!document.querySelector('.pro-badge')) {
-                            document.getElementById('user-info').innerHTML += '<span class="pro-badge">PRO ⚡</span>';
-                        }
-                        window.history.replaceState({}, document.title, window.location.pathname);
-                    });
-                }
+                if(!Cloud.user) return alert("Please sign in first");
+                // Secure Upgrade Flow:
+                // We append the user's ID as 'client_reference_id'.
+                // Stripe will send this ID to our Cloudflare Worker via Webhook after payment.
+                const finalLink = `${STRIPE_LINK}?client_reference_id=${Cloud.user.uid}`;
+                window.location.href = finalLink;
             }
         };
 
@@ -838,7 +823,6 @@ const Utils = {
             const init = () => {
                 const params = new URLSearchParams(window.location.search);
                 const code = params.get('code');
-                const paymentSuccess = params.get('payment_success');
 
                 if (code) {
                     localStorage.setItem('spotify_auth_code_relay', code);
@@ -875,7 +859,7 @@ const Utils = {
 
             const createWidget = (type, w, h, x, y, savedData) => {
                 if (!isPro && grid.getGridItems().length >= 2 && !isDashboardLoaded) { }
-                if (isDashboardLoaded && !isPro && grid.getGridItems().length >= 4) { alert("Free Tier Limit Reached (4 Widgets). Upgrade to Pro for unlimited access!"); UI.toggleAdd(false); return; }
+                if (isDashboardLoaded && !isPro && grid.getGridItems().length >= 4) { alert("Free Tier Limit Reached (4 Widgets). Upgrade to Pro for unlimited access! Just $3"); UI.toggleAdd(false); return; }
 
                 const id = 'w-' + Math.random().toString(36).substr(2, 9);
                 const content = Templates.get(type, id, savedData);
