@@ -92,10 +92,10 @@
 
         input, textarea { 
             user-select: text !important; -webkit-user-select: text !important; cursor: text; 
-            background: var(--ios-input); border: 1px solid transparent; border-radius: 8px; 
+            background: var(--ios-input); border: none; border-radius: 8px; 
             padding: 8px 12px; color: white; width: 100%; font-size: 13px; outline: none;
         }
-        input:focus, textarea:focus { background: rgba(118, 118, 128, 0.4); border-color: var(--ios-blue); }
+        input:focus, textarea:focus { background: rgba(118, 118, 128, 0.4); }
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
 
         nav { height: 50px; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; background: rgba(20, 20, 20, 0.4); backdrop-filter: blur(20px); border-bottom: 1px solid var(--ios-card-border); z-index: 1000; }
@@ -644,7 +644,7 @@ const Utils = {
                 }
                 if (s.innerText === '0' && !['.', '+', '-', '×', '÷', '^', ')', '%'].includes(val)) { s.innerText = ''; expr = ''; }
                 let displayVal = val; let mathVal = val;
-                if(val === 'sin') { displayVal='sin('; mathVal='sin('; } else if(val === 'cos') { displayVal='cos('; mathVal='sin('; } else if(val === 'tan') { displayVal='tan('; mathVal='tan('; } else if(val === 'log') { displayVal='log('; mathVal='log('; } else if(val === 'ln') { displayVal='ln('; mathVal='ln('; } else if(val === '√') { displayVal='√('; mathVal='√('; }
+                if(val === 'sin') { displayVal='sin('; mathVal='sin('; } else if(val === 'cos') { displayVal='cos('; mathVal='cos('; } else if(val === 'tan') { displayVal='tan('; mathVal='tan('; } else if(val === 'log') { displayVal='log('; mathVal='log('; } else if(val === 'ln') { displayVal='ln('; mathVal='ln('; } else if(val === '√') { displayVal='√('; mathVal='√('; }
                 s.innerText += displayVal; s.setAttribute('data-expr', expr + mathVal);
             },
             linkAction: (id, index, btn) => {
@@ -1003,17 +1003,15 @@ const Utils = {
                     inp.type = cfg.type || 'text'; 
                     inp.id = `pop-in-${idx}`;
                     
-                    // Fixed Navigation Logic
-                    inp.addEventListener('keydown', (e) => {
-                        if (e.key === 'Enter') {
-                            e.preventDefault();
+                    inp.onkeydown = (e) => { 
+                        if(e.key === 'Enter') { 
+                            e.preventDefault(); 
                             e.stopPropagation();
                             
-                            const currentIdNum = parseInt(e.target.id.split('-')[2]);
-                            const nextInput = document.getElementById(`pop-in-${currentIdNum + 1}`);
+                            const nextInp = document.getElementById(`pop-in-${idx + 1}`);
                             
-                            if (nextInput) {
-                                nextInput.focus(); // Jump to Title tab
+                            if (nextInp) {
+                                nextInp.focus(); // Jump to next box
                             } else {
                                 // Final check: trigger save logic
                                 const allValues = resIds.map(id => document.getElementById(id).value);
@@ -1024,8 +1022,8 @@ const Utils = {
                                     UI.closePopup();
                                 }
                             }
-                        }
-                    });
+                        } 
+                    };
 
                     resIds.push(inp.id); 
                     wrap.appendChild(label); 
