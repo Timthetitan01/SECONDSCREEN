@@ -92,10 +92,10 @@
 
         input, textarea { 
             user-select: text !important; -webkit-user-select: text !important; cursor: text; 
-            background: var(--ios-input); border: none; border-radius: 8px; 
+            background: var(--ios-input); border: 1px solid transparent; border-radius: 8px; 
             padding: 8px 12px; color: white; width: 100%; font-size: 13px; outline: none;
         }
-        input:focus, textarea:focus { background: rgba(118, 118, 128, 0.4); }
+        input:focus, textarea:focus { background: rgba(118, 118, 128, 0.4); border-color: var(--ios-blue); }
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
 
         nav { height: 50px; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; background: rgba(20, 20, 20, 0.4); backdrop-filter: blur(20px); border-bottom: 1px solid var(--ios-card-border); z-index: 1000; }
@@ -293,6 +293,14 @@
         .media-btn { background: rgba(255,255,255,0.1); border: none; color: white; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; transition: 0.2s; }
         .media-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.2); }
         .media-play { background: var(--ios-blue); width: 54px; height: 54px; font-size: 22px; }
+
+        .draw-wrapper { height: 100%; display: flex; flex-direction: column; gap: 8px; }
+        .draw-canvas { flex: 1; background: #fff; border-radius: 12px; width: 100%; touch-action: none; cursor: crosshair; }
+        .draw-controls { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.1); padding: 6px; border-radius: 99px; }
+        .draw-colors { display: flex; gap: 6px; }
+        .d-color { width: 20px; height: 20px; border-radius: 50%; cursor: pointer; border: 2px solid rgba(255,255,255,0.2); transition: transform 0.1s; }
+        .d-color:active { transform: scale(0.9); }
+        .draw-btn { background: none; border: none; color: var(--ios-red); cursor: pointer; font-size: 14px; padding: 0 8px; }
     </style>
 </head>
 <body>
@@ -330,6 +338,7 @@
             <button class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;" onclick="UI.toggleAdd(false)">Close</button>
         </div>
         <div class="modal-grid">
+            <div class="add-card" onclick="Core.createWidget('draw', 3, 3)"><i class="fa-solid fa-pen-nib add-icon" style="color:var(--ios-green)"></i><span class="add-label">Whiteboard</span></div>
             <div class="add-card" onclick="Core.createWidget('media', 4, 2)"><i class="fa-solid fa-play add-icon" style="color:var(--ios-blue)"></i><span class="add-label">Universal Media</span></div>
             <div class="add-card" onclick="Core.createWidget('pandora', 3, 2)"><i class="fa-solid fa-hourglass-end add-icon" style="color:#ffd700"></i><span class="add-label">Minutes</span></div>
             <div class="add-card" onclick="Core.createWidget('music', 4, 2)"><i class="fa-brands fa-spotify add-icon" style="color:#1DB954"></i><span class="add-label">Spotify</span></div>
@@ -810,6 +819,24 @@ const Utils = {
                 let val = raw; if(unit === 'F') val = (raw * 9/5) + 32; el.innerText = Math.round(val) + '°' + unit;
             },
 
+            initCanvas: (id, savedUrl) => {
+                const cvs = document.getElementById(`canv-${id}`);
+                const ctx = cvs.getContext('2d');
+                const rect = cvs.getBoundingClientRect();
+                cvs.width = rect.width; cvs.height = rect.height;
+                ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.lineWidth = 3; ctx.strokeStyle = '#000000';
+                if (savedUrl) { const img = new Image(); img.onload = () => ctx.drawImage(img, 0, 0); img.src = savedUrl; }
+                let isDrawing = false, lastX = 0, lastY = 0;
+                const getPos = (e) => { const r = cvs.getBoundingClientRect(); if(e.touches) { return { x: e.touches[0].clientX - r.left, y: e.touches[0].clientY - r.top }; } return { x: e.clientX - r.left, y: e.clientY - r.top }; };
+                const start = (e) => { isDrawing = true; const pos = getPos(e); lastX = pos.x; lastY = pos.y; e.preventDefault(); };
+                const move = (e) => { if (!isDrawing) return; const pos = getPos(e); ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(pos.x, pos.y); ctx.stroke(); lastX = pos.x; lastY = pos.y; e.preventDefault(); };
+                const stop = () => { if(isDrawing) { isDrawing = false; Core.saveLayout(); } };
+                cvs.addEventListener('mousedown', start); cvs.addEventListener('mousemove', move); cvs.addEventListener('mouseup', stop); cvs.addEventListener('mouseout', stop);
+                cvs.addEventListener('touchstart', start); cvs.addEventListener('touchmove', move); cvs.addEventListener('touchend', stop);
+            },
+            setPen: (id, color) => { const ctx = document.getElementById(`canv-${id}`).getContext('2d'); ctx.strokeStyle = color; if(color === '#ffffff') ctx.lineWidth = 15; else ctx.lineWidth = 3; },
+            clearCanvas: (id) => { const cvs = document.getElementById(`canv-${id}`); const ctx = cvs.getContext('2d'); ctx.clearRect(0, 0, cvs.width, cvs.height); Core.saveLayout(); },
+
             setPandora: (id) => {
                 if(activePandoras[id]) return; 
                 UI.askInput("Open Pandora's Box", [{label: "Minutes", value: "1", type: "number", placeholder: "1"}], (values) => {
@@ -912,6 +939,7 @@ const Utils = {
                 if (type === 'countdown' && savedData) Utils.updateCountdown(id);
                 if (type === 'calendar') Utils.initCalendar(id);
                 if (type === 'battery') Utils.updateBattery(id);
+                if (type === 'draw') setTimeout(() => Utils.initCanvas(id, savedData), 100);
                 if (type === 'clipboard' && savedData) {
                     savedData.forEach(t => { const i = document.createElement('div'); i.className='clip-item'; i.innerText=t; i.onclick = () => { navigator.clipboard.writeText(t); UI.showToast("Copied to Clipboard!"); }; document.getElementById(`clip-${id}`).appendChild(i); });
                 }
@@ -943,6 +971,7 @@ const Utils = {
                     if (type === 'clipboard') { data = Array.from(el.querySelectorAll('.clip-item')).map(i => i.innerText); }
                     if (type === 'timer') { const wrap = el.querySelector('.timer-container'); data = { end: wrap.getAttribute('data-end'), label: el.querySelector('.timer-label').innerText }; }
                     if (type === 'music') { data = {}; }
+                    if (type === 'draw') { const cvs = document.getElementById(`canv-${el.id.replace('w-', '')}`); if(cvs) data = cvs.toDataURL(); }
                     if (type === 'weather') { const unit = el.getAttribute('data-unit') || 'F'; data = { unit }; }
                     if (type === 'youtube') { const frame = el.querySelector('iframe'); if(frame && frame.src && frame.style.display !== 'none') { data = { url: frame.src }; } }
                     return { x: el.gridstackNode.x, y: el.gridstackNode.y, w: el.gridstackNode.w, h: el.gridstackNode.h, type, data };
@@ -1008,19 +1037,12 @@ const Utils = {
                             e.preventDefault(); 
                             e.stopPropagation();
                             
-                            const nextInp = document.getElementById(`pop-in-${idx + 1}`);
-                            
-                            if (nextInp) {
-                                nextInp.focus(); // Jump to next box
+                            // Simple Logic: if this is Input 0 (URL), go to Input 1 (Title).
+                            // If this is Input 1 (Title), click Save.
+                            if(idx === 0 && inputsConfig.length > 1) {
+                                document.getElementById(`pop-in-1`).focus();
                             } else {
-                                // Final check: trigger save logic
-                                const allValues = resIds.map(id => document.getElementById(id).value);
-                                if(allValues.some(v => !v)) {
-                                    UI.showToast("Please fill all fields");
-                                } else {
-                                    onSave(allValues);
-                                    UI.closePopup();
-                                }
+                                document.getElementById('popup-confirm-btn').click();
                             }
                         } 
                     };
@@ -1065,13 +1087,27 @@ const Utils = {
 
         const Templates = {
             get: (type, id, data) => {
-                const validTypes = ['clock', 'links', 'countdown', 'calc', 'weather', 'todo', 'notes', 'calendar', 'music', 'timer', 'battery', 'password', 'clipboard', 'youtube', 'pandora', 'media'];
+                const validTypes = ['clock', 'links', 'countdown', 'calc', 'weather', 'todo', 'notes', 'calendar', 'music', 'timer', 'battery', 'password', 'clipboard', 'youtube', 'pandora', 'media', 'draw'];
                 if(!validTypes.includes(type)) return `<div>Error</div>`;
 
                 const wrap = (l, c) => `<div class="remove-widget">✕</div><div class="w-header" data-type="${type}"><span class="w-label">${l}</span></div><div class="w-content" data-type="${type}">${c}</div>`;
                 const getLink = (idx, s) => { const h = s&&s.url; const icon = h ? `<img src="https://www.google.com/s2/favicons?domain=${s.domain}&sz=64" class="deck-favicon"><span class="deck-label">${s.name}</span>` : `<i class="fa-solid fa-plus deck-icon deck-unset"></i>`; return `<div class="deck-btn" onclick="Utils.linkAction('${id}', ${idx}, this)" oncontextmenu="event.preventDefault(); Utils.editLink('${id}', ${idx}, this)" data-link='${h?JSON.stringify(s):""}'>${icon}</div>`; };
 
                 const map = {
+                    draw: wrap('Whiteboard', `<div class="draw-wrapper">
+                        <canvas id="canv-${id}" class="draw-canvas"></canvas>
+                        <div class="draw-controls">
+                            <div class="draw-colors">
+                                <div class="d-color" style="background:#000" onclick="Utils.setPen('${id}', '#000')"></div>
+                                <div class="d-color" style="background:#FF3B30" onclick="Utils.setPen('${id}', '#FF3B30')"></div>
+                                <div class="d-color" style="background:#007AFF" onclick="Utils.setPen('${id}', '#007AFF')"></div>
+                                <div class="d-color" style="background:#34C759" onclick="Utils.setPen('${id}', '#34C759')"></div>
+                                <div class="d-color" style="background:#FFD60A" onclick="Utils.setPen('${id}', '#FFD60A')"></div>
+                                <div class="d-color" style="background:#FFFFFF" onclick="Utils.setPen('${id}', '#FFFFFF')"></div>
+                            </div>
+                            <button class="draw-btn" onclick="Utils.clearCanvas('${id}')"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>`),
                     media: wrap('Universal Media', `<div class="media-widget">
                         <div class="media-btn-group">
                             <button class="media-btn" onclick="GlobalMedia.send('prev')"><i class="fa-solid fa-backward"></i></button>
