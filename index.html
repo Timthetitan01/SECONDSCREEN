@@ -110,10 +110,31 @@
         .btn-gold { background: linear-gradient(135deg, #FFD700, #FFA500); color: black; border: 1px solid #FFD700; font-weight: 700; text-shadow: 0 1px 0 rgba(255,255,255,0.4); }
         .btn-gold:hover { transform: scale(1.05); box-shadow: 0 0 15px rgba(255, 215, 0, 0.4); }
 
-        .user-pill { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.3); padding: 4px 12px 4px 4px; border-radius: 99px; }
-        .user-avatar { width: 24px; height: 24px; border-radius: 50%; background: #555; }
-        .user-name { font-size: 12px; font-weight: 500; }
-        .pro-badge { background: #0A84FF; color: black; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 800; margin-left: 5px; }
+        /* User Menu Styles */
+        .user-menu-container { position: relative; margin-left: 10px; }
+        .header-pfp { width: 32px; height: 32px; border-radius: 50%; cursor: pointer; border: 2px solid rgba(255,255,255,0.1); transition: 0.2s; object-fit: cover; background: #333; }
+        .header-pfp:hover { border-color: var(--ios-blue); transform: scale(1.05); }
+        .user-dropdown { 
+            position: absolute; top: 45px; right: 0; 
+            background: rgba(28, 28, 30, 0.95); backdrop-filter: blur(20px);
+            border: 1px solid var(--ios-card-border); border-radius: 14px; 
+            width: 180px; display: none; flex-direction: column; 
+            overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.5); 
+            z-index: 5000; animation: fadeDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .user-dropdown.show { display: flex; }
+        .dropdown-item { 
+            padding: 10px 16px; font-size: 13px; color: white; cursor: pointer; 
+            display: flex; align-items: center; gap: 10px; transition: background 0.2s; font-weight: 500;
+        }
+        .dropdown-item:hover { background: rgba(255,255,255,0.1); }
+        .dropdown-item.danger { color: var(--ios-red); }
+        .dropdown-item.danger:hover { background: rgba(255, 69, 58, 0.15); }
+        .dropdown-divider { height: 1px; background: rgba(255,255,255,0.1); margin: 4px 0; }
+        
+        @keyframes fadeDown { from { opacity: 0; transform: translateY(-10px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        
+        .pro-badge { background: #0A84FF; color: black; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 800; margin-right: 5px; }
 
         #dashboard-wrapper { flex: 1; padding: 20px; overflow-y: auto; overflow-x: hidden; cursor: default; }
         .grid-stack-item { overflow: visible !important; }
@@ -297,8 +318,8 @@
         /* Modified Draw Widget CSS */
         .draw-wrapper { height: 100%; display: flex; flex-direction: row; gap: 8px; }
         .draw-canvas { flex: 1; background: #fff; border-radius: 12px; height: 100%; touch-action: none; cursor: crosshair; }
-        .draw-controls { display: flex; flex-direction: column; justify-content: flex-start; align-items: center; background: rgba(255,255,255,0.1); padding: 8px 6px; border-radius: 12px; gap: 8px; width: 44px; flex-shrink: 0; }
-        .draw-colors { display: flex; flex-direction: column; gap: 8px; }
+        .draw-controls { display: flex; flex-direction: column; justify-content: flex-start; align-items: center; background: rgba(255,255,255,0.1); padding: 8px 6px; border-radius: 12px; gap: 10px; width: 44px; flex-shrink: 0; }
+        .draw-colors { display: flex; flex-direction: column; gap: 8px; flex: 1; overflow-y: auto; }
         .draw-tools { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1); width: 100%; align-items: center; }
         .d-color { width: 24px; height: 24px; border-radius: 50%; cursor: pointer; border: 2px solid rgba(255,255,255,0.2); transition: transform 0.1s; }
         .d-color:active { transform: scale(0.9); }
@@ -348,7 +369,7 @@
             <button class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;" onclick="UI.toggleAdd(false)">Close</button>
         </div>
         <div class="modal-grid">
-            <div class="add-card" onclick="Core.createWidget('draw', 4, 6)"><i class="fa-solid fa-pen-nib add-icon" style="color:var(--ios-green)"></i><span class="add-label">Whiteboard</span></div>
+            <div class="add-card" onclick="Core.createWidget('draw', 3, 3)"><i class="fa-solid fa-pen-nib add-icon" style="color:var(--ios-green)"></i><span class="add-label">Whiteboard</span></div>
             <div class="add-card" onclick="Core.createWidget('media', 4, 2)"><i class="fa-solid fa-play add-icon" style="color:var(--ios-blue)"></i><span class="add-label">Universal Media</span></div>
             <div class="add-card" onclick="Core.createWidget('pandora', 3, 2)"><i class="fa-solid fa-hourglass-end add-icon" style="color:#ffd700"></i><span class="add-label">Minutes</span></div>
             <div class="add-card" onclick="Core.createWidget('music', 4, 2)"><i class="fa-brands fa-spotify add-icon" style="color:#1DB954"></i><span class="add-label">Spotify</span></div>
@@ -376,9 +397,15 @@
             </button>
             <button class="btn btn-primary" onclick="UI.toggleAdd(true)"><i class="fa-solid fa-plus"></i> Add</button>
             <button id="edit-btn" class="btn" onclick="Core.toggleEdit()"><i class="fa-solid fa-pen-nib"></i> Edit</button>
-            <button class="btn" onclick="Cloud.logout()"><i class="fa-solid fa-power-off"></i></button>
-            <div id="user-info"></div>
-            <div class="user-pill"></div>
+            <div class="user-menu-container">
+                <img id="header-pfp" class="header-pfp" src="https://lh3.googleusercontent.com/a/default-user=s96-c" onclick="UI.toggleUserDropdown()">
+                <div id="user-dropdown" class="user-dropdown">
+                    <div class="dropdown-item" onclick="UI.showToast('Account Page (Coming Soon)')"><i class="fa-solid fa-user"></i> Account</div>
+                    <div class="dropdown-item" onclick="UI.showToast('Settings (Coming Soon)')"><i class="fa-solid fa-gear"></i> Settings</div>
+                    <div class="dropdown-divider"></div>
+                    <div class="dropdown-item danger" onclick="Cloud.logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</div>
+                </div>
+            </div>
         </div>
     </nav>
 
@@ -464,6 +491,11 @@ const firebaseConfig = {
                         Cloud.user = user;
                         document.getElementById('login-overlay').style.opacity = '0';
                         setTimeout(() => document.getElementById('login-overlay').style.display = 'none', 500);
+                        
+                        if(user.photoURL) {
+                            document.getElementById('header-pfp').src = user.photoURL;
+                        }
+
                         Core.loadData();
                         
                         if(localStorage.getItem('sp_token')) setTimeout(Spotify.initPlayer, 1000);
@@ -1263,7 +1295,6 @@ const Utils = {
                                 <div class="d-color" style="background:#007AFF" onclick="Utils.setPen('${id}', '#007AFF')"></div>
                                 <div class="d-color" style="background:#34C759" onclick="Utils.setPen('${id}', '#34C759')"></div>
                                 <div class="d-color" style="background:#FFD60A" onclick="Utils.setPen('${id}', '#FFD60A')"></div>
-                                <div class="d-color" style="background:#FFFFFF" onclick="Utils.setPen('${id}', '#FFFFFF')"></div>
                             </div>
                             <div class="draw-tools">
                                 <button class="tool-btn active" onclick="Utils.setTool('${id}', 'pen')" title="Pen"><i class="fa-solid fa-pen"></i></button>
