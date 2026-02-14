@@ -297,8 +297,9 @@
         /* Modified Draw Widget CSS */
         .draw-wrapper { height: 100%; display: flex; flex-direction: row; gap: 8px; }
         .draw-canvas { flex: 1; background: #fff; border-radius: 12px; height: 100%; touch-action: none; cursor: crosshair; }
-        .draw-controls { display: flex; flex-direction: column; justify-content: flex-start; align-items: center; background: rgba(255,255,255,0.1); padding: 8px 6px; border-radius: 12px; gap: 10px; width: 44px; flex-shrink: 0; }
-        .draw-colors { display: flex; flex-direction: column; gap: 8px; flex: 1; overflow-y: auto; }
+        .draw-controls { display: flex; flex-direction: column; justify-content: flex-start; align-items: center; background: rgba(255,255,255,0.1); padding: 8px 6px; border-radius: 12px; gap: 8px; width: 44px; flex-shrink: 0; }
+        .draw-colors { display: flex; flex-direction: column; gap: 8px; }
+        .draw-tools { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1); width: 100%; align-items: center; }
         .d-color { width: 24px; height: 24px; border-radius: 50%; cursor: pointer; border: 2px solid rgba(255,255,255,0.2); transition: transform 0.1s; }
         .d-color:active { transform: scale(0.9); }
         
@@ -837,13 +838,18 @@ const Utils = {
 
                 const resizeCanvas = () => {
                     const temp = ctx.getImageData(0,0, cvs.width, cvs.height);
-                    // Use clientWidth/Height directly. Since sidebar is fixed width, this just works.
                     cvs.width = cvs.clientWidth;
                     cvs.height = cvs.clientHeight;
                     ctx.putImageData(temp, 0, 0);
                     ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-                    ctx.strokeStyle = cvs.dataset.currentColor || '#000000';
-                    ctx.lineWidth = parseInt(cvs.dataset.currentWidth) || 3;
+                    // Re-apply correct state for tool
+                    if (cvs.dataset.currentTool === 'eraser') {
+                         ctx.strokeStyle = '#ffffff';
+                         ctx.lineWidth = 20;
+                    } else {
+                         ctx.strokeStyle = cvs.dataset.currentColor || '#000000';
+                         ctx.lineWidth = parseInt(cvs.dataset.currentWidth) || 3;
+                    }
                 };
 
                 const rect = cvs.getBoundingClientRect();
@@ -867,7 +873,6 @@ const Utils = {
                     if (cvs.dataset.currentTool === 'bucket') {
                         // Bucket Logic
                         const hex = cvs.dataset.currentColor || '#000000';
-                        // Convert hex to rgb
                         const r = parseInt(hex.slice(1, 3), 16);
                         const g = parseInt(hex.slice(3, 5), 16);
                         const b = parseInt(hex.slice(5, 7), 16);
@@ -896,9 +901,12 @@ const Utils = {
                 cvs.addEventListener('mousedown', start); cvs.addEventListener('mousemove', move); cvs.addEventListener('mouseup', stop); cvs.addEventListener('mouseout', stop);
                 cvs.addEventListener('touchstart', start); cvs.addEventListener('touchmove', move); cvs.addEventListener('touchend', stop);
                 
-                cvs.dataset.currentColor = '#000000';
-                cvs.dataset.currentWidth = '3';
-                cvs.dataset.currentTool = 'pen';
+                // Defaults
+                if(!cvs.dataset.currentTool) {
+                    cvs.dataset.currentColor = '#000000';
+                    cvs.dataset.currentWidth = '3';
+                    cvs.dataset.currentTool = 'pen';
+                }
             },
 
             floodFill: (ctx, startX, startY, fillColor) => {
@@ -951,18 +959,29 @@ const Utils = {
                 const cvs = document.getElementById(`canv-${id}`);
                 const ctx = cvs.getContext('2d'); 
                 
+                // If user clicks a color, switch to Pen mode automatically
+                Utils.setTool(id, 'pen');
+
                 ctx.strokeStyle = color; 
-                let width = 3;
-                if(color === '#ffffff') width = 20; // Eraser size
+                ctx.lineWidth = 3;
                 
-                ctx.lineWidth = width;
                 cvs.dataset.currentColor = color;
-                cvs.dataset.currentWidth = width;
+                cvs.dataset.currentWidth = 3;
             },
 
             setTool: (id, tool) => {
                 const cvs = document.getElementById(`canv-${id}`);
+                const ctx = cvs.getContext('2d');
                 cvs.dataset.currentTool = tool;
+                
+                // Handle context changes based on tool
+                if (tool === 'eraser') {
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 20;
+                } else if (tool === 'pen') {
+                    ctx.strokeStyle = cvs.dataset.currentColor || '#000000';
+                    ctx.lineWidth = 3;
+                }
                 
                 // Visual update for buttons
                 const parent = cvs.parentElement;
@@ -1238,10 +1257,6 @@ const Utils = {
                 const map = {
                     draw: wrap('Whiteboard', `<div class="draw-wrapper">
                         <div class="draw-controls">
-                            <div style="display:flex;gap:4px;margin-bottom:8px">
-                                <button class="tool-btn active" onclick="Utils.setTool('${id}', 'pen')" title="Pen"><i class="fa-solid fa-pen"></i></button>
-                                <button class="tool-btn" onclick="Utils.setTool('${id}', 'bucket')" title="Bucket Fill"><i class="fa-solid fa-fill-drip"></i></button>
-                            </div>
                             <div class="draw-colors">
                                 <div class="d-color" style="background:#000" onclick="Utils.setPen('${id}', '#000')"></div>
                                 <div class="d-color" style="background:#FF3B30" onclick="Utils.setPen('${id}', '#FF3B30')"></div>
@@ -1249,6 +1264,11 @@ const Utils = {
                                 <div class="d-color" style="background:#34C759" onclick="Utils.setPen('${id}', '#34C759')"></div>
                                 <div class="d-color" style="background:#FFD60A" onclick="Utils.setPen('${id}', '#FFD60A')"></div>
                                 <div class="d-color" style="background:#FFFFFF" onclick="Utils.setPen('${id}', '#FFFFFF')"></div>
+                            </div>
+                            <div class="draw-tools">
+                                <button class="tool-btn active" onclick="Utils.setTool('${id}', 'pen')" title="Pen"><i class="fa-solid fa-pen"></i></button>
+                                <button class="tool-btn" onclick="Utils.setTool('${id}', 'bucket')" title="Bucket Fill"><i class="fa-solid fa-fill-drip"></i></button>
+                                <button class="tool-btn" onclick="Utils.setTool('${id}', 'eraser')" title="Eraser"><i class="fa-solid fa-eraser"></i></button>
                             </div>
                             <button class="draw-btn" onclick="Utils.clearCanvas('${id}')"><i class="fa-solid fa-trash"></i></button>
                         </div>
