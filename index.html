@@ -294,13 +294,14 @@
         .media-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.2); }
         .media-play { background: var(--ios-blue); width: 54px; height: 54px; font-size: 22px; }
 
-        .draw-wrapper { height: 100%; display: flex; flex-direction: column; gap: 8px; }
-        .draw-canvas { flex: 1; background: #fff; border-radius: 12px; width: 100%; touch-action: none; cursor: crosshair; }
-        .draw-controls { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.1); padding: 6px; border-radius: 99px; }
-        .draw-colors { display: flex; gap: 6px; }
-        .d-color { width: 20px; height: 20px; border-radius: 50%; cursor: pointer; border: 2px solid rgba(255,255,255,0.2); transition: transform 0.1s; }
+        /* Modified Draw Widget CSS */
+        .draw-wrapper { height: 100%; display: flex; flex-direction: row; gap: 8px; }
+        .draw-canvas { flex: 1; background: #fff; border-radius: 12px; height: 100%; touch-action: none; cursor: crosshair; }
+        .draw-controls { display: flex; flex-direction: column; justify-content: flex-start; align-items: center; background: rgba(255,255,255,0.1); padding: 8px 6px; border-radius: 12px; gap: 10px; width: 44px; flex-shrink: 0; }
+        .draw-colors { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+        .d-color { width: 24px; height: 24px; border-radius: 50%; cursor: pointer; border: 2px solid rgba(255,255,255,0.2); transition: transform 0.1s; }
         .d-color:active { transform: scale(0.9); }
-        .draw-btn { background: none; border: none; color: var(--ios-red); cursor: pointer; font-size: 14px; padding: 0 8px; }
+        .draw-btn { background: none; border: none; color: var(--ios-red); cursor: pointer; font-size: 16px; margin-top: auto; padding-bottom: 4px; }
     </style>
 </head>
 <body>
@@ -822,54 +823,41 @@ const Utils = {
             initCanvas: (id, savedUrl) => {
                 const cvs = document.getElementById(`canv-${id}`);
                 const ctx = cvs.getContext('2d');
-                let currentPenColor = '#000000';
-                let currentLineWidth = 3;
+                let currentPenColor = cvs.dataset.currentColor || '#000000';
+                let currentLineWidth = parseInt(cvs.dataset.currentWidth) || 3;
 
-                // Function to handle resize without stretching
+                // Improved Resize Logic: Uses client dimensions, preserves content
                 const resizeCanvas = () => {
-                    // 1. Save current drawing
                     const temp = ctx.getImageData(0,0, cvs.width, cvs.height);
-                    // 2. Get new parent dimensions
-                    const rect = cvs.parentElement.getBoundingClientRect();
-                    // 3. Update canvas resolution
-                    cvs.width = rect.width;
-                    cvs.height = rect.height;
-                    // 4. Restore drawing (at 0,0)
+                    cvs.width = cvs.clientWidth;
+                    cvs.height = cvs.clientHeight;
                     ctx.putImageData(temp, 0, 0);
-                    // 5. Restore Context Settings (they get wiped on resize)
+                    
+                    // Restore drawing context state
                     ctx.lineCap = 'round'; 
                     ctx.lineJoin = 'round';
-                    ctx.strokeStyle = currentPenColor;
-                    ctx.lineWidth = currentLineWidth;
+                    ctx.strokeStyle = cvs.dataset.currentColor || '#000000';
+                    ctx.lineWidth = parseInt(cvs.dataset.currentWidth) || 3;
                 };
 
-                // Initial setup
                 const rect = cvs.getBoundingClientRect();
                 cvs.width = rect.width; 
                 cvs.height = rect.height;
                 
-                // Set initial context state
                 ctx.lineCap = 'round'; ctx.lineJoin = 'round'; 
-                ctx.lineWidth = 3; ctx.strokeStyle = '#000000';
+                ctx.lineWidth = currentLineWidth; ctx.strokeStyle = currentPenColor;
 
-                // Load saved image
                 if (savedUrl) { 
                     const img = new Image(); 
                     img.onload = () => ctx.drawImage(img, 0, 0); 
                     img.src = savedUrl; 
                 }
 
-                // Add Resize Observer
-                new ResizeObserver(() => {
-                    // Defer slightly to let layout settle
-                    requestAnimationFrame(resizeCanvas);
-                }).observe(cvs.parentElement);
+                new ResizeObserver(() => requestAnimationFrame(resizeCanvas)).observe(cvs);
 
-                // Drawing Logic
                 let isDrawing = false, lastX = 0, lastY = 0;
                 
                 const getPos = (e) => { 
-                    // Always get fresh rect for accurate cursor position
                     const r = cvs.getBoundingClientRect(); 
                     if(e.touches) { 
                         return { x: e.touches[0].clientX - r.left, y: e.touches[0].clientY - r.top }; 
@@ -904,35 +892,25 @@ const Utils = {
 
                 cvs.addEventListener('mousedown', start); cvs.addEventListener('mousemove', move); cvs.addEventListener('mouseup', stop); cvs.addEventListener('mouseout', stop);
                 cvs.addEventListener('touchstart', start); cvs.addEventListener('touchmove', move); cvs.addEventListener('touchend', stop);
-
-                // Hook for changing pen color from HTML buttons
-                cvs.dataset.widgetId = id; // Tag element for finding it later
                 
-                // Override setPen logic to update local variables
-                const oldSetPen = Utils.setPen; 
-                // We don't overwrite the main Utils.setPen every time, 
-                // instead we rely on the attributes of the canvas context being managed by resizeCanvas
-                // We add a listener to the parent widget for color clicks? 
-                // No, existing structure calls Utils.setPen directly. 
-                // Let's modify Utils.setPen below.
+                // Initialize default state attributes
+                cvs.dataset.currentColor = '#000000';
+                cvs.dataset.currentWidth = '3';
             },
 
             setPen: (id, color) => { 
                 const cvs = document.getElementById(`canv-${id}`);
                 const ctx = cvs.getContext('2d'); 
                 
-                // Update Context
                 ctx.strokeStyle = color; 
-                if(color === '#ffffff') ctx.lineWidth = 20; // Bigger eraser
-                else ctx.lineWidth = 3; 
-
-                // Hack: We need to update the closure variables inside initCanvas?
-                // Actually, since resizeCanvas reads FROM ctx.strokeStyle...
-                // Wait, getImageData/putImageData preserves pixel data, but RESIZING clears context state.
-                // So when resize happens, we need to know what the color WAS.
-                // We can store it on the canvas element itself.
+                let width = 3;
+                if(color === '#ffffff') width = 20;
+                
+                ctx.lineWidth = width;
+                
+                // Save state for resize restoration
                 cvs.dataset.currentColor = color;
-                cvs.dataset.currentWidth = (color === '#ffffff') ? 20 : 3;
+                cvs.dataset.currentWidth = width;
             },
 
             clearCanvas: (id) => { 
@@ -1201,7 +1179,6 @@ const Utils = {
 
                 const map = {
                     draw: wrap('Whiteboard', `<div class="draw-wrapper">
-                        <canvas id="canv-${id}" class="draw-canvas"></canvas>
                         <div class="draw-controls">
                             <div class="draw-colors">
                                 <div class="d-color" style="background:#000" onclick="Utils.setPen('${id}', '#000')"></div>
@@ -1213,6 +1190,7 @@ const Utils = {
                             </div>
                             <button class="draw-btn" onclick="Utils.clearCanvas('${id}')"><i class="fa-solid fa-trash"></i></button>
                         </div>
+                        <canvas id="canv-${id}" class="draw-canvas"></canvas>
                     </div>`),
                     media: wrap('Universal Media', `<div class="media-widget">
                         <div class="media-btn-group">
