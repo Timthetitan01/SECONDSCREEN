@@ -42,7 +42,6 @@
             color: var(--text-main); font-family: var(--font); height: 100vh; overflow: hidden; display: flex; flex-direction: column;
         }
 
-        /* --- UI COMPONENTS --- */
         #status-bar {
             position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
             background: rgba(0,0,0,0.8); color: white; padding: 8px 16px;
@@ -112,7 +111,6 @@
         .btn-gold { background: linear-gradient(135deg, #FFD700, #FFA500); color: black; border: 1px solid #FFD700; font-weight: 700; text-shadow: 0 1px 0 rgba(255,255,255,0.4); }
         .btn-gold:hover { transform: scale(1.05); box-shadow: 0 0 15px rgba(255, 215, 0, 0.4); }
 
-        /* USER MENU STYLES */
         .user-menu-container { position: relative; margin-left: 8px; }
         .user-avatar-btn { width: 32px; height: 32px; border-radius: 50%; background: #555; background-size: cover; background-position: center; border: 2px solid rgba(255,255,255,0.2); cursor: pointer; transition: 0.2s; position: relative; }
         .user-avatar-btn:hover { border-color: var(--ios-blue); }
@@ -145,22 +143,20 @@
         .w-label { font-size: 11px; font-weight: 600; color: var(--ios-blue); text-transform: uppercase; letter-spacing: 0.5px; }
         .w-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
 
-        /* --- WIDGET SPECIFIC STYLES --- */
-        
-        /* VAULT WIDGET CSS */
-        .vault-wrapper { height: 100%; position: relative; }
+        /* --- VAULT WIDGET CSS --- */
+        .vault-wrapper { height: 100%; position: relative; display: flex; flex-direction: column; }
         .vault-locked { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; }
-        .vault-unlocked { height: 100%; display: none; flex-direction: column; }
+        .vault-unlocked { height: 100%; display: none; flex-direction: column; min-height: 0; }
         .vault-unlocked.active { display: flex; }
-        .vault-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
-        .vault-item { background: rgba(255,255,255,0.08); padding: 10px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s; }
+        .vault-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; margin-top: 8px; min-height: 0; }
+        .vault-item { background: rgba(255,255,255,0.08); padding: 10px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s; flex-shrink: 0; }
         .vault-item:hover { background: rgba(255,255,255,0.12); transform: translateX(2px); }
         .vault-item:active { transform: scale(0.98); }
-        .v-meta { display: flex; flex-direction: column; gap: 2px; }
-        .v-title { font-size: 13px; font-weight: 600; color: white; }
+        .v-meta { display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
+        .v-title { font-size: 13px; font-weight: 600; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .v-pass { font-family: monospace; font-size: 11px; color: var(--text-sec); letter-spacing: 2px; }
-        .v-icon { color: var(--text-sec); font-size: 12px; }
-        .vault-add-row { display: flex; gap: 6px; margin-bottom: 4px; }
+        .v-icon { color: var(--text-sec); font-size: 12px; margin-left: 10px; }
+        .vault-add-row { display: flex; gap: 6px; margin-bottom: 4px; flex-shrink: 0; }
         .vault-add-row input { font-size: 12px; padding: 6px 10px; }
 
         /* Media Widget */
@@ -171,7 +167,6 @@
         .media-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.2); }
         .media-play { background: var(--ios-blue); width: 54px; height: 54px; font-size: 22px; }
 
-        /* Battery */
         .batt-container { display: flex; align-items: center; justify-content: center; height: 100%; gap: 15px; }
         .batt-icon-shell { width: 50px; height: 26px; border: 3px solid var(--text-sec); border-radius: 6px; padding: 2px; position: relative; }
         .batt-icon-shell::after { content:''; position: absolute; right: -6px; top: 6px; width: 3px; height: 8px; background: var(--text-sec); border-radius: 0 2px 2px 0; }
@@ -179,25 +174,21 @@
         .batt-text { font-size: 28px; font-weight: 600; }
         .batt-state { font-size: 11px; color: var(--text-sec); text-align: center; margin-top: 5px; }
 
-        /* Pass Gen */
         .pass-display { font-family: monospace; font-size: 16px; text-align: center; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-bottom: 10px; color: var(--ios-green); word-break: break-all; cursor: pointer; transition: background 0.2s; }
         .pass-display:hover { background: rgba(0,0,0,0.5); }
         .pass-controls { display: flex; gap: 10px; align-items: center; }
         
-        /* Clipboard */
         .clip-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
         .clip-item { background: rgba(255,255,255,0.05); padding: 8px; border-radius: 8px; font-size: 11px; cursor: pointer; color: var(--text-sec); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .clip-item:hover { background: rgba(255,255,255,0.1); color: white; }
         .clip-item:active { transform: scale(0.98); }
 
-        /* Timer */
         .timer-container { display: flex; flex-direction: column; justify-content: center; height: 100%; cursor: pointer; }
         .timer-big { font-size: 36px; font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; line-height: 1; margin-bottom: 5px; }
         .timer-label { font-size: 12px; color: var(--text-sec); text-align: center; }
         .timer-bar { height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 10px; overflow: hidden; }
         .timer-fill { height: 100%; background: var(--ios-orange); width: 100%; transition: width 1s linear; }
 
-        /* Todo */
         .task-input-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
         .task-list { flex: 1; overflow-y: auto; padding-right: 2px; }
         .task-item { display: flex; align-items: center; gap: 10px; padding: 10px 8px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: 0.3s; }
@@ -209,7 +200,6 @@
         .task-item:hover .task-delete { opacity: 1; }
         .task-empty { text-align: center; color: var(--text-sec); font-size: 12px; margin-top: 20px; font-style: italic; opacity: 0.7; }
 
-        /* Calc */
         .calc-screen { text-align:right; font-size:32px; font-weight:200; margin-bottom:2px; height:40px; white-space:nowrap; overflow:hidden; letter-spacing: -1px; }
         .calc-hist { text-align:right; font-size:12px; color: var(--text-sec); height: 16px; overflow:hidden; margin-bottom: 4px; }
         .calc-grid-adv { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; flex: 1; }
@@ -220,12 +210,10 @@
         .calc-sci:active { background: rgba(10, 132, 255, 0.45); }
         .calc-wide { grid-column: span 2; }
         
-        /* Clock */
         .clock-container { display: flex; flex-direction: column; justify-content: center; height: 100%; text-align: center; }
         .time-big { font-size: 48px; font-weight: 200; letter-spacing: -1px; line-height: 1; margin-bottom: 5px; white-space: nowrap; }
         .date-sub { font-size: 15px; color: var(--ios-red); font-weight: 500; text-transform: uppercase; }
 
-        /* Links */
         .deck-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; height: 100%; }
         .deck-btn { background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05)); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; position: relative; }
         .deck-btn:active { transform: scale(0.95); background: rgba(255,255,255,0.15); box-shadow: 0 0 15px var(--ios-blue); border-color: var(--ios-blue); }
@@ -234,14 +222,12 @@
         .deck-label { font-size: 10px; font-weight: 600; color: var(--text-sec); text-align: center; width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .deck-unset { color: var(--text-sec); opacity: 0.5; font-size: 20px; }
 
-        /* Countdown */
         .count-container { display: flex; flex-direction: column; justify-content: center; height: 100%; text-align: center; cursor: pointer; }
         .count-days { font-size: 42px; font-weight: 700; line-height: 1; margin-bottom: 4px; }
         .count-label { font-size: 12px; color: var(--text-sec); font-weight: 500; }
         .count-progress { height: 4px; background: rgba(255,255,255,0.1); margin-top: 10px; border-radius: 2px; width: 80%; margin-left: auto; margin-right: auto; overflow: hidden; }
         .count-fill { height: 100%; background: var(--ios-indigo); width: 0%; transition: width 1s ease; }
 
-        /* Calendar */
         .cal-wrapper { height: 100%; display: flex; flex-direction: column; }
         .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-weight: 600; font-size: 14px; }
         .cal-title { cursor: pointer; transition: color 0.2s; }
@@ -255,7 +241,6 @@
         .cal-day.today { background: var(--ios-red); color: white; font-weight: 700; }
         .cal-day.empty { pointer-events: none; }
         
-        /* YouTube */
         .yt-container { height: 100%; display: flex; flex-direction: column; position: relative; }
         .yt-setup { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
         .yt-frame { flex: 1; width: 100%; border: none; border-radius: 12px; }
@@ -263,14 +248,16 @@
         .yt-controls { position: absolute; top: 5px; right: 5px; z-index: 10; opacity: 0; transition: 0.2s; }
         .grid-stack-item:hover .yt-controls { opacity: 1; }
         
-        /* Pandora */
+        .sp-container { height: 100%; display: flex; flex-direction: column; position: relative; }
+        .sp-setup { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; }
+        .sp-frame { flex: 1; width: 100%; border: none; border-radius: 12px; }
+
         .pan-container { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
         .pan-time { font-size: 36px; font-weight: 700; font-variant-numeric: tabular-nums; }
         .pan-label { font-size: 12px; color: var(--text-sec); margin-top: 5px; }
         .pan-finished { color: var(--ios-green); animation: blink 1s infinite; }
         @keyframes blink { 50% { opacity: 0.5; } }
 
-        /* Modal Overlay */
         #popup-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px);
@@ -303,7 +290,6 @@
         .p-confirm { background: var(--ios-blue); color: white; }
         .p-danger { background: rgba(255, 69, 58, 0.2); color: var(--ios-red); }
 
-        /* Music */
         .music-wrapper { width: 100%; height: 100%; background: var(--music-bg); display: flex; align-items: center; padding: 20px; gap: 20px; position: relative; }
         .music-art { width: 90px; height: 90px; background-color: var(--music-art); border-radius: 16px; flex-shrink: 0; background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; }
         .music-art-icon { font-size: 32px; color: black; opacity: 0.3; }
@@ -338,7 +324,6 @@
 
         ::-webkit-scrollbar { width: 0px; } 
 
-        /* Draw Widget */
         .draw-wrapper { height: 100%; display: flex; flex-direction: row; gap: 8px; }
         .draw-canvas { flex: 1; background: #fff; border-radius: 12px; height: 100%; touch-action: none; cursor: crosshair; }
         .draw-controls { display: flex; flex-direction: column; justify-content: flex-start; align-items: center; background: rgba(255,255,255,0.1); padding: 8px 6px; border-radius: 12px; gap: 8px; width: 44px; flex-shrink: 0; }
@@ -438,7 +423,6 @@
         <div class="nav-actions">
             <button class="btn btn-primary" onclick="UI.toggleAdd(true)"><i class="fa-solid fa-plus"></i> Add</button>
             <button id="edit-btn" class="btn" onclick="Core.toggleEdit()"><i class="fa-solid fa-pen-nib"></i> Edit</button>
-            
             <div class="user-menu-container">
                 <div id="nav-user-avatar" class="user-avatar-btn" onclick="UI.toggleUserMenu()">
                     <div id="nav-pro-badge" class="pfp-pro-badge">PRO</div>
@@ -706,7 +690,6 @@
             openVault: (id) => {
                 document.getElementById(`v-lock-${id}`).style.display='none';
                 document.getElementById(`v-open-${id}`).classList.add('active');
-                // Add marker class to widget for auto-locking logic
                 document.getElementById(`w-${id}`).classList.add('vault-active');
             },
             lockAllVaults: () => {
@@ -728,6 +711,9 @@
                 div.className = 'vault-item';
                 div.innerHTML = `<div class="v-meta"><div class="v-title">${t}</div><div class="v-pass">••••••</div></div><i class="fa-solid fa-copy v-icon"></i>`;
                 div.onclick = () => { navigator.clipboard.writeText(p); UI.showToast("Password Copied"); };
+                
+                // Store actual data in dataset for saving (Simple Obfuscation)
+                div.dataset.meta = JSON.stringify({t, p});
                 list.prepend(div);
                 
                 // Clear Inputs
@@ -1209,7 +1195,7 @@
 
                 const el = grid.addWidget({ w, h, x, y, content, minW: 2, minH: 2 });
                 el.setAttribute('data-type', type); 
-                el.id = 'w-' + id; // Ensure ID is set for locking logic
+                el.id = 'w-' + id; 
                 const removeBtn = el.querySelector('.remove-widget');
                 if(removeBtn) { el.appendChild(removeBtn); removeBtn.onclick = () => { grid.removeWidget(el); Core.saveLayout(); }; }
                 
@@ -1224,13 +1210,13 @@
                     savedData.forEach(t => { const i = document.createElement('div'); i.className='clip-item'; i.innerText=t; i.onclick = () => { navigator.clipboard.writeText(t); UI.showToast("Copied to Clipboard!"); }; document.getElementById(`clip-${id}`).appendChild(i); });
                 }
                 if (type === 'vault' && savedData) {
-                    // Populate saved vault items
                     savedData.forEach(item => {
                         const list = document.getElementById(`v-list-${id}`);
                         const div = document.createElement('div');
                         div.className = 'vault-item';
                         div.innerHTML = `<div class="v-meta"><div class="v-title">${item.t}</div><div class="v-pass">••••••</div></div><i class="fa-solid fa-copy v-icon"></i>`;
                         div.onclick = () => { navigator.clipboard.writeText(item.p); UI.showToast("Password Copied"); };
+                        div.dataset.meta = JSON.stringify(item);
                         list.prepend(div);
                     });
                 }
@@ -1262,18 +1248,10 @@
                     if (type === 'clipboard') { data = Array.from(el.querySelectorAll('.clip-item')).map(i => i.innerText); }
                     if (type === 'timer') { const wrap = el.querySelector('.timer-container'); data = { end: wrap.getAttribute('data-end'), label: el.querySelector('.timer-label').innerText }; }
                     if (type === 'vault') {
-                        // Extract vault data from DOM since we aren't using a separate data model in this simple snippet
                         data = [];
                         el.querySelectorAll('.vault-item').forEach(vItem => {
-                            // Recovering data from DOM isn't ideal for security but fits this architecture.
-                            // However, since we masked it, we can't recover 'p' easily unless we stored it in dataset.
-                            // Let's modify creation to store it.
-                            // FOR THIS DEMO: We will assume state is transient or we need a dataset attribute.
-                            // FIX: Re-read dataset
+                            if(vItem.dataset.meta) data.push(JSON.parse(vItem.dataset.meta));
                         });
-                        // Actually, simplified approach: We won't save Vault data to cloud in this frontend-only demo to avoid sending cleartext passwords to Firestore without proper encryption logic.
-                        // Ideally, we'd encrypt before saving.
-                        // For the prompt's purpose, we return null or basic marker.
                     }
                     if (type === 'music') { data = {}; }
                     if (type === 'draw') { const cvs = document.getElementById(`canv-${el.id.replace('w-', '')}`); if(cvs) data = cvs.toDataURL(); }
