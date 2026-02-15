@@ -22,6 +22,7 @@
             --ios-card-border: rgba(255, 255, 255, 0.12);
             --ios-input: rgba(118, 118, 128, 0.24);
             --ios-blue: #0A84FF; --ios-green: #30D158; --ios-red: #FF453A;
+            --ios-orange: #FF9500; --ios-indigo: #5E5CE6; --ios-purple: #AF52DE; --ios-teal: #64D2FF; --ios-yellow: #FFD60A;
             --text-main: #FFFFFF; --text-sec: rgba(235, 235, 245, 0.6);
             --radius: 22px;
             --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
@@ -110,10 +111,19 @@
         .btn-gold { background: linear-gradient(135deg, #FFD700, #FFA500); color: black; border: 1px solid #FFD700; font-weight: 700; text-shadow: 0 1px 0 rgba(255,255,255,0.4); }
         .btn-gold:hover { transform: scale(1.05); box-shadow: 0 0 15px rgba(255, 215, 0, 0.4); }
 
-        .user-pill { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.3); padding: 4px 12px 4px 4px; border-radius: 99px; }
-        .user-avatar { width: 24px; height: 24px; border-radius: 50%; background: #555; }
-        .user-name { font-size: 12px; font-weight: 500; }
-        .pro-badge { background: #0A84FF; color: black; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 800; margin-left: 5px; }
+        .user-menu-container { position: relative; margin-left: 8px; }
+        .user-avatar-btn { width: 32px; height: 32px; border-radius: 50%; background: #555; background-size: cover; background-position: center; border: 2px solid rgba(255,255,255,0.2); cursor: pointer; transition: 0.2s; position: relative; }
+        .user-avatar-btn:hover { border-color: var(--ios-blue); }
+        .user-dropdown { position: absolute; top: 45px; right: 0; background: rgba(28, 28, 30, 0.95); backdrop-filter: blur(20px); border: 1px solid var(--ios-card-border); border-radius: 12px; padding: 6px; width: 160px; display: none; flex-direction: column; gap: 4px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transform-origin: top right; animation: scaleIn 0.2s cubic-bezier(0.19, 1, 0.22, 1); }
+        .user-dropdown.show { display: flex; }
+        @keyframes scaleIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .dropdown-item { padding: 8px 12px; font-size: 13px; color: white; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
+        .dropdown-item:hover { background: rgba(255,255,255,0.1); }
+        .dropdown-item.danger { color: var(--ios-red); }
+        .dropdown-item.danger:hover { background: rgba(255, 69, 58, 0.15); }
+        
+        .pfp-pro-badge { position: absolute; bottom: -4px; right: -4px; background: var(--ios-blue); color: white; font-size: 8px; font-weight: 800; padding: 2px 4px; border-radius: 4px; border: 2px solid #000; display: none; }
+        .pfp-pro-badge.visible { display: block; }
 
         #dashboard-wrapper { flex: 1; padding: 20px; overflow-y: auto; overflow-x: hidden; cursor: default; }
         .grid-stack-item { overflow: visible !important; }
@@ -133,6 +143,16 @@
         .w-label { font-size: 11px; font-weight: 600; color: var(--ios-blue); text-transform: uppercase; letter-spacing: 0.5px; }
         .w-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
 
+        /* --- CONVERTER WIDGET CSS --- */
+        .conv-wrapper { display: flex; flex-direction: column; gap: 10px; height: 100%; justify-content: center; }
+        .conv-row { display: flex; gap: 8px; align-items: center; }
+        .conv-input { flex: 1; background: rgba(255,255,255,0.1); border: 1px solid var(--ios-card-border); border-radius: 8px; padding: 8px; color: white; font-size: 16px; width: 100%; font-variant-numeric: tabular-nums; }
+        .conv-select { flex: 1; background: rgba(255,255,255,0.1); border: 1px solid var(--ios-card-border); border-radius: 8px; padding: 8px; color: white; font-size: 12px; outline: none; cursor: pointer; }
+        .conv-select option { background: #1c1c1e; color: white; }
+        .conv-select-small { flex: 1; background: rgba(255,255,255,0.1); border: 1px solid var(--ios-card-border); border-radius: 8px; padding: 6px; color: white; font-size: 11px; outline: none; cursor: pointer; }
+        .conv-arrow { color: var(--text-sec); font-size: 12px; }
+        .conv-result { font-size: 24px; font-weight: 700; color: var(--ios-green); text-align: center; margin-top: 5px; word-break: break-all; }
+
         /* --- VAULT WIDGET CSS --- */
         .vault-wrapper { height: 100%; position: relative; display: flex; flex-direction: column; }
         .vault-locked { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; }
@@ -148,6 +168,14 @@
         .v-icon { color: var(--text-sec); font-size: 12px; margin-left: 10px; }
         .vault-add-row { display: flex; gap: 6px; margin-bottom: 4px; flex-shrink: 0; }
         .vault-add-row input { font-size: 12px; padding: 6px 10px; }
+
+        /* Media Widget */
+        .media-widget { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 10px; text-align: center; }
+        .media-info-text { font-size: 13px; font-weight: 600; color: var(--ios-blue); max-width: 90%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; min-height: 16px; }
+        .media-btn-group { display: flex; gap: 20px; align-items: center; }
+        .media-btn { background: rgba(255,255,255,0.1); border: none; color: white; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; transition: 0.2s; }
+        .media-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.2); }
+        .media-play { background: var(--ios-blue); width: 54px; height: 54px; font-size: 22px; }
 
         .batt-container { display: flex; align-items: center; justify-content: center; height: 100%; gap: 15px; }
         .batt-icon-shell { width: 50px; height: 26px; border: 3px solid var(--text-sec); border-radius: 6px; padding: 2px; position: relative; }
@@ -291,8 +319,10 @@
 
         #modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); z-index: 1999; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
         #modal-overlay.show { opacity: 1; pointer-events: all; }
-        #add-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); width: 90%; max-width: 500px; max-height: 80vh; background: rgba(28, 28, 30, 0.95); border: 1px solid var(--ios-card-border); border-radius: 24px; padding: 24px; z-index: 2000; display: flex; flex-direction: column; opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1); box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
-        #add-modal.show { opacity: 1; pointer-events: all; transform: translate(-50%, -50%) scale(1); }
+        
+        #add-modal, #settings-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); width: 90%; max-width: 500px; max-height: 80vh; background: rgba(28, 28, 30, 0.95); border: 1px solid var(--ios-card-border); border-radius: 24px; padding: 24px; z-index: 2000; display: flex; flex-direction: column; opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1); box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
+        #add-modal.show, #settings-modal.show { opacity: 1; pointer-events: all; transform: translate(-50%, -50%) scale(1); }
+        
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .modal-title { font-size: 20px; font-weight: 700; color: white; }
         .modal-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 15px; overflow-y: auto; padding: 2px; }
@@ -304,13 +334,6 @@
 
         ::-webkit-scrollbar { width: 0px; } 
 
-        .media-widget { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 10px; text-align: center; }
-        .media-btn-group { display: flex; gap: 20px; align-items: center; }
-        .media-btn { background: rgba(255,255,255,0.1); border: none; color: white; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; transition: 0.2s; }
-        .media-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.2); }
-        .media-play { background: var(--ios-blue); width: 54px; height: 54px; font-size: 22px; }
-
-        /* Modified Draw Widget CSS */
         .draw-wrapper { height: 100%; display: flex; flex-direction: row; gap: 8px; }
         .draw-canvas { flex: 1; background: #fff; border-radius: 12px; height: 100%; touch-action: none; cursor: crosshair; }
         .draw-controls { display: flex; flex-direction: column; justify-content: flex-start; align-items: center; background: rgba(255,255,255,0.1); padding: 8px 6px; border-radius: 12px; gap: 8px; width: 44px; flex-shrink: 0; }
@@ -357,13 +380,15 @@
         </div>
     </div>
 
-    <div id="modal-overlay" onclick="UI.toggleAdd(false)"></div>
+    <div id="modal-overlay" onclick="UI.closeAllModals()"></div>
+    
     <div id="add-modal">
         <div class="modal-header">
             <div class="modal-title">Gallery</div>
             <button class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;" onclick="UI.toggleAdd(false)">Close</button>
         </div>
         <div class="modal-grid">
+            <div class="add-card" onclick="Core.createWidget('converter', 4, 3)"><i class="fa-solid fa-right-left add-icon" style="color:var(--ios-teal)"></i><span class="add-label">Converter</span></div>
             <div class="add-card" onclick="Core.createWidget('vault', 4, 4)"><i class="fa-solid fa-lock add-icon" style="color:var(--ios-red)"></i><span class="add-label">Password Vault</span></div>
             <div class="add-card" onclick="Core.createWidget('draw', 4, 6)"><i class="fa-solid fa-pen-nib add-icon" style="color:var(--ios-green)"></i><span class="add-label">Whiteboard</span></div>
             <div class="add-card" onclick="Core.createWidget('media', 4, 2)"><i class="fa-solid fa-play add-icon" style="color:var(--ios-blue)"></i><span class="add-label">Universal Media</span></div>
@@ -372,7 +397,7 @@
             <div class="add-card" onclick="Core.createWidget('youtube', 4, 3)"><i class="fa-brands fa-youtube add-icon" style="color:#FF0000"></i><span class="add-label">YouTube</span></div>
             <div class="add-card" onclick="Core.createWidget('timer', 3, 2)"><i class="fa-solid fa-hourglass-end add-icon" style="color:var(--ios-orange)"></i><span class="add-label">Timer</span></div>
             <div class="add-card" onclick="Core.createWidget('battery', 3, 2)"><i class="fa-solid fa-battery-half add-icon" style="color:var(--ios-green)"></i><span class="add-label">Battery</span></div>
-            <div class="add-card" onclick="Core.createWidget('password', 4, 3)"><i class="fa-solid fa-key add-icon" style="color:var(--ios-purple)"></i><span class="add-label">Passwords</span></div>
+            <div class="add-card" onclick="Core.createWidget('password', 4, 3)"><i class="fa-solid fa-key add-icon" style="color:var(--ios-purple)"></i><span class="add-label">Pass Gen</span></div>
             <div class="add-card" onclick="Core.createWidget('clipboard', 3, 4)"><i class="fa-solid fa-clipboard add-icon" style="color:var(--ios-teal)"></i><span class="add-label">Clipboard</span></div>
             <div class="add-card" onclick="Core.createWidget('calendar', 4, 4)"><i class="fa-regular fa-calendar add-icon" style="color:var(--ios-red)"></i><span class="add-label">Calendar</span></div>
             <div class="add-card" onclick="Core.createWidget('links', 4, 2)"><i class="fa-solid fa-gamepad add-icon" style="color:var(--ios-blue)"></i><span class="add-label">Quick Links</span></div>
@@ -385,17 +410,39 @@
         </div>
     </div>
 
+    <div id="settings-modal">
+        <div class="modal-header">
+            <div class="modal-title">Settings</div>
+            <button class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;" onclick="UI.toggleSettings(false)">Close</button>
+        </div>
+        <div style="flex:1; display:flex; flex-direction:column; gap:20px; align-items:center; justify-content:center;">
+             <div id="settings-user-info" style="text-align:center;">
+                 <div class="user-avatar" id="settings-avatar" style="width:80px; height:80px; margin:0 auto 10px auto;"></div>
+                 <h3 id="settings-name">User Name</h3>
+             </div>
+             <button id="modal-upgrade-btn" class="btn btn-gold" onclick="Cloud.upgrade()" style="font-size:16px; padding:12px 24px; display:none;">
+                <i class="fa-solid fa-star"></i> Upgrade to Pro
+             </button>
+             <button class="btn btn-primary" onclick="localStorage.removeItem('study_vault_hash'); UI.showToast('Master Pass Reset')">Reset Master Password</button>
+             <div style="font-size:12px; color:var(--text-sec);">StudyNest v1.3</div>
+             <button class="btn btn-danger" onclick="Core.reset()">Reset Dashboard Layout</button>
+        </div>
+    </div>
+
     <nav>
         <div class="brand">StudyNest</div>
         <div class="nav-actions">
-            <button id="upgrade-btn" class="btn btn-gold" onclick="Cloud.upgrade()" style="display:none">
-                <i class="fa-solid fa-star"></i> Upgrade
-            </button>
             <button class="btn btn-primary" onclick="UI.toggleAdd(true)"><i class="fa-solid fa-plus"></i> Add</button>
             <button id="edit-btn" class="btn" onclick="Core.toggleEdit()"><i class="fa-solid fa-pen-nib"></i> Edit</button>
-            <button class="btn" onclick="Cloud.logout()"><i class="fa-solid fa-power-off"></i></button>
-            <div id="user-info"></div>
-            <div class="user-pill"></div>
+            <div class="user-menu-container">
+                <div id="nav-user-avatar" class="user-avatar-btn" onclick="UI.toggleUserMenu()">
+                    <div id="nav-pro-badge" class="pfp-pro-badge">PRO</div>
+                </div>
+                <div id="user-dropdown" class="user-dropdown">
+                    <div class="dropdown-item" onclick="UI.toggleSettings(true)"><i class="fa-solid fa-gear"></i> Settings</div>
+                    <div class="dropdown-item danger" onclick="Cloud.logout()"><i class="fa-solid fa-right-from-bracket"></i> Log Out</div>
+                </div>
+            </div>
         </div>
     </nav>
 
@@ -408,31 +455,25 @@
     <script>
 
         const GlobalMedia = {
+            activeSource: 'None',
             send: (action) => {
-                let hiddenMedia = document.getElementById('hidden-media-trigger');
-                if (!hiddenMedia) {
-                    hiddenMedia = document.createElement('audio');
-                    hiddenMedia.id = 'hidden-media-trigger';
-                    hiddenMedia.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
-                    document.body.appendChild(hiddenMedia);
+                if (GlobalMedia.activeSource === 'Spotify' && player) {
+                    if (action === 'playpause') Spotify.toggle();
+                    if (action === 'next') Spotify.next();
+                    if (action === 'prev') Spotify.prev();
+                    return;
                 }
-
                 if ('mediaSession' in navigator) {
-                    switch(action) {
-                        case 'playpause':
-                            document.dispatchEvent(new KeyboardEvent('keydown', {'keyCode': 179}));
-                            UI.showToast("Toggle Play/Pause");
-                            break;
-                        case 'next':
-                            document.dispatchEvent(new KeyboardEvent('keydown', {'keyCode': 176}));
-                            UI.showToast("Next Track");
-                            break;
-                        case 'prev':
-                            document.dispatchEvent(new KeyboardEvent('keydown', {'keyCode': 177}));
-                            UI.showToast("Previous Track");
-                            break;
-                    }
+                    try {
+                        const keyMap = { 'playpause': 179, 'next': 176, 'prev': 177 };
+                        if(keyMap[action]) document.dispatchEvent(new KeyboardEvent('keydown', {'keyCode': keyMap[action]}));
+                        UI.showToast("Command Sent");
+                    } catch(e) { console.log(e); }
                 }
+            },
+            updateDisplay: (title, artist) => {
+                const text = title ? `${title} - ${artist}` : "No Active Media";
+                document.querySelectorAll('.media-info-text').forEach(el => el.innerText = text);
             }
         };
         
@@ -481,10 +522,14 @@
                         Cloud.user = user;
                         document.getElementById('login-overlay').style.opacity = '0';
                         setTimeout(() => document.getElementById('login-overlay').style.display = 'none', 500);
-                        Core.loadData();
                         
-                        if(localStorage.getItem('sp_token')) setTimeout(Spotify.initPlayer, 1000);
+                        const photo = user.photoURL || 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y';
+                        document.getElementById('nav-user-avatar').style.backgroundImage = `url('${photo}')`;
+                        document.getElementById('settings-avatar').style.backgroundImage = `url('${photo}')`;
+                        document.getElementById('settings-name').innerText = user.displayName;
 
+                        Core.loadData();
+                        if(localStorage.getItem('sp_token')) setTimeout(Spotify.initPlayer, 1000);
                     } else {
                         document.getElementById('login-overlay').style.display = 'flex';
                         document.getElementById('login-overlay').style.opacity = '1';
@@ -503,10 +548,7 @@
                     }, { merge: true }).then(() => {
                         status.innerText = "Saved";
                         setTimeout(() => status.style.display = 'none', 1500);
-                    }).catch(e => {
-                        console.error(e);
-                        status.innerText = "Error Saving";
-                    });
+                    }).catch(e => { console.error(e); status.innerText = "Error Saving"; });
                 }
             },
             upgrade: () => {
@@ -527,7 +569,6 @@
         const Spotify = {
             token: null,
             deviceId: null,
-
             login: () => {
                 const generateRandomString = (l) => {
                     const p = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -535,7 +576,6 @@
                 };
                 const sha256 = async (p) => window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(p));
                 const base64encode = (i) => btoa(String.fromCharCode.apply(null, new Uint8Array(i))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-
                 const start = async () => {
                     const v = generateRandomString(64);
                     localStorage.setItem('spotify_verifier', v);
@@ -551,7 +591,6 @@
                 };
                 start();
             },
-
             handleCode: async (code) => {
                 const v = localStorage.getItem('spotify_verifier');
                 const res = await fetch("https://accounts.spotify.com/api/token", {
@@ -569,20 +608,13 @@
                     Spotify.initPlayer();
                 }
             },
-
             initPlayer: () => {
                 const t = localStorage.getItem('sp_token');
                 if(!t) return;
                 Spotify.token = t;
                 if(player) return;
-
                 window.onSpotifyWebPlaybackSDKReady = () => {
-                    player = new Spotify.Player({
-                        name: 'StudyNest Web Player',
-                        getOAuthToken: cb => { cb(Spotify.token); },
-                        volume: 0.5
-                    });
-
+                    player = new Spotify.Player({ name: 'StudyNest Web Player', getOAuthToken: cb => { cb(Spotify.token); }, volume: 0.5 });
                     player.addListener('ready', ({ device_id }) => {
                         Spotify.deviceId = device_id;
                         document.querySelectorAll('.music-settings').forEach(el => {
@@ -590,21 +622,20 @@
                             el.innerHTML = `<div class="music-msg">Player Ready</div><button class="login-btn" onclick="Spotify.transfer()">Start Player</button>`;
                         });
                     });
-
                     player.addListener('player_state_changed', state => {
                         if (!state) return;
                         Spotify.updateUI(state);
+                        const track = state.track_window.current_track;
+                        GlobalMedia.activeSource = 'Spotify';
+                        GlobalMedia.updateDisplay(track.name, track.artists[0].name);
                     });
-                    
                     player.addListener('authentication_error', () => {
                           UI.showToast("Auth Error. Re-login");
                           localStorage.removeItem('sp_token');
                     });
-
                     player.connect();
                 };
             },
-
             transfer: async () => {
                 if(!Spotify.deviceId || !Spotify.token) return;
                 await fetch(`https://api.spotify.com/v1/...`, {
@@ -614,11 +645,9 @@
                 });
                 document.querySelectorAll('.music-settings').forEach(el => el.classList.remove('active'));
             },
-
             toggle: () => { if(player) player.togglePlay(); },
             next: () => { if(player) player.nextTrack(); },
             prev: () => { if(player) player.previousTrack(); },
-
             updateUI: (state) => {
                 const track = state.track_window.current_track;
                 if(!track) return;
@@ -626,7 +655,6 @@
                 const artist = track.artists[0].name;
                 const art = track.album.images[0]?.url;
                 const progress = (state.position / state.duration) * 100;
-                
                 document.querySelectorAll('.music-wrapper').forEach(el => {
                     el.querySelector('.music-title').innerText = title;
                     el.querySelector('.music-artist').innerText = artist;
@@ -640,14 +668,77 @@
                     const overlay = el.querySelector('.music-settings');
                     if(overlay && !state.paused) overlay.classList.remove('active');
                 });
-
                 document.querySelectorAll('.media-play').forEach(btn => {
-                    btn.innerHTML = state.paused ? '<i class="fa-solid fa-play"></i>' : '<i class="fa-solid fa-pause"></i>';
+                   btn.innerHTML = state.paused ? '<i class="fa-solid fa-play"></i>' : '<i class="fa-solid fa-pause"></i>';
                 });
             }
         };
 
+        const CONVERSION_RATES = {
+            'Length': { 'm': 1, 'km': 1000, 'cm': 0.01, 'mm': 0.001, 'in': 0.0254, 'ft': 0.3048, 'yd': 0.9144, 'mi': 1609.34 },
+            'Weight': { 'kg': 1, 'g': 0.001, 'mg': 0.000001, 'lb': 0.453592, 'oz': 0.0283495 },
+            'Temp': { 'C': 'c', 'F': 'f', 'K': 'k' },
+            'Volume': { 'L': 1, 'ml': 0.001, 'gal': 3.78541, 'qt': 0.946353, 'pt': 0.473176, 'cup': 0.24, 'fl oz': 0.0295735, 'tbsp': 0.015, 'tsp': 0.005 },
+            'Time': { 's': 1, 'min': 60, 'hr': 3600, 'day': 86400, 'wk': 604800, 'yr': 31536000 },
+            'Digital': { 'B': 1, 'KB': 1024, 'MB': 1048576, 'GB': 1073741824, 'TB': 1099511627776 },
+            'Speed': { 'm/s': 1, 'km/h': 0.277778, 'mph': 0.44704 }
+        };
+
         const Utils = {
+            // --- CONVERTER UTILS ---
+            initConverter: (id) => {
+                const catSel = document.getElementById(`conv-cat-${id}`);
+                Object.keys(CONVERSION_RATES).forEach(k => {
+                    const opt = document.createElement('option');
+                    opt.value = k; opt.innerText = k;
+                    catSel.appendChild(opt);
+                });
+                Utils.updateConvUnits(id);
+            },
+            updateConvUnits: (id) => {
+                const cat = document.getElementById(`conv-cat-${id}`).value;
+                const fromSel = document.getElementById(`conv-from-${id}`);
+                const toSel = document.getElementById(`conv-to-${id}`);
+                fromSel.innerHTML = ''; toSel.innerHTML = '';
+                
+                Object.keys(CONVERSION_RATES[cat]).forEach(u => {
+                    const o1 = document.createElement('option'); o1.value = u; o1.innerText = u;
+                    const o2 = document.createElement('option'); o2.value = u; o2.innerText = u;
+                    fromSel.appendChild(o1);
+                    toSel.appendChild(o2);
+                });
+                // Default selection
+                toSel.selectedIndex = 1;
+                Utils.runConversion(id);
+            },
+            runConversion: (id) => {
+                const cat = document.getElementById(`conv-cat-${id}`).value;
+                const val = parseFloat(document.getElementById(`conv-in-${id}`).value);
+                const from = document.getElementById(`conv-from-${id}`).value;
+                const to = document.getElementById(`conv-to-${id}`).value;
+                const resEl = document.getElementById(`conv-res-${id}`);
+
+                if (isNaN(val)) { resEl.innerText = '---'; return; }
+
+                let result;
+                if (cat === 'Temp') {
+                    let cVal = val;
+                    if (from === 'F') cVal = (val - 32) * 5/9;
+                    if (from === 'K') cVal = val - 273.15;
+                    
+                    if (to === 'C') result = cVal;
+                    if (to === 'F') result = (cVal * 9/5) + 32;
+                    if (to === 'K') result = cVal + 273.15;
+                } else {
+                    const baseVal = val * CONVERSION_RATES[cat][from];
+                    result = baseVal / CONVERSION_RATES[cat][to];
+                }
+                
+                // Format result
+                resEl.innerText = Math.abs(result) < 0.001 || Math.abs(result) > 10000 ? result.toExponential(3) : parseFloat(result.toFixed(4));
+            },
+            // --- END CONVERTER UTILS ---
+
             // --- VAULT UTILS ---
             unlockVault: (id) => {
                 const savedHash = localStorage.getItem('study_vault_hash');
@@ -1142,6 +1233,11 @@
                 setInterval(() => { document.querySelectorAll('.timer-container').forEach(el => Utils.updateTimer(el.id.replace('timer-wrap-',''))); }, 1000);
                 document.getElementById('dashboard-wrapper').addEventListener('click', (e) => {
                     if (editing && !e.target.closest('.grid-stack-item')) { Core.toggleEdit(); }
+                    
+                    // Close user menu if clicking outside
+                    if (!e.target.closest('.user-menu-container')) {
+                        document.getElementById('user-dropdown').classList.remove('show');
+                    }
                 });
 
                 // --- VAULT AUTO-LOCK LISTENER ---
@@ -1171,6 +1267,7 @@
 
                 const el = grid.addWidget({ w, h, x, y, content, minW: 2, minH: 2 });
                 el.setAttribute('data-type', type); 
+                el.id = 'w-' + id; 
                 const removeBtn = el.querySelector('.remove-widget');
                 if(removeBtn) { el.appendChild(removeBtn); removeBtn.onclick = () => { grid.removeWidget(el); Core.saveLayout(); }; }
                 
@@ -1197,6 +1294,7 @@
                     const frame = document.getElementById(`yt-frame-${id}`);
                     frame.src = savedData.url; frame.style.display = 'block'; document.getElementById(`yt-controls-${id}`).style.display = 'block'; document.getElementById(`yt-setup-${id}`).style.display = 'none';
                 }
+                if (type === 'converter') setTimeout(() => Utils.initConverter(id), 100);
                 if (type === 'vault' && savedData) {
                     savedData.forEach(item => {
                         const list = document.getElementById(`v-list-${id}`);
@@ -1232,6 +1330,7 @@
                             if(vItem.dataset.meta) data.push(JSON.parse(vItem.dataset.meta));
                         });
                     }
+                    if (type === 'converter') { data = {}; }
                     return { x: el.gridstackNode.x, y: el.gridstackNode.y, w: el.gridstackNode.w, h: el.gridstackNode.h, type, data };
                 });
                 Cloud.save(items);
@@ -1245,7 +1344,15 @@
                     if(doc.exists) {
                         const dbData = doc.data();
                         isPro = dbData.isPro || false;
-                        if(isPro) { document.getElementById('upgrade-btn').style.display = 'none'; if(!document.querySelector('.pro-badge')) { document.getElementById('user-info').innerHTML += '<span class="pro-badge">PRO ⚡</span>'; } } else { document.getElementById('upgrade-btn').style.display = 'block'; }
+                        
+                        if(isPro) { 
+                            document.getElementById('modal-upgrade-btn').style.display = 'none';
+                            document.getElementById('nav-pro-badge').classList.add('visible');
+                        } else { 
+                            document.getElementById('modal-upgrade-btn').style.display = 'block';
+                            document.getElementById('nav-pro-badge').classList.remove('visible');
+                        }
+
                         try { const items = JSON.parse(dbData.layout); if(items && items.length > 0) { grid.batchUpdate(); items.forEach(s => createWidget(s.type, s.w, s.h, s.x, s.y, s.data)); grid.commit(); } else { loadDefaults(); } } catch(e) { loadDefaults(); }
                     } else { loadDefaults(); }
                     setTimeout(() => { isDashboardLoaded = true; grid.on('change added removed', saveLayout); }, 1000);
@@ -1259,6 +1366,24 @@
 
         const UI = {
             toggleAdd: (show) => { const m=document.getElementById('add-modal'), o=document.getElementById('modal-overlay'); if(show){m.classList.add('show');o.classList.add('show');}else{m.classList.remove('show');o.classList.remove('show');}},
+            
+            toggleSettings: (show) => {
+                const m = document.getElementById('settings-modal');
+                const o = document.getElementById('modal-overlay');
+                document.getElementById('user-dropdown').classList.remove('show'); // close dropdown
+                if(show){ m.classList.add('show'); o.classList.add('show'); }
+                else { m.classList.remove('show'); o.classList.remove('show'); }
+            },
+            
+            toggleUserMenu: () => {
+                document.getElementById('user-dropdown').classList.toggle('show');
+            },
+            
+            closeAllModals: () => {
+                UI.toggleAdd(false);
+                UI.toggleSettings(false);
+            },
+            
             updateTime: () => { const n=new Date(); document.querySelectorAll('.time-big').forEach(e=>e.innerText=n.toLocaleTimeString([],{hour:'numeric',minute:'2-digit',hour12:true})); document.querySelectorAll('.date-sub').forEach(e=>e.innerText=n.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'}));},
             
             closePopup: () => { document.getElementById('popup-overlay').classList.remove('show'); },
@@ -1340,18 +1465,43 @@
             },
             closeAllModals: () => {
                 UI.toggleAdd(false);
+                UI.toggleSettings(false);
             }
+        };
+
+        const CONVERSION_RATES = {
+            'Length': { 'm': 1, 'km': 1000, 'cm': 0.01, 'mm': 0.001, 'in': 0.0254, 'ft': 0.3048, 'yd': 0.9144, 'mi': 1609.34 },
+            'Weight': { 'kg': 1, 'g': 0.001, 'mg': 0.000001, 'lb': 0.453592, 'oz': 0.0283495 },
+            'Temp': { 'C': 'c', 'F': 'f', 'K': 'k' },
+            'Volume': { 'L': 1, 'ml': 0.001, 'gal': 3.78541, 'qt': 0.946353, 'pt': 0.473176, 'cup': 0.24, 'fl oz': 0.0295735, 'tbsp': 0.015, 'tsp': 0.005 },
+            'Time': { 's': 1, 'min': 60, 'hr': 3600, 'day': 86400, 'wk': 604800, 'yr': 31536000 },
+            'Digital': { 'B': 1, 'KB': 1024, 'MB': 1048576, 'GB': 1073741824, 'TB': 1099511627776 },
+            'Speed': { 'm/s': 1, 'km/h': 0.277778, 'mph': 0.44704 }
         };
 
         const Templates = {
             get: (type, id, data) => {
-                const validTypes = ['clock', 'links', 'countdown', 'calc', 'weather', 'todo', 'notes', 'calendar', 'music', 'timer', 'battery', 'password', 'clipboard', 'youtube', 'pandora', 'media', 'draw', 'vault'];
+                const validTypes = ['clock', 'links', 'countdown', 'calc', 'weather', 'todo', 'notes', 'calendar', 'music', 'timer', 'battery', 'password', 'clipboard', 'youtube', 'pandora', 'media', 'draw', 'vault', 'converter'];
                 if(!validTypes.includes(type)) return `<div>Error</div>`;
 
                 const wrap = (l, c) => `<div class="remove-widget">✕</div><div class="w-header" data-type="${type}"><span class="w-label">${l}</span></div><div class="w-content" data-type="${type}">${c}</div>`;
                 const getLink = (idx, s) => { const h = s&&s.url; const icon = h ? `<img src="https://www.google.com/s2/favicons?domain=${s.domain}&sz=64" class="deck-favicon"><span class="deck-label">${s.name}</span>` : `<i class="fa-solid fa-plus deck-icon deck-unset"></i>`; return `<div class="deck-btn" onclick="Utils.linkAction('${id}', ${idx}, this)" oncontextmenu="event.preventDefault(); Utils.editLink('${id}', ${idx}, this)" data-link='${h?JSON.stringify(s):""}'>${icon}</div>`; };
 
                 const map = {
+                    converter: wrap('Converter', `
+                        <div class="conv-wrapper">
+                            <div class="conv-row">
+                                <input type="number" id="conv-in-${id}" class="conv-input" placeholder="0" oninput="Utils.runConversion('${id}')">
+                                <select id="conv-cat-${id}" class="conv-select" onchange="Utils.updateConvUnits('${id}')"></select>
+                            </div>
+                            <div class="conv-row">
+                                <select id="conv-from-${id}" class="conv-select-small" onchange="Utils.runConversion('${id}')"></select>
+                                <i class="fa-solid fa-arrow-right conv-arrow"></i>
+                                <select id="conv-to-${id}" class="conv-select-small" onchange="Utils.runConversion('${id}')"></select>
+                            </div>
+                            <div class="conv-result" id="conv-res-${id}">0</div>
+                        </div>
+                    `),
                     vault: wrap('Password Vault', `
                         <div class="vault-wrapper" id="v-wrapper-${id}">
                             <div class="vault-locked" id="v-lock-${id}">
@@ -1388,6 +1538,7 @@
                         <canvas id="canv-${id}" class="draw-canvas"></canvas>
                     </div>`),
                     media: wrap('Universal Media', `<div class="media-widget">
+                        <div class="media-info-text">No Active Media</div>
                         <div class="media-btn-group">
                             <button class="media-btn" onclick="GlobalMedia.send('prev')"><i class="fa-solid fa-backward"></i></button>
                             <button class="media-btn media-play" onclick="GlobalMedia.send('playpause')"><i class="fa-solid fa-play"></i></button>
@@ -1411,7 +1562,7 @@
                     music: `<div class="remove-widget">✕</div><div class="music-wrapper" id="ms-${id}"><div class="music-settings ${localStorage.getItem('sp_token') ? '' : 'active'}" id="ov-${id}"><div class="music-msg">Connect Spotify Premium</div><button class="login-btn" onclick="Spotify.login()">Login</button></div><div class="music-art" id="ms-art-${id}"><i class="fa-solid fa-music music-art-icon"></i></div><div class="music-info"><div class="music-title" id="ms-title-${id}">Not Playing</div><div class="music-artist" id="ms-artist-${id}">Connect a device</div><div class="music-progress"><div class="music-fill" id="ms-fill-${id}"></div></div><div class="music-controls"><button class="ctrl-btn" onclick="Spotify.prev()"><i class="fa-solid fa-backward-step"></i></button><button class="ctrl-btn play-btn" onclick="Spotify.toggle()"><i class="fa-solid fa-play"></i></button><button class="ctrl-btn" onclick="Spotify.next()"><i class="fa-solid fa-forward-step"></i></button></div></div></div>`,
                     timer: wrap('Event Timer', `<div class="timer-container" id="timer-wrap-${id}" onclick="Utils.setTimer('${id}')"><div id="timer-val-${id}" class="timer-big">--:--</div><div id="timer-lbl-${id}" class="timer-label">Click to Set</div><div class="timer-bar"><div id="timer-bar-${id}" class="timer-fill"></div></div></div>`),
                     battery: wrap('Battery', `<div class="batt-container"><div class="batt-icon-shell"><div class="batt-fill" id="batt-fill-${id}"></div></div><div><div id="batt-val-${id}" class="batt-text">--%</div><div id="batt-st-${id}" class="batt-state">Reading...</div></div></div>`),
-                    password: wrap('Passwords', `<div id="pass-${id}" class="pass-display" onclick="Utils.copyPass('${id}')">CLICK GEN</div><div class="pass-controls"><span id="lbl-${id}" style="font-size:11px;color:var(--text-sec);width:60px">Length: 16</span><input type="range" id="rng-${id}" min="8" max="32" value="16" style="flex:1" oninput="Utils.genPass('${id}')"><button class="btn" onclick="Utils.genPass('${id}')">Gen</button></div>`),
+                    password: wrap('Pass Gen', `<div id="pass-${id}" class="pass-display" onclick="Utils.copyPass('${id}')">CLICK GEN</div><div class="pass-controls"><span id="lbl-${id}" style="font-size:11px;color:var(--text-sec);width:60px">Length: 16</span><input type="range" id="rng-${id}" min="8" max="32" value="16" style="flex:1" oninput="Utils.genPass('${id}')"><button class="btn" onclick="Utils.genPass('${id}')">Gen</button></div>`),
                     clipboard: wrap('Clipboard', `<button class="btn btn-primary" style="width:100%; justify-content:center" onclick="Utils.saveClip('${id}')"><i class="fa-solid fa-paste"></i> Save Recent</button><div id="clip-${id}" class="clip-list"></div>`),
                     youtube: `<div class="remove-widget">✕</div><div class="yt-container"><div id="yt-setup-${id}" class="yt-setup"><i class="fa-brands fa-youtube" style="font-size:40px;color:#FF0000;margin-bottom:10px"></i><input id="yt-input-${id}" class="yt-input" placeholder="Paste YouTube Link..." onkeypress="if(event.key==='Enter') Utils.loadYT('${id}')"><button class="btn" onclick="Utils.loadYT('${id}')">Load</button></div><iframe id="yt-frame-${id}" class="yt-frame" style="display:none" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe><div id="yt-controls-${id}" class="yt-controls" style="display:none"><button class="btn btn-danger" onclick="Utils.resetYT('${id}')"><i class="fa-solid fa-xmark"></i></button></div></div>`,
                 };
