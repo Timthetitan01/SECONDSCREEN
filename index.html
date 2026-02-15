@@ -457,6 +457,132 @@
         // GLOBAL LISTENER TO PREVENT ANTHEM ERROR
         window.onSpotifyWebPlaybackSDKReady = () => { console.log('Spotify SDK Ready'); };
 
+        const UI = {
+            toggleAdd: (show) => { const m=document.getElementById('add-modal'), o=document.getElementById('modal-overlay'); if(show){m.classList.add('show');o.classList.add('show');}else{m.classList.remove('show');o.classList.remove('show');}},
+            
+            toggleSettings: (show) => {
+                const m = document.getElementById('settings-modal');
+                const o = document.getElementById('modal-overlay');
+                document.getElementById('user-dropdown').classList.remove('show'); 
+                if(show){ m.classList.add('show'); o.classList.add('show'); }
+                else { m.classList.remove('show'); o.classList.remove('show'); }
+            },
+            
+            toggleUserMenu: () => {
+                document.getElementById('user-dropdown').classList.toggle('show');
+            },
+            
+            closeAllModals: () => {
+                UI.toggleAdd(false);
+                UI.toggleSettings(false);
+            },
+            
+            updateTime: () => { const n=new Date(); document.querySelectorAll('.time-big').forEach(e=>e.innerText=n.toLocaleTimeString([],{hour:'numeric',minute:'2-digit',hour12:true})); document.querySelectorAll('.date-sub').forEach(e=>e.innerText=n.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'}));},
+            
+            closePopup: () => { document.getElementById('popup-overlay').classList.remove('show'); },
+            
+            confirmAction: (title, msg, onConfirm) => {
+                const el = document.getElementById('popup-overlay');
+                document.getElementById('popup-title').innerText = title;
+                document.getElementById('popup-msg').innerText = msg;
+                document.getElementById('popup-inputs').style.display = 'none';
+                const btn = document.getElementById('popup-confirm-btn');
+                btn.innerText = "Log Out"; btn.className = "popup-btn p-danger"; 
+                btn.onclick = () => { onConfirm(); UI.closePopup(); };
+                el.classList.add('show');
+            },
+            
+            askInput: (title, inputsConfig, onSave) => {
+                const el = document.getElementById('popup-overlay');
+                document.getElementById('popup-title').innerText = title;
+                document.getElementById('popup-msg').style.display = 'none';
+                const container = document.getElementById('popup-inputs');
+                container.innerHTML = ''; container.style.display = 'flex';
+                const resIds = [];
+                
+                inputsConfig.forEach((cfg, idx) => {
+                    const wrap = document.createElement('div');
+                    const label = document.createElement('div'); label.className = 'popup-input-label'; label.innerText = cfg.label;
+                    const inp = document.createElement('input'); 
+                    inp.value = cfg.value || ''; 
+                    inp.placeholder = cfg.placeholder || ''; 
+                    inp.type = cfg.type || 'text'; 
+                    inp.id = `pop-in-${idx}`;
+                    
+                    inp.onkeydown = (e) => { 
+                        if(e.key === 'Enter') { 
+                            e.preventDefault(); 
+                            e.stopPropagation();
+                            if(idx === 0 && inputsConfig.length > 1) {
+                                document.getElementById(`pop-in-1`).focus();
+                            } else {
+                                document.getElementById('popup-confirm-btn').click();
+                            }
+                        } 
+                    };
+
+                    resIds.push(inp.id); 
+                    wrap.appendChild(label); 
+                    wrap.appendChild(inp); 
+                    container.appendChild(wrap);
+                });
+                
+                const btn = document.getElementById('popup-confirm-btn');
+                btn.innerText = "Save"; btn.className = "popup-btn p-confirm";
+                btn.onclick = () => { 
+                    const values = resIds.map(id => document.getElementById(id).value); 
+                    if(values.some(v => !v)) { UI.showToast("Please fill all fields"); return; } 
+                    onSave(values); 
+                    UI.closePopup(); 
+                };
+                el.classList.add('show');
+                setTimeout(() => document.getElementById(resIds[0]).focus(), 150);
+            },
+            
+            initTodo: (id, data) => {
+                const list = document.getElementById(`list-${id}`), em = document.getElementById(`empty-${id}`);
+                if (!list || !em) return;
+                
+                // Define check function
+                const check = () => { em.style.display = list.children.length===0 ? 'block':'none'; };
+                
+                const add = (t, d) => {
+                    const i = document.createElement('div'); i.className=`task-item ${d?'done':''}`;
+                    i.innerHTML=`<div class="task-check"><i class="fa-solid fa-check"></i></div><span class="task-text">${t}</span><i class="fa-solid fa-xmark task-delete" onclick="event.stopPropagation(); this.parentElement.remove(); UI.checkEmpty('${id}'); Core.saveLayout()"></i>`;
+                    i.onclick = (e) => { 
+                        if(e.target.classList.contains('task-delete')) return; 
+                        i.classList.add('done'); 
+                        setTimeout(()=>{ i.remove(); check(); Core.saveLayout(); },800); 
+                    };
+                    list.prepend(i); check();
+                };
+                
+                const input = document.getElementById(`in-${id}`);
+                if(input) input.onkeypress = (e) => { 
+                    if(e.key==='Enter'&&e.target.value.trim()){ 
+                        add(e.target.value,false); 
+                        e.target.value=''; 
+                        Core.saveLayout(); 
+                    } 
+                };
+                
+                if(data) data.forEach(d => { if(!d.d) add(d.t, false); }); 
+                check();
+                
+                // Assign checkEmpty to UI for delete handler
+                UI.checkEmpty = (targetId) => {
+                     const l = document.getElementById(`list-${targetId}`);
+                     const e = document.getElementById(`empty-${targetId}`);
+                     if(l && e) e.style.display = l.children.length===0 ? 'block':'none';
+                };
+            },
+            
+            showToast: (msg) => {
+                const el = document.getElementById('action-toast'); el.innerText = msg; el.style.display = 'block'; el.style.animation = 'none'; el.offsetHeight; 
+                el.style.animation = 'popUpFade 2s ease forwards'; setTimeout(() => { el.style.display = 'none'; }, 2000);
+            }
+        };
+
         const GlobalMedia = {
             activeSource: 'None',
             send: (action) => {
@@ -1396,6 +1522,20 @@
             }, 1000);
 
             const loadData = () => {
+                const finishLoad = () => {
+                    setTimeout(() => { isDashboardLoaded = true; grid.on('change added removed', saveLayout); }, 1000);
+                };
+
+                if(Cloud.isGuest) {
+                    const localData = localStorage.getItem('studynest_guest_data');
+                    grid.removeAll();
+                    if(localData) {
+                        try { const items = JSON.parse(localData); if(items.length > 0) { grid.batchUpdate(); items.forEach(s => createWidget(s.type, s.w, s.h, s.x, s.y, s.data)); grid.commit(); } else { loadDefaults(); } } catch(e) { loadDefaults(); }
+                    } else { loadDefaults(); }
+                    finishLoad();
+                    return;
+                }
+
                 if(!Cloud.user || !db) return;
                 isDashboardLoaded = false; grid.off('change added removed');
                 db.collection('users').doc(Cloud.user.uid).get().then(doc => {
@@ -1414,12 +1554,12 @@
 
                         try { const items = JSON.parse(dbData.layout); if(items && items.length > 0) { grid.batchUpdate(); items.forEach(s => createWidget(s.type, s.w, s.h, s.x, s.y, s.data)); grid.commit(); } else { loadDefaults(); } } catch(e) { loadDefaults(); }
                     } else { loadDefaults(); }
-                    setTimeout(() => { isDashboardLoaded = true; grid.on('change added removed', saveLayout); }, 1000);
+                    finishLoad();
                 }).catch(e => { console.error("Load failed", e); document.getElementById('error-toast').innerText = "Load Failed: " + e.message; document.getElementById('error-toast').style.display = 'block'; });
             };
 
             const loadDefaults = () => { grid.batchUpdate(); createWidget('clock', 4, 2, 0, 0); createWidget('weather', 4, 2, 4, 0); grid.commit(); setTimeout(() => { isDashboardLoaded = true; saveLayout(); grid.on('change added removed', saveLayout); }, 1000); };
-            const reset = () => { if(confirm("This will clear your dashboard. Are you sure?")) { isDashboardLoaded = false; db.collection('users').doc(Cloud.user.uid).delete().then(() => location.reload()); } };
+            const reset = () => { if(confirm("This will clear your dashboard. Are you sure?")) { isDashboardLoaded = false; if(Cloud.isGuest) { localStorage.removeItem('studynest_guest_data'); location.reload(); } else { db.collection('users').doc(Cloud.user.uid).delete().then(() => location.reload()); } } };
             return { init, toggleEdit, createWidget, saveLayout, reset, loadData };
         })();
 
