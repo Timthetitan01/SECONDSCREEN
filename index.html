@@ -22,6 +22,7 @@
             --ios-card-border: rgba(255, 255, 255, 0.12);
             --ios-input: rgba(118, 118, 128, 0.24);
             --ios-blue: #0A84FF; --ios-green: #30D158; --ios-red: #FF453A;
+            --ios-orange: #FF9500; --ios-indigo: #5E5CE6; --ios-purple: #AF52DE; --ios-teal: #64D2FF; --ios-yellow: #FFD60A;
             --text-main: #FFFFFF; --text-sec: rgba(235, 235, 245, 0.6);
             --radius: 22px;
             --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
@@ -110,35 +111,24 @@
         .btn-gold { background: linear-gradient(135deg, #FFD700, #FFA500); color: black; border: 1px solid #FFD700; font-weight: 700; text-shadow: 0 1px 0 rgba(255,255,255,0.4); }
         .btn-gold:hover { transform: scale(1.05); box-shadow: 0 0 15px rgba(255, 215, 0, 0.4); }
 
-        /* User Menu Styles */
-        .user-menu-container { position: relative; margin-left: 10px; }
-        .header-pfp { width: 32px; height: 32px; border-radius: 50%; cursor: pointer; border: 2px solid rgba(255,255,255,0.1); transition: 0.2s; object-fit: cover; background: #333; }
-        .header-pfp:hover { border-color: var(--ios-blue); transform: scale(1.05); }
-        .user-dropdown { 
-            position: absolute; top: 45px; right: 0; 
-            background: rgba(28, 28, 30, 0.95); backdrop-filter: blur(20px);
-            border: 1px solid var(--ios-card-border); border-radius: 14px; 
-            width: 180px; display: none; flex-direction: column; 
-            overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.5); 
-            z-index: 5000; animation: fadeDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-        }
+        /* USER MENU STYLES */
+        .user-menu-container { position: relative; margin-left: 8px; }
+        .user-avatar-btn { width: 32px; height: 32px; border-radius: 50%; background: #555; background-size: cover; background-position: center; border: 2px solid rgba(255,255,255,0.2); cursor: pointer; transition: 0.2s; position: relative; }
+        .user-avatar-btn:hover { border-color: var(--ios-blue); }
+        .user-dropdown { position: absolute; top: 45px; right: 0; background: rgba(28, 28, 30, 0.95); backdrop-filter: blur(20px); border: 1px solid var(--ios-card-border); border-radius: 12px; padding: 6px; width: 160px; display: none; flex-direction: column; gap: 4px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transform-origin: top right; animation: scaleIn 0.2s cubic-bezier(0.19, 1, 0.22, 1); }
         .user-dropdown.show { display: flex; }
-        .dropdown-item { 
-            padding: 10px 16px; font-size: 13px; color: white; cursor: pointer; 
-            display: flex; align-items: center; gap: 10px; transition: background 0.2s; font-weight: 500;
-        }
+        @keyframes scaleIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .dropdown-item { padding: 8px 12px; font-size: 13px; color: white; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
         .dropdown-item:hover { background: rgba(255,255,255,0.1); }
         .dropdown-item.danger { color: var(--ios-red); }
         .dropdown-item.danger:hover { background: rgba(255, 69, 58, 0.15); }
-        .dropdown-divider { height: 1px; background: rgba(255,255,255,0.1); margin: 4px 0; }
         
-        @keyframes fadeDown { from { opacity: 0; transform: translateY(-10px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
-        
-        .pro-badge { background: #0A84FF; color: black; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 800; margin-right: 5px; }
+        .pfp-pro-badge { position: absolute; bottom: -4px; right: -4px; background: var(--ios-blue); color: white; font-size: 8px; font-weight: 800; padding: 2px 4px; border-radius: 4px; border: 2px solid #000; display: none; }
+        .pfp-pro-badge.visible { display: block; }
 
         #dashboard-wrapper { flex: 1; padding: 20px; overflow-y: auto; overflow-x: hidden; cursor: default; }
         .grid-stack-item { overflow: visible !important; }
-        .grid-stack-item-content { background: var(--ios-card) !important; backdrop-filter: var(--blur) !important; border: 1px solid var(--ios-card-border) !important; border-radius: var(--radius) !important; padding: 16px; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.2); overflow: hidden; }
+        .grid-stack-item-content { background: var(--ios-card) !important; backdrop-filter: blur(20px) !important; border: 1px solid var(--ios-card-border) !important; border-radius: var(--radius) !important; padding: 16px; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.2); overflow: hidden; }
 
         .remove-widget { position: absolute; top: -10px; right: -10px; width: 26px; height: 26px; background: #8e8e93; border: 2px solid var(--bg-body); border-radius: 50%; color: white; display: none; justify-content: center; align-items: center; font-size: 12px; cursor: pointer; z-index: 9999; box-shadow: 0 2px 6px rgba(0,0,0,0.4); }
         .editing .remove-widget { display: flex; animation: popIn 0.2s; }
@@ -153,6 +143,14 @@
         .w-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; height: 16px; flex-shrink: 0; transition: 0.2s; }
         .w-label { font-size: 11px; font-weight: 600; color: var(--ios-blue); text-transform: uppercase; letter-spacing: 0.5px; }
         .w-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+
+        /* Media Widget Styles */
+        .media-widget { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 10px; text-align: center; }
+        .media-info-text { font-size: 13px; font-weight: 600; color: var(--ios-blue); max-width: 90%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; min-height: 16px; }
+        .media-btn-group { display: flex; gap: 20px; align-items: center; }
+        .media-btn { background: rgba(255,255,255,0.1); border: none; color: white; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; transition: 0.2s; }
+        .media-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.2); }
+        .media-play { background: var(--ios-blue); width: 54px; height: 54px; font-size: 22px; }
 
         .batt-container { display: flex; align-items: center; justify-content: center; height: 100%; gap: 15px; }
         .batt-icon-shell { width: 50px; height: 26px; border: 3px solid var(--text-sec); border-radius: 6px; padding: 2px; position: relative; }
@@ -296,8 +294,10 @@
 
         #modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); z-index: 1999; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
         #modal-overlay.show { opacity: 1; pointer-events: all; }
-        #add-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); width: 90%; max-width: 500px; max-height: 80vh; background: rgba(28, 28, 30, 0.95); border: 1px solid var(--ios-card-border); border-radius: 24px; padding: 24px; z-index: 2000; display: flex; flex-direction: column; opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1); box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
-        #add-modal.show { opacity: 1; pointer-events: all; transform: translate(-50%, -50%) scale(1); }
+        
+        #add-modal, #settings-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); width: 90%; max-width: 500px; max-height: 80vh; background: rgba(28, 28, 30, 0.95); border: 1px solid var(--ios-card-border); border-radius: 24px; padding: 24px; z-index: 2000; display: flex; flex-direction: column; opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1); box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
+        #add-modal.show, #settings-modal.show { opacity: 1; pointer-events: all; transform: translate(-50%, -50%) scale(1); }
+        
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .modal-title { font-size: 20px; font-weight: 700; color: white; }
         .modal-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 15px; overflow-y: auto; padding: 2px; }
@@ -309,17 +309,11 @@
 
         ::-webkit-scrollbar { width: 0px; } 
 
-        .media-widget { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 10px; text-align: center; }
-        .media-btn-group { display: flex; gap: 20px; align-items: center; }
-        .media-btn { background: rgba(255,255,255,0.1); border: none; color: white; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; transition: 0.2s; }
-        .media-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.2); }
-        .media-play { background: var(--ios-blue); width: 54px; height: 54px; font-size: 22px; }
-
         /* Modified Draw Widget CSS */
         .draw-wrapper { height: 100%; display: flex; flex-direction: row; gap: 8px; }
         .draw-canvas { flex: 1; background: #fff; border-radius: 12px; height: 100%; touch-action: none; cursor: crosshair; }
-        .draw-controls { display: flex; flex-direction: column; justify-content: flex-start; align-items: center; background: rgba(255,255,255,0.1); padding: 8px 6px; border-radius: 12px; gap: 10px; width: 44px; flex-shrink: 0; }
-        .draw-colors { display: flex; flex-direction: column; gap: 8px; flex: 1; overflow-y: auto; }
+        .draw-controls { display: flex; flex-direction: column; justify-content: flex-start; align-items: center; background: rgba(255,255,255,0.1); padding: 8px 6px; border-radius: 12px; gap: 8px; width: 44px; flex-shrink: 0; }
+        .draw-colors { display: flex; flex-direction: column; gap: 8px; }
         .draw-tools { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1); width: 100%; align-items: center; }
         .d-color { width: 24px; height: 24px; border-radius: 50%; cursor: pointer; border: 2px solid rgba(255,255,255,0.2); transition: transform 0.1s; }
         .d-color:active { transform: scale(0.9); }
@@ -362,14 +356,15 @@
         </div>
     </div>
 
-    <div id="modal-overlay" onclick="UI.toggleAdd(false)"></div>
+    <div id="modal-overlay" onclick="UI.closeAllModals()"></div>
+    
     <div id="add-modal">
         <div class="modal-header">
             <div class="modal-title">Gallery</div>
             <button class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;" onclick="UI.toggleAdd(false)">Close</button>
         </div>
         <div class="modal-grid">
-            <div class="add-card" onclick="Core.createWidget('draw', 3, 3)"><i class="fa-solid fa-pen-nib add-icon" style="color:var(--ios-green)"></i><span class="add-label">Whiteboard</span></div>
+            <div class="add-card" onclick="Core.createWidget('draw', 4, 6)"><i class="fa-solid fa-pen-nib add-icon" style="color:var(--ios-green)"></i><span class="add-label">Whiteboard</span></div>
             <div class="add-card" onclick="Core.createWidget('media', 4, 2)"><i class="fa-solid fa-play add-icon" style="color:var(--ios-blue)"></i><span class="add-label">Universal Media</span></div>
             <div class="add-card" onclick="Core.createWidget('pandora', 3, 2)"><i class="fa-solid fa-hourglass-end add-icon" style="color:#ffd700"></i><span class="add-label">Minutes</span></div>
             <div class="add-card" onclick="Core.createWidget('music', 4, 2)"><i class="fa-brands fa-spotify add-icon" style="color:#1DB954"></i><span class="add-label">Spotify</span></div>
@@ -389,21 +384,37 @@
         </div>
     </div>
 
+    <div id="settings-modal">
+        <div class="modal-header">
+            <div class="modal-title">Settings</div>
+            <button class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;" onclick="UI.toggleSettings(false)">Close</button>
+        </div>
+        <div style="flex:1; display:flex; flex-direction:column; gap:20px; align-items:center; justify-content:center;">
+             <div id="settings-user-info" style="text-align:center;">
+                 <div class="user-avatar" id="settings-avatar" style="width:80px; height:80px; margin:0 auto 10px auto;"></div>
+                 <h3 id="settings-name">User Name</h3>
+             </div>
+             <button id="modal-upgrade-btn" class="btn btn-gold" onclick="Cloud.upgrade()" style="font-size:16px; padding:12px 24px; display:none;">
+                <i class="fa-solid fa-star"></i> Upgrade to Pro
+             </button>
+             <div style="font-size:12px; color:var(--text-sec);">StudyNest v1.2</div>
+             <button class="btn btn-danger" onclick="Core.reset()">Reset Dashboard Layout</button>
+        </div>
+    </div>
+
     <nav>
         <div class="brand">StudyNest</div>
         <div class="nav-actions">
-            <button id="upgrade-btn" class="btn btn-gold" onclick="Cloud.upgrade()" style="display:none">
-                <i class="fa-solid fa-star"></i> Upgrade
-            </button>
             <button class="btn btn-primary" onclick="UI.toggleAdd(true)"><i class="fa-solid fa-plus"></i> Add</button>
             <button id="edit-btn" class="btn" onclick="Core.toggleEdit()"><i class="fa-solid fa-pen-nib"></i> Edit</button>
+            
             <div class="user-menu-container">
-                <img id="header-pfp" class="header-pfp" src="https://lh3.googleusercontent.com/a/default-user=s96-c" onclick="UI.toggleUserDropdown()">
+                <div id="nav-user-avatar" class="user-avatar-btn" onclick="UI.toggleUserMenu()">
+                    <div id="nav-pro-badge" class="pfp-pro-badge">PRO</div>
+                </div>
                 <div id="user-dropdown" class="user-dropdown">
-                    <div class="dropdown-item" onclick="UI.showToast('Account Page (Coming Soon)')"><i class="fa-solid fa-user"></i> Account</div>
-                    <div class="dropdown-item" onclick="UI.showToast('Settings (Coming Soon)')"><i class="fa-solid fa-gear"></i> Settings</div>
-                    <div class="dropdown-divider"></div>
-                    <div class="dropdown-item danger" onclick="Cloud.logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</div>
+                    <div class="dropdown-item" onclick="UI.toggleSettings(true)"><i class="fa-solid fa-gear"></i> Settings</div>
+                    <div class="dropdown-item danger" onclick="Cloud.logout()"><i class="fa-solid fa-right-from-bracket"></i> Log Out</div>
                 </div>
             </div>
         </div>
@@ -417,47 +428,54 @@
     
     <script>
 
+        // REVISED MEDIA CONTROLLER
         const GlobalMedia = {
+            activeSource: 'None',
             send: (action) => {
-                let hiddenMedia = document.getElementById('hidden-media-trigger');
-                if (!hiddenMedia) {
-                    hiddenMedia = document.createElement('audio');
-                    hiddenMedia.id = 'hidden-media-trigger';
-                    hiddenMedia.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
-                    document.body.appendChild(hiddenMedia);
+                // Spotify Priority Control
+                if (GlobalMedia.activeSource === 'Spotify' && player) {
+                    if (action === 'playpause') Spotify.toggle();
+                    if (action === 'next') Spotify.next();
+                    if (action === 'prev') Spotify.prev();
+                    return;
                 }
 
+                // Fallback for browser media (limited support)
                 if ('mediaSession' in navigator) {
-                    switch(action) {
-                        case 'playpause':
-                            document.dispatchEvent(new KeyboardEvent('keydown', {'keyCode': 179}));
-                            UI.showToast("Toggle Play/Pause");
-                            break;
-                        case 'next':
-                            document.dispatchEvent(new KeyboardEvent('keydown', {'keyCode': 176}));
-                            UI.showToast("Next Track");
-                            break;
-                        case 'prev':
-                            document.dispatchEvent(new KeyboardEvent('keydown', {'keyCode': 177}));
-                            UI.showToast("Previous Track");
-                            break;
-                    }
+                    try {
+                        const video = document.querySelector('iframe')?.contentWindow?.document?.querySelector('video');
+                        if (video) {
+                           // Attempt direct control (often blocked by cross-origin)
+                        } else {
+                           // Generic key simulation fallback
+                           const keyMap = { 'playpause': 179, 'next': 176, 'prev': 177 };
+                           if(keyMap[action]) document.dispatchEvent(new KeyboardEvent('keydown', {'keyCode': keyMap[action]}));
+                        }
+                        UI.showToast("Command Sent");
+                    } catch(e) { console.log(e); }
                 }
+            },
+            updateDisplay: (title, artist) => {
+                // Update all instances of the media widget text
+                const text = title ? `${title} - ${artist}` : "No Active Media";
+                document.querySelectorAll('.media-info-text').forEach(el => el.innerText = text);
+                
+                // Toggle play icon based on state if needed, though simple toggle is safer
             }
         };
         
-const SPOTIFY_CLIENT_ID = "2aea224b957a49e0ade20938094a2170"; 
-const SPOTIFY_SCOPES = "streaming user-read-email user-read-private user-modify-playback-state user-read-currently-playing user-read-playback-state";
+        const SPOTIFY_CLIENT_ID = "2aea224b957a49e0ade20938094a2170"; 
+        const SPOTIFY_SCOPES = "streaming user-read-email user-read-private user-modify-playback-state user-read-currently-playing user-read-playback-state";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyArqMp658OSK8u46cjCefyVKiDJe4oe8-g",
-  authDomain: "secondscreen-f7cd9.firebaseapp.com",
-  projectId: "secondscreen-f7cd9",
-  storageBucket: "secondscreen-f7cd9.firebasestorage.app",
-  messagingSenderId: "233696091813",
-  appId: "1:233696091813:web:734ed34d527ba05dbbf74c",
-  measurementId: "G-QTQZ0ET1KJ"
-};
+        const firebaseConfig = {
+          apiKey: "AIzaSyArqMp658OSK8u46cjCefyVKiDJe4oe8-g",
+          authDomain: "secondscreen-f7cd9.firebaseapp.com",
+          projectId: "secondscreen-f7cd9",
+          storageBucket: "secondscreen-f7cd9.firebasestorage.app",
+          messagingSenderId: "233696091813",
+          appId: "1:233696091813:web:734ed34d527ba05dbbf74c",
+          measurementId: "G-QTQZ0ET1KJ"
+        };
 
         const STRIPE_LINK = "https://buy.stripe.com/fZu28r2I2cJi24N0oOfEk00"; 
 
@@ -492,9 +510,11 @@ const firebaseConfig = {
                         document.getElementById('login-overlay').style.opacity = '0';
                         setTimeout(() => document.getElementById('login-overlay').style.display = 'none', 500);
                         
-                        if(user.photoURL) {
-                            document.getElementById('header-pfp').src = user.photoURL;
-                        }
+                        // User Profile Setup
+                        const photo = user.photoURL || 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y';
+                        document.getElementById('nav-user-avatar').style.backgroundImage = `url('${photo}')`;
+                        document.getElementById('settings-avatar').style.backgroundImage = `url('${photo}')`;
+                        document.getElementById('settings-name').innerText = user.displayName;
 
                         Core.loadData();
                         
@@ -609,6 +629,11 @@ const firebaseConfig = {
                     player.addListener('player_state_changed', state => {
                         if (!state) return;
                         Spotify.updateUI(state);
+                        
+                        // SYNC TO MEDIA WIDGET
+                        const track = state.track_window.current_track;
+                        GlobalMedia.activeSource = 'Spotify';
+                        GlobalMedia.updateDisplay(track.name, track.artists[0].name);
                     });
                     
                     player.addListener('authentication_error', () => {
@@ -655,14 +680,15 @@ const firebaseConfig = {
                     const overlay = el.querySelector('.music-settings');
                     if(overlay && !state.paused) overlay.classList.remove('active');
                 });
-
+                
+                // Update Media Widget Controls
                 document.querySelectorAll('.media-play').forEach(btn => {
-                    btn.innerHTML = state.paused ? '<i class="fa-solid fa-play"></i>' : '<i class="fa-solid fa-pause"></i>';
+                   btn.innerHTML = state.paused ? '<i class="fa-solid fa-play"></i>' : '<i class="fa-solid fa-pause"></i>';
                 });
             }
         };
 
-const Utils = {
+        const Utils = {
             calc: (id, val) => {
                 const s = document.getElementById(`scr-${id}`);
                 const h = document.getElementById(`hist-${id}`);
@@ -1100,6 +1126,11 @@ const Utils = {
                 setInterval(() => { document.querySelectorAll('.timer-container').forEach(el => Utils.updateTimer(el.id.replace('timer-wrap-',''))); }, 1000);
                 document.getElementById('dashboard-wrapper').addEventListener('click', (e) => {
                     if (editing && !e.target.closest('.grid-stack-item')) { Core.toggleEdit(); }
+                    
+                    // Close user menu if clicking outside
+                    if (!e.target.closest('.user-menu-container')) {
+                        document.getElementById('user-dropdown').classList.remove('show');
+                    }
                 });
             };
 
@@ -1179,7 +1210,16 @@ const Utils = {
                     if(doc.exists) {
                         const dbData = doc.data();
                         isPro = dbData.isPro || false;
-                        if(isPro) { document.getElementById('upgrade-btn').style.display = 'none'; if(!document.querySelector('.pro-badge')) { document.getElementById('user-info').innerHTML += '<span class="pro-badge">PRO ⚡</span>'; } } else { document.getElementById('upgrade-btn').style.display = 'block'; }
+                        
+                        // PRO BADGE LOGIC
+                        if(isPro) { 
+                            document.getElementById('modal-upgrade-btn').style.display = 'none';
+                            document.getElementById('nav-pro-badge').classList.add('visible');
+                        } else { 
+                            document.getElementById('modal-upgrade-btn').style.display = 'block';
+                            document.getElementById('nav-pro-badge').classList.remove('visible');
+                        }
+
                         try { const items = JSON.parse(dbData.layout); if(items && items.length > 0) { grid.batchUpdate(); items.forEach(s => createWidget(s.type, s.w, s.h, s.x, s.y, s.data)); grid.commit(); } else { loadDefaults(); } } catch(e) { loadDefaults(); }
                     } else { loadDefaults(); }
                     setTimeout(() => { isDashboardLoaded = true; grid.on('change added removed', saveLayout); }, 1000);
@@ -1193,6 +1233,24 @@ const Utils = {
 
         const UI = {
             toggleAdd: (show) => { const m=document.getElementById('add-modal'), o=document.getElementById('modal-overlay'); if(show){m.classList.add('show');o.classList.add('show');}else{m.classList.remove('show');o.classList.remove('show');}},
+            
+            toggleSettings: (show) => {
+                const m = document.getElementById('settings-modal');
+                const o = document.getElementById('modal-overlay');
+                document.getElementById('user-dropdown').classList.remove('show'); // close dropdown
+                if(show){ m.classList.add('show'); o.classList.add('show'); }
+                else { m.classList.remove('show'); o.classList.remove('show'); }
+            },
+            
+            toggleUserMenu: () => {
+                document.getElementById('user-dropdown').classList.toggle('show');
+            },
+            
+            closeAllModals: () => {
+                UI.toggleAdd(false);
+                UI.toggleSettings(false);
+            },
+            
             updateTime: () => { const n=new Date(); document.querySelectorAll('.time-big').forEach(e=>e.innerText=n.toLocaleTimeString([],{hour:'numeric',minute:'2-digit',hour12:true})); document.querySelectorAll('.date-sub').forEach(e=>e.innerText=n.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'}));},
             
             closePopup: () => { document.getElementById('popup-overlay').classList.remove('show'); },
@@ -1295,6 +1353,7 @@ const Utils = {
                                 <div class="d-color" style="background:#007AFF" onclick="Utils.setPen('${id}', '#007AFF')"></div>
                                 <div class="d-color" style="background:#34C759" onclick="Utils.setPen('${id}', '#34C759')"></div>
                                 <div class="d-color" style="background:#FFD60A" onclick="Utils.setPen('${id}', '#FFD60A')"></div>
+                                <div class="d-color" style="background:#FFFFFF" onclick="Utils.setPen('${id}', '#FFFFFF')"></div>
                             </div>
                             <div class="draw-tools">
                                 <button class="tool-btn active" onclick="Utils.setTool('${id}', 'pen')" title="Pen"><i class="fa-solid fa-pen"></i></button>
@@ -1306,12 +1365,13 @@ const Utils = {
                         <canvas id="canv-${id}" class="draw-canvas"></canvas>
                     </div>`),
                     media: wrap('Universal Media', `<div class="media-widget">
+                        <div class="media-info-text">No Active Media</div>
                         <div class="media-btn-group">
                             <button class="media-btn" onclick="GlobalMedia.send('prev')"><i class="fa-solid fa-backward"></i></button>
                             <button class="media-btn media-play" onclick="GlobalMedia.send('playpause')"><i class="fa-solid fa-play"></i></button>
                             <button class="media-btn" onclick="GlobalMedia.send('next')"><i class="fa-solid fa-forward"></i></button>
                         </div>
-                        <div style="font-size:10px; color:var(--text-sec); margin-top:8px">Controls active browser media</div>
+                        <div style="font-size:10px; color:var(--text-sec);">Controls Spotify & Browser Media</div>
                     </div>`),
                     pandora: `<div class="remove-widget">✕</div>
                         <div class="pan-container" id="pan-${id}" onclick="Utils.setPandora('${id}')">
