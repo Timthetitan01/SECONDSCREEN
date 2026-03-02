@@ -1,1 +1,244 @@
+<script src="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack-all.js"></script>
 
+<style>
+    #modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); z-index: 1999; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+    #modal-overlay.show { opacity: 1; pointer-events: all; }
+    
+    #settings-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); width: 90%; max-width: 500px; max-height: 80vh; background: rgba(28, 28, 30, 0.95); border: 1px solid var(--ios-card-border); border-radius: 24px; padding: 24px; z-index: 2000; display: flex; flex-direction: column; opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1); box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
+    #settings-modal.show { opacity: 1; pointer-events: all; transform: translate(-50%, -50%) scale(1); }
+    
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .modal-title { font-size: 20px; font-weight: 700; color: white; }
+
+    #dashboard-wrapper { flex: 1; padding: 20px; overflow-y: auto; overflow-x: hidden; cursor: default; }
+    .grid-stack-item { overflow: visible !important; }
+    .grid-stack-item-content { background: var(--ios-card) !important; backdrop-filter: var(--blur) !important; border: 1px solid var(--ios-card-border) !important; border-radius: var(--radius) !important; padding: 16px; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.2); overflow: hidden; }
+
+    .remove-widget { position: absolute; top: -10px; right: -10px; width: 26px; height: 26px; background: #8e8e93; border: 2px solid var(--bg-body); border-radius: 50%; color: white; display: none; justify-content: center; align-items: center; font-size: 12px; cursor: pointer; z-index: 9999; box-shadow: 0 2px 6px rgba(0,0,0,0.4); }
+    .editing .remove-widget { display: flex; animation: popIn 0.2s; }
+    .editing .grid-stack-item-content { cursor: grab; animation: jiggle 0.3s infinite ease-in-out; border-color: var(--ios-blue) !important; }
+    .editing .grid-stack-item-content:active { cursor: grabbing; }
+    .editing input, .editing textarea { cursor: text !important; }
+    .editing .weather-temp { cursor: pointer; color: var(--ios-blue) !important; text-decoration: underline; text-decoration-style: dotted; }
+
+    @keyframes jiggle { 0% { transform: rotate(-0.8deg); } 50% { transform: rotate(0.8deg); } 100% { transform: rotate(-0.8deg); } }
+    @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
+
+    .w-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; height: 16px; flex-shrink: 0; transition: 0.2s; }
+    .w-label { font-size: 11px; font-weight: 600; color: var(--ios-blue); text-transform: uppercase; letter-spacing: 0.5px; }
+    .w-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+</style>
+
+<div id="modal-overlay" onclick="UI.closeAllModals()"></div>
+
+<div id="settings-modal">
+    <div class="modal-header">
+        <div class="modal-title">Settings</div>
+        <button class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;" onclick="UI.toggleSettings(false)">Close</button>
+    </div>
+    <div style="flex:1; display:flex; flex-direction:column; gap:20px; align-items:center; justify-content:center;">
+         <div id="settings-user-info" style="text-align:center;">
+             <div class="user-avatar" id="settings-avatar" style="width:80px; height:80px; margin:0 auto 10px auto;"></div>
+             <h3 id="settings-name">User Name</h3>
+         </div>
+         <button id="modal-upgrade-btn" class="btn btn-gold" onclick="Cloud.upgrade()" style="font-size:16px; padding:12px 24px; display:none;">
+            <i class="fa-solid fa-star"></i> Upgrade to Pro
+         </button>
+         <button class="btn btn-primary" onclick="localStorage.removeItem('study_vault_hash'); UI.showToast('Master Pass Reset')">Reset Master Password</button>
+         <div style="font-size:12px; color:var(--text-sec);">StudyNest v1.3</div>
+         <button class="btn btn-danger" onclick="Core.reset()">Reset Dashboard Layout</button>
+    </div>
+</div>
+
+<div id="dashboard-wrapper">
+    <div class="grid-stack"></div>
+</div>
+
+<script>
+    let isDashboardLoaded = false;
+    let isPro = false;
+    
+    function debounce(func, wait) {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    }
+
+    const Core = (() => {
+        let grid = null, editing = false;
+
+        const init = () => {
+            const params = new URLSearchParams(window.location.search);
+            const code = params.get('code');
+
+            if (code) {
+                localStorage.setItem('spotify_auth_code_relay', code);
+                setTimeout(() => window.close(), 100);
+                return; 
+            }
+
+            window.addEventListener('storage', (e) => {
+                if (e.key === 'spotify_auth_code_relay' && e.newValue) {
+                    Spotify.handleCode(e.newValue);
+                    localStorage.removeItem('spotify_auth_code_relay');
+                }
+            });
+            
+            grid = GridStack.init({ column: 12, cellHeight: '85px', margin: 12, float: true, animate: true, disableDrag: true, disableResize: true });
+            grid.off('change added removed'); 
+            Cloud.initAuth();
+            setInterval(UI.updateTime, 1000);
+            setInterval(() => document.querySelectorAll('.count-container').forEach(el => Utils.updateCountdown(el.id.replace('count-wrap-', ''))), 60000);
+            setInterval(() => { document.querySelectorAll('.timer-container').forEach(el => Utils.updateTimer(el.id.replace('timer-wrap-',''))); }, 1000);
+            document.getElementById('dashboard-wrapper').addEventListener('click', (e) => {
+                if (editing && !e.target.closest('.grid-stack-item')) { Core.toggleEdit(); }
+                
+                // Close user menu if clicking outside
+                if (!e.target.closest('.user-menu-container')) {
+                    document.getElementById('user-dropdown').classList.remove('show');
+                }
+            });
+
+            // --- VAULT AUTO-LOCK LISTENER ---
+            document.addEventListener('click', (e) => {
+                if(!e.target.closest('.vault-open-state') && !e.target.closest('#popup-overlay')) {
+                    Utils.lockAllVaults();
+                }
+            });
+        };
+
+        const toggleEdit = () => {
+            editing = !editing;
+            grid.enableMove(editing); grid.enableResize(editing);
+            document.body.classList.toggle('editing', editing);
+            const btn = document.getElementById('edit-btn');
+            if(editing) { btn.innerHTML = '<i class="fa-solid fa-check"></i> Done'; btn.classList.add('btn-primary'); } 
+            else { btn.innerHTML = '<i class="fa-solid fa-pen-nib"></i> Edit'; btn.classList.remove('btn-primary'); }
+        };
+
+        const createWidget = (type, w, h, x, y, savedData) => {
+            if (!isPro && grid.getGridItems().length >= 2 && !isDashboardLoaded) { }
+            if (isDashboardLoaded && !isPro && grid.getGridItems().length >= 4) { alert("Free Tier Limit Reached (4 Widgets). Upgrade to Pro for unlimited access! Just $3"); UI.toggleAdd(false); return; }
+
+            const id = 'w-' + Math.random().toString(36).substr(2, 9);
+            const content = Templates.get(type, id, savedData);
+            if (content === '<div>Error</div>') return;
+
+            const el = grid.addWidget({ w, h, x, y, content, minW: 2, minH: 2 });
+            el.setAttribute('data-type', type); 
+            el.id = 'w-' + id; 
+            const removeBtn = el.querySelector('.remove-widget');
+            if(removeBtn) { el.appendChild(removeBtn); removeBtn.onclick = () => { grid.removeWidget(el); Core.saveLayout(); }; }
+            
+            if (type === 'todo') UI.initTodo(id, savedData);
+            if (type === 'notes') document.getElementById(`nt-${id}`).value = savedData || "";
+            if (type === 'weather') Utils.initWeather(id, savedData);
+            if (type === 'countdown' && savedData) Utils.updateCountdown(id);
+            if (type === 'calendar') Utils.initCalendar(id);
+            if (type === 'battery') Utils.updateBattery(id);
+            if (type === 'draw') setTimeout(() => Utils.initCanvas(id, savedData), 100);
+            if (type === 'clipboard' && savedData) {
+                savedData.forEach(t => { const i = document.createElement('div'); i.className='clip-item'; i.innerText=t; i.onclick = () => { navigator.clipboard.writeText(t); UI.showToast("Copied to Clipboard!"); }; document.getElementById(`clip-${id}`).appendChild(i); });
+            }
+            if (type === 'timer' && savedData) {
+                const wrap = document.getElementById(`timer-wrap-${id}`);
+                wrap.setAttribute('data-end', savedData.end);
+                document.getElementById(`timer-lbl-${id}`).innerText = savedData.label;
+            }
+            if (type === 'music') { 
+                const hasToken = localStorage.getItem('sp_token');
+                if(hasToken) { setTimeout(Spotify.initPlayer, 1000); } else { const overlay = document.getElementById(`ov-${id}`); if(overlay) overlay.classList.add('active'); }
+            }
+            if (type === 'youtube' && savedData && savedData.url) {
+                const frame = document.getElementById(`yt-frame-${id}`);
+                frame.src = savedData.url; frame.style.display = 'block'; document.getElementById(`yt-controls-${id}`).style.display = 'block'; document.getElementById(`yt-setup-${id}`).style.display = 'none';
+            }
+            if (type === 'converter') setTimeout(() => Utils.initConverter(id), 100);
+            if (type === 'vault' && savedData) {
+                savedData.forEach(item => {
+                    const list = document.getElementById(`v-list-${id}`);
+                    const div = document.createElement('div');
+                    div.className = 'vault-item';
+                    div.innerHTML = `<div class="v-meta"><div class="v-title">${item.t}</div><div class="v-pass">••••••</div></div><i class="fa-solid fa-copy v-icon"></i>`;
+                    div.onclick = () => { navigator.clipboard.writeText(item.p); UI.showToast("Password Copied"); };
+                    div.dataset.meta = JSON.stringify(item);
+                    list.prepend(div);
+                });
+            }
+            UI.toggleAdd(false);
+        };
+
+        const saveLayout = debounce(() => {
+            if(!isDashboardLoaded) return; 
+            const items = grid.getGridItems().map(el => {
+                const type = el.getAttribute('data-type');
+                let data = null;
+                if (type === 'notes') data = el.querySelector('textarea').value;
+                if (type === 'todo') data = Array.from(el.querySelectorAll('.task-item')).map(i => ({t: i.querySelector('.task-text').innerText, d: i.classList.contains('done')}));
+                if (type === 'links') { data = []; el.querySelectorAll('.deck-btn').forEach(btn => data.push(JSON.parse(btn.getAttribute('data-link') || 'null'))); }
+                if (type === 'countdown') { data = JSON.parse(el.querySelector('.count-container').getAttribute('data-target') || 'null'); }
+                if (type === 'clipboard') { data = Array.from(el.querySelectorAll('.clip-item')).map(i => i.innerText); }
+                if (type === 'timer') { const wrap = el.querySelector('.timer-container'); data = { end: wrap.getAttribute('data-end'), label: el.querySelector('.timer-label').innerText }; }
+                if (type === 'music') { data = {}; }
+                if (type === 'draw') { const cvs = document.getElementById(`canv-${el.id.replace('w-', '')}`); if(cvs) data = cvs.toDataURL(); }
+                if (type === 'weather') { const unit = el.getAttribute('data-unit') || 'F'; data = { unit }; }
+                if (type === 'youtube') { const frame = el.querySelector('iframe'); if(frame && frame.src && frame.style.display !== 'none') { data = { url: frame.src }; } }
+                if (type === 'vault') {
+                    data = [];
+                    el.querySelectorAll('.vault-item').forEach(vItem => {
+                        if(vItem.dataset.meta) data.push(JSON.parse(vItem.dataset.meta));
+                    });
+                }
+                if (type === 'converter') { data = {}; }
+                return { x: el.gridstackNode.x, y: el.gridstackNode.y, w: el.gridstackNode.w, h: el.gridstackNode.h, type, data };
+            });
+            Cloud.save(items);
+        }, 1000);
+
+        const loadData = () => {
+            const finishLoad = () => {
+                setTimeout(() => { isDashboardLoaded = true; grid.on('change added removed', saveLayout); }, 1000);
+            };
+
+            if(Cloud.isGuest) {
+                const localData = localStorage.getItem('studynest_guest_data');
+                grid.removeAll();
+                if(localData) {
+                    try { const items = JSON.parse(localData); if(items.length > 0) { grid.batchUpdate(); items.forEach(s => createWidget(s.type, s.w, s.h, s.x, s.y, s.data)); grid.commit(); } else { loadDefaults(); } } catch(e) { loadDefaults(); }
+                } else { loadDefaults(); }
+                finishLoad();
+                return;
+            }
+
+            if(!Cloud.user || !db) return;
+            isDashboardLoaded = false; grid.off('change added removed');
+            db.collection('users').doc(Cloud.user.uid).get().then(doc => {
+                grid.removeAll(); 
+                if(doc.exists) {
+                    const dbData = doc.data();
+                    isPro = dbData.isPro || false;
+                    
+                    if(isPro) { 
+                        document.getElementById('modal-upgrade-btn').style.display = 'none';
+                        document.getElementById('nav-pro-badge').classList.add('visible');
+                    } else { 
+                        document.getElementById('modal-upgrade-btn').style.display = 'block';
+                        document.getElementById('nav-pro-badge').classList.remove('visible');
+                    }
+
+                    try { const items = JSON.parse(dbData.layout); if(items && items.length > 0) { grid.batchUpdate(); items.forEach(s => createWidget(s.type, s.w, s.h, s.x, s.y, s.data)); grid.commit(); } else { loadDefaults(); } } catch(e) { loadDefaults(); }
+                } else { loadDefaults(); }
+                finishLoad();
+            }).catch(e => { console.error("Load failed", e); document.getElementById('error-toast').innerText = "Load Failed: " + e.message; document.getElementById('error-toast').style.display = 'block'; });
+        };
+
+        const loadDefaults = () => { grid.batchUpdate(); createWidget('clock', 4, 2, 0, 0); createWidget('weather', 4, 2, 4, 0); grid.commit(); setTimeout(() => { isDashboardLoaded = true; saveLayout(); grid.on('change added removed', saveLayout); }, 1000); };
+        const reset = () => { if(confirm("This will clear your dashboard. Are you sure?")) { isDashboardLoaded = false; if(Cloud.isGuest) { localStorage.removeItem('studynest_guest_data'); location.reload(); } else { db.collection('users').doc(Cloud.user.uid).delete().then(() => location.reload()); } } };
+        
+        return { init, toggleEdit, createWidget, saveLayout, reset, loadData };
+    })();
+
+    window.onload = Core.init;
+</script>
