@@ -1,0 +1,122 @@
+<style>
+    /* Widget Specific Styles */
+    .w-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; height: 18px; flex-shrink: 0; }
+    .w-label { font-size: 12px; font-weight: 700; color: var(--label); text-transform: uppercase; letter-spacing: 0.5px; }
+    
+    /* Converter */
+    .conv-wrapper { display: flex; flex-direction: column; gap: 12px; height: 100%; justify-content: center; }
+    .conv-row { display: flex; gap: 10px; align-items: center; }
+    .conv-input, .conv-select { background: var(--ios-input); border: 2px solid transparent; border-radius: 12px; padding: 10px; color: var(--text-main); flex: 1; outline: none; }
+    .conv-result { font-size: 28px; font-weight: 700; color: var(--success); text-align: center; }
+
+    /* Vault */
+    .vault-wrapper { height: 100%; position: relative; display: flex; flex-direction: column; }
+    .vault-item { background: var(--ios-input); padding: 12px 14px; border-radius: 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; margin-bottom: 8px; }
+    
+    /* Calculator */
+    .calc-screen { text-align:right; font-size:36px; font-weight:700; margin-bottom:4px; height:44px; overflow:hidden; }
+    .calc-grid-adv { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; flex: 1; }
+    .calc-btn { background: var(--ios-input); border:none; color:var(--text-main); border-radius:10px; font-size:16px; font-weight: 600; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+    .calc-btn:hover { background: var(--inactive); }
+    .calc-orange { background: var(--ios-orange); color: white; }
+    .calc-sci { background: rgba(0, 136, 181, 0.15); color: var(--primary); font-size: 13px; }
+
+    /* Todo */
+    .task-input-row { display: flex; gap: 10px; margin-bottom: 12px; }
+    .task-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+    .task-item { display: flex; align-items: center; gap: 12px; padding: 12px 10px; background: var(--ios-input); border-radius: 12px; }
+    .task-check { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--label); display: flex; align-items: center; justify-content: center; color: transparent; cursor: pointer; }
+    .task-item.done .task-check { background: var(--primary); border-color: var(--primary); color: white; }
+    .task-item.done .task-text { text-decoration: line-through; opacity: 0.6; }
+
+    /* Clock & Weather */
+    .clock-container { display: flex; flex-direction: column; justify-content: center; height: 100%; text-align: center; }
+    .time-big { font-size: 56px; font-weight: 700; letter-spacing: -2px; line-height: 1; }
+    .date-sub { font-size: 16px; color: var(--primary); font-weight: 700; text-transform: uppercase; }
+    .weather-temp { font-size:32px; font-weight:700; cursor: pointer; }
+
+    /* Drawing */
+    .draw-wrapper { height: 100%; display: flex; gap: 12px; }
+    .draw-canvas { flex: 1; background: #ffffff; border-radius: 16px; border: 2px solid var(--inactive); cursor: crosshair; }
+    .draw-controls { display: flex; flex-direction: column; gap: 10px; width: 40px; }
+    .d-color { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 2px solid var(--inactive); }
+</style>
+
+<script>
+    const Utils = {
+        initTodo: (id) => {
+            const input = document.getElementById(`in-${id}`);
+            const list = document.getElementById(`list-${id}`);
+            if(input) {
+                input.onkeypress = (e) => {
+                    if(e.key === 'Enter' && input.value.trim()) {
+                        const div = document.createElement('div'); div.className = 'task-item';
+                        div.innerHTML = `<div class="task-check" onclick="this.parentElement.classList.toggle('done')"><i class="fa-solid fa-check"></i></div><span class="task-text">${input.value}</span><i class="fa-solid fa-xmark" style="margin-left:auto;cursor:pointer;color:var(--error)" onclick="this.parentElement.remove()"></i>`;
+                        list.prepend(div);
+                        input.value = '';
+                    }
+                }
+            }
+        },
+        updateTime: () => {
+            const n = new Date();
+            document.querySelectorAll('.time-big').forEach(e => e.innerText = n.toLocaleTimeString([], {hour:'numeric', minute:'2-digit', hour12:true}));
+            document.querySelectorAll('.date-sub').forEach(e => e.innerText = n.toLocaleDateString(undefined, {weekday:'long', month:'short', day:'numeric'}));
+        },
+        initWeather: (id) => {
+            // Simulated Weather
+            const el = document.getElementById(`temp-${id}`);
+            if(el) el.innerText = "72°F";
+        },
+        calc: (id, val) => {
+            const s = document.getElementById(`scr-${id}`);
+            if(val === 'AC') s.innerText = '0';
+            else if(val === '=') { try { s.innerText = eval(s.innerText.replace('×','*').replace('÷','/').replace('^','**').replace('π','Math.PI')); } catch { s.innerText = 'Error'; } }
+            else { s.innerText = s.innerText === '0' ? val : s.innerText + val; }
+        },
+        initCanvas: (id) => {
+            const cvs = document.getElementById(`canv-${id}`);
+            if(!cvs) return;
+            const ctx = cvs.getContext('2d');
+            const rect = cvs.getBoundingClientRect(); cvs.width = rect.width; cvs.height = rect.height;
+            let drawing = false;
+            ctx.lineWidth = 3; ctx.lineCap = 'round';
+            cvs.onmousedown = (e) => { drawing = true; ctx.beginPath(); ctx.moveTo(e.offsetX, e.offsetY); };
+            cvs.onmousemove = (e) => { if(drawing) { ctx.lineTo(e.offsetX, e.offsetY); ctx.stroke(); } };
+            cvs.onmouseup = () => drawing = false;
+        },
+        setPen: (id, color) => {
+            const cvs = document.getElementById(`canv-${id}`);
+            if(cvs) cvs.getContext('2d').strokeStyle = color;
+        },
+        clearCanvas: (id) => {
+            const cvs = document.getElementById(`canv-${id}`);
+            if(cvs) cvs.getContext('2d').clearRect(0,0,cvs.width,cvs.height);
+        }
+    };
+
+    const Templates = {
+        get: (type, id, data) => {
+            const wrap = (l, c) => `<div class="remove-widget">✕</div><div class="w-header"><span class="w-label">${l}</span></div><div class="w-content">${c}</div>`;
+            const map = {
+                clock: `<div class="remove-widget">✕</div><div class="clock-container"><div class="time-big">00:00</div><div class="date-sub">Loading...</div></div>`,
+                todo: wrap('Reminders', `<div class="task-input-row"><input id="in-${id}" placeholder="Add task..."></div><div id="list-${id}" class="task-list"></div>`),
+                notes: wrap('Notes', `<textarea id="nt-${id}" style="flex:1;resize:none;background:transparent;border:none;padding:0;font-family:inherit;font-size:15px;" placeholder="Type here..."></textarea>`),
+                calc: wrap('Scientific', `<div id="scr-${id}" class="calc-screen">0</div><div class="calc-grid-adv"><button class="calc-btn calc-sci" onclick="Utils.calc('${id}','sin')">sin</button><button class="calc-btn calc-sci" onclick="Utils.calc('${id}','cos')">cos</button><button class="calc-btn calc-sci" onclick="Utils.calc('${id}','tan')">tan</button><button class="calc-btn calc-orange" onclick="Utils.calc('${id}','AC')">AC</button><button class="calc-btn calc-orange" onclick="Utils.calc('${id}','DEL')">⌫</button><button class="calc-btn" onclick="Utils.calc('${id}','7')">7</button><button class="calc-btn" onclick="Utils.calc('${id}','8')">8</button><button class="calc-btn" onclick="Utils.calc('${id}','9')">9</button><button class="calc-btn calc-orange" onclick="Utils.calc('${id}','×')">×</button><button class="calc-btn calc-orange" onclick="Utils.calc('${id}','÷')">÷</button><button class="calc-btn" onclick="Utils.calc('${id}','4')">4</button><button class="calc-btn" onclick="Utils.calc('${id}','5')">5</button><button class="calc-btn" onclick="Utils.calc('${id}','6')">6</button><button class="calc-btn calc-orange" onclick="Utils.calc('${id}','-')">-</button><button class="calc-btn calc-orange" onclick="Utils.calc('${id}','+')">+</button><button class="calc-btn" onclick="Utils.calc('${id}','1')">1</button><button class="calc-btn" onclick="Utils.calc('${id}','2')">2</button><button class="calc-btn" onclick="Utils.calc('${id}','3')">3</button><button class="calc-btn" onclick="Utils.calc('${id}','0')">0</button><button class="calc-btn calc-orange" onclick="Utils.calc('${id}','=')">=</button></div>`),
+                weather: wrap('Weather', `<div style="display:flex;align-items:center;justify-content:center;gap:20px;height:100%"><i class="fa-solid fa-cloud-sun" style="font-size:36px;color:var(--ios-yellow)"></i><div><div id="temp-${id}" class="weather-temp">--°</div><div style="font-size:12px;color:var(--label);">Partly Cloudy</div></div></div>`),
+                draw: wrap('Whiteboard', `<div class="draw-wrapper"><div class="draw-controls"><div class="d-color" style="background:#000" onclick="Utils.setPen('${id}','#000')"></div><div class="d-color" style="background:red" onclick="Utils.setPen('${id}','red')"></div><div class="d-color" style="background:blue" onclick="Utils.setPen('${id}','blue')"></div><button onclick="Utils.clearCanvas('${id}')" style="margin-top:auto"><i class="fa-solid fa-trash"></i></button></div><canvas id="canv-${id}" class="draw-canvas"></canvas></div>`),
+                music: wrap('Spotify', `<div style="display:flex; align-items:center; justify-content:center; height:100%; color:var(--label)">Spotify API Placeholder</div>`),
+                youtube: wrap('YouTube', `<div style="display:flex; align-items:center; justify-content:center; height:100%; color:var(--label)">YouTube Player Placeholder</div>`),
+                battery: wrap('Battery', `<div style="text-align:center; font-size:24px; font-weight:bold;">100%</div>`),
+                converter: wrap('Converter', `<div class="conv-wrapper"><input type="number" class="conv-input" placeholder="Value"><div class="conv-result">0</div></div>`),
+                vault: wrap('Vault', `<div class="vault-wrapper"><div class="vault-item"><span>Password 1</span><i class="fa-solid fa-copy"></i></div></div>`),
+                timer: wrap('Timer', `<div style="text-align:center; font-size:32px;">00:00</div>`),
+                media: wrap('Media', `<div style="text-align:center;">Media Controls</div>`),
+                links: wrap('Links', `<div style="text-align:center;">Quick Links</div>`),
+                calendar: wrap('Calendar', `<div style="text-align:center;">Calendar Widget</div>`),
+                pandora: wrap('Minutes', `<div style="text-align:center;">Pandora Widget</div>`)
+            };
+            return map[type] || `<div>Error: ${type} not found</div>`;
+        }
+    };
+</script>
