@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Checkout Flow</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@48,400,0,0" rel="stylesheet" />
+
+    <style>
+        /* Dynamic Theme Variables */
+        :root {
+            --primary: #0088b5;
+            --primary-light: #67e8f9;
+            --success: #10b981;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --label: #64748b;
+        }
+
+        html.dark {
+            --bg: #0f172a; 
+            --card-bg: #1e293b; 
+            --label: #94a3b8;
+        }
+
+        body {
+            font-family: 'Ubuntu', sans-serif;
+            background: var(--bg);
+            transition: background-color 0.5s ease;
+            overflow-x: hidden; /* Prevent horizontal scrollbars during slide */
+        }
+
+        /* Slider Logic */
+        .slider-wrapper {
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .slider-container {
+            display: flex;
+            width: 200%; /* Two steps: 100% each */
+            transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .slide-panel {
+            width: 50%;
+            padding: 2rem;
+            flex-shrink: 0;
+        }
+
+        /* Input Styles & Smart Borders */
+        .input-container {
+            position: relative;
+            margin-bottom: 2rem;
+            width: 100%;
+        }
+
+        .custom-input {
+            border: 4px solid var(--primary);
+            border-radius: 50px;
+            padding: 1.25rem 1.75rem;
+            width: 100%;
+            outline: none;
+            background: transparent;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 10;
+            position: relative;
+            font-size: 1.125rem;
+        }
+
+        .custom-label {
+            position: absolute;
+            top: 0;
+            left: 30px;
+            transform: translateY(-50%) scale(0.9);
+            background: var(--bg);
+            padding: 0 10px;
+            color: var(--primary);
+            font-weight: bold;
+            transition: all 0.4s ease, background-color 0.5s ease;
+            pointer-events: none;
+            z-index: 20;
+            border: 3px solid var(--primary);
+            border-radius: 20px;
+        }
+
+        .custom-input:focus {
+            box-shadow: 0 0 0 4px rgba(0, 136, 181, 0.2);
+        }
+
+        /* Credit Card specific styles */
+        .credit-card {
+            border: 4px solid var(--primary);
+            border-radius: 24px;
+            background: var(--card-bg);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.5s ease;
+            aspect-ratio: 1.586; 
+            width: 100%;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        .cc-chip {
+            width: 50px;
+            height: 40px;
+            background: #fde047; 
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        /* Billing Profile Card Styles */
+        .profile-card {
+            border: 4px solid var(--primary);
+            border-radius: 40px;
+            position: relative;
+            min-height: 280px;
+            background: var(--card-bg);
+            transition: all 0.5s ease;
+            width: 100%;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        .profile-cutout {
+            position: absolute;
+            top: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 75px;
+            background: var(--bg);
+            border-bottom: 4px solid var(--primary);
+            border-left: 4px solid var(--primary);
+            border-right: 4px solid var(--primary);
+            border-bottom-left-radius: 75px;
+            border-bottom-right-radius: 75px;
+            z-index: 5;
+            transition: background-color 0.5s ease;
+        }
+
+        .icon-circle {
+            position: absolute;
+            top: -64px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 128px;
+            height: 128px;
+            background: var(--card-bg);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.5s ease;
+            color: var(--primary);
+        }
+
+        /* Action Buttons */
+        .action-btn {
+            background: var(--primary-light);
+            color: #0f172a;
+            border: none;
+            border-radius: 50px;
+            padding: 1rem 2.5rem;
+            font-weight: bold;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 10px 20px -5px rgba(103, 232, 249, 0.5);
+        }
+
+        .action-btn-back {
+            background: transparent;
+            color: var(--label);
+            font-weight: bold;
+            font-size: 1.25rem;
+            padding: 1rem 1.5rem;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .action-btn-back:hover {
+            color: var(--primary);
+        }
+
+        .trans-text {
+            transition: color 0.3s ease;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center py-10">
+
+    <button id="themeToggle" class="fixed top-6 right-6 p-3 rounded-full bg-white dark:bg-slate-800 shadow-lg text-slate-800 dark:text-white transition-all hover:scale-110 z-50 group">
+        <span class="material-symbols-rounded transition-transform group-hover:rotate-12" id="themeIcon">dark_mode</span>
+    </button>
+
+    <div class="max-w-6xl w-full slider-wrapper">
+        
+        <div id="slider" class="slider-container">
+
+            <div class="slide-panel">
+                <h1 class="text-4xl md:text-5xl font-extrabold text-center mb-16 text-slate-800 dark:text-white transition-colors tracking-tight">Payment Details</h1>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+                    
+                    <div class="w-full flex flex-col justify-center">
+                        <div class="input-container">
+                            <input type="text" id="payName" class="custom-input text-slate-800 dark:text-white" placeholder=" ">
+                            <label class="custom-label">Name</label>
+                        </div>
+
+                        <div class="input-container">
+                            <input type="text" id="payCard" maxlength="19" class="custom-input text-slate-800 dark:text-white font-mono tracking-widest" placeholder=" ">
+                            <label class="custom-label">Card #</label>
+                        </div>
+
+                        <div class="flex gap-6 w-full mb-2">
+                            <div class="input-container w-1/2">
+                                <input type="text" id="payCvc" maxlength="3" class="custom-input text-slate-800 dark:text-white font-mono" placeholder=" ">
+                                <label class="custom-label">CVC</label>
+                            </div>
+                            <div class="input-container w-1/2">
+                                <input type="text" id="payExp" maxlength="5" class="custom-input text-slate-800 dark:text-white font-mono" placeholder=" ">
+                                <label class="custom-label">Exp. /</label>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-center md:justify-end mt-4">
+                            <button onclick="goToStep(1)" class="action-btn w-full md:w-auto">
+                                Billing <span class="material-symbols-rounded font-bold">arrow_forward</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="w-full flex justify-center">
+                        <div class="credit-card p-6 md:p-8 shadow-2xl dark:shadow-slate-900/50 flex flex-col justify-between">
+                            <div class="font-bold text-xl md:text-2xl text-slate-800 dark:text-white trans-text">StudyNest</div>
+                            
+                            <div class="mt-4 md:mt-6">
+                                <div class="cc-chip shadow-inner"></div>
+                                <p id="dispPayCard" class="text-2xl sm:text-3xl font-mono font-bold text-slate-800 dark:text-white tracking-wider whitespace-nowrap trans-text mt-2">1234 5678 9032 3456</p>
+                            </div>
+                            
+                            <div class="flex justify-between items-end mt-6">
+                                <p id="dispPayName" class="text-xl md:text-2xl font-medium text-slate-800 dark:text-white truncate w-1/2 trans-text">Name Here</p>
+                                <div class="text-right font-mono text-slate-800 dark:text-white trans-text">
+                                    <div class="text-sm opacity-70">VALID THRU <span class="ml-2 font-bold text-lg md:text-xl opacity-100" id="dispPayExp">01/21</span></div>
+                                    <div class="text-sm opacity-70">CVC <span class="ml-2 font-bold text-lg md:text-xl opacity-100" id="dispPayCvc">183</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="slide-panel">
+                <h1 class="text-4xl md:text-5xl font-extrabold text-center mb-16 text-slate-800 dark:text-white transition-colors tracking-tight">Billing Info</h1>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+                    
+                    <div class="w-full flex flex-col justify-center">
+                        <div class="grid grid-cols-2 gap-x-4 gap-y-0">
+                            <div class="input-container"><input type="text" id="billName" class="custom-input text-slate-800 dark:text-white" placeholder=" "><label class="custom-label">Name</label></div>
+                            <div class="input-container"><input type="text" id="billPhone" class="custom-input text-slate-800 dark:text-white" placeholder=" "><label class="custom-label">Phone</label></div>
+                            
+                            <div class="input-container col-span-2"><input type="text" id="billAdd1" class="custom-input text-slate-800 dark:text-white" placeholder=" "><label class="custom-label">Address 1</label></div>
+                            
+                            <div class="input-container"><input type="text" id="billCity" class="custom-input text-slate-800 dark:text-white" placeholder=" "><label class="custom-label">City</label></div>
+                            <div class="input-container"><input type="text" id="billState" class="custom-input text-slate-800 dark:text-white" placeholder=" "><label class="custom-label">State</label></div>
+                            
+                            <div class="input-container"><input type="text" id="billZip" class="custom-input text-slate-800 dark:text-white" placeholder=" "><label class="custom-label">Zip Code</label></div>
+                            <div class="input-container"><input type="text" id="billCountry" class="custom-input text-slate-800 dark:text-white" placeholder=" "><label class="custom-label">Country</label></div>
+                        </div>
+
+                        <div class="flex justify-between items-center mt-2">
+                            <button onclick="goToStep(0)" class="action-btn-back">
+                                <span class="material-symbols-rounded">arrow_back</span> Back
+                            </button>
+                            <button class="action-btn" style="background: var(--success); color: white;">
+                                Finalize <span class="material-symbols-rounded font-bold">check</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="w-full flex justify-center pt-8 md:pt-0">
+                        <div class="profile-card p-8 pt-20 shadow-2xl dark:shadow-slate-900/50 flex flex-col items-center">
+                            <div class="profile-cutout"></div>
+                            <div class="icon-circle">
+                                <span class="material-symbols-rounded" style="font-size: 72px;">location_on</span>
+                            </div>
+                            
+                            <div class="text-center mt-2 w-full">
+                                <h2 class="text-3xl font-bold text-slate-800 dark:text-white trans-text truncate"><span id="dispBillName">Name</span>'s Billing</h2>
+                                <p id="dispBillPhone" class="text-xl font-bold text-slate-800 dark:text-white trans-text mt-1 opacity-80">(123) 456 7890</p>
+                            </div>
+
+                            <div class="mt-8 w-full text-left space-y-3 text-lg font-medium text-slate-800 dark:text-white trans-text">
+                                <div class="flex"><span class="w-24 opacity-70">Address:</span> <span class="flex-1 font-bold text-right truncate" id="dispBillAdd">...</span></div>
+                                <div class="flex"><span class="w-24 opacity-70">City:</span> <span class="flex-1 font-bold text-right" id="dispBillCity">...</span></div>
+                                <div class="flex"><span class="w-24 opacity-70">State:</span> <span class="flex-1 font-bold text-right" id="dispBillState">...</span></div>
+                                <div class="flex"><span class="w-24 opacity-70">Zip:</span> <span class="flex-1 font-bold text-right" id="dispBillZip">...</span></div>
+                                <div class="flex"><span class="w-24 opacity-70">Country:</span> <span class="flex-1 font-bold text-right" id="dispBillCountry">...</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // --- Dark Mode Logic ---
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        
+        themeToggle.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            themeIcon.innerText = document.documentElement.classList.contains('dark') ? 'light_mode' : 'dark_mode';
+        });
+
+        // --- Slider Logic ---
+        const slider = document.getElementById('slider');
+        function goToStep(stepIndex) {
+            // stepIndex 0 = Payment, 1 = Billing
+            slider.style.transform = `translateX(-${stepIndex * 50}%)`;
+        }
+
+        // --- Helper for binding ---
+        function bindInput(inputId, dispId, fallback) {
+            document.getElementById(inputId).addEventListener('input', (e) => {
+                document.getElementById(dispId).innerText = e.target.value || fallback;
+            });
+        }
+
+        // --- Payment Logic ---
+        bindInput('payName', 'dispPayName', 'Name Here');
+        
+        document.getElementById('payCvc').addEventListener('input', (e) => {
+            let val = e.target.value.replace(/\D/g, ''); 
+            e.target.value = val;
+            document.getElementById('dispPayCvc').innerText = val || '183';
+        });
+
+        document.getElementById('payCard').addEventListener('input', (e) => {
+            let val = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, ''); 
+            let formatted = val.match(/.{1,4}/g)?.join(' ') || '';
+            e.target.value = formatted;
+            document.getElementById('dispPayCard').innerText = formatted || '1234 5678 9032 3456';
+        });
+
+        document.getElementById('payExp').addEventListener('input', (e) => {
+            let val = e.target.value.replace(/\D/g, ''); 
+            if (val.length > 2) val = val.substring(0, 2) + '/' + val.substring(2, 4);
+            e.target.value = val;
+            document.getElementById('dispPayExp').innerText = val || '01/21';
+        });
+
+        // --- Billing Logic ---
+        bindInput('billName', 'dispBillName', 'Name');
+        bindInput('billPhone', 'dispBillPhone', '(123) 456 7890');
+        bindInput('billAdd1', 'dispBillAdd', '...');
+        bindInput('billCity', 'dispBillCity', '...');
+        bindInput('billState', 'dispBillState', '...');
+        bindInput('billZip', 'dispBillZip', '...');
+        bindInput('billCountry', 'dispBillCountry', '...');
+
+    </script>
+</body>
+</html>
