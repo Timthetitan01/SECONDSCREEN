@@ -1,122 +1,368 @@
-<style>
-    /* Widget Specific Styles */
-    .w-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; height: 18px; flex-shrink: 0; }
-    .w-label { font-size: 12px; font-weight: 700; color: var(--label); text-transform: uppercase; letter-spacing: 0.5px; }
-    
-    /* Converter */
-    .conv-wrapper { display: flex; flex-direction: column; gap: 12px; height: 100%; justify-content: center; }
-    .conv-row { display: flex; gap: 10px; align-items: center; }
-    .conv-input, .conv-select { background: var(--ios-input); border: 2px solid transparent; border-radius: 12px; padding: 10px; color: var(--text-main); flex: 1; outline: none; }
-    .conv-result { font-size: 28px; font-weight: 700; color: var(--success); text-align: center; }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyNest - Dashboard</title>
+    <link rel="icon" type="image/png" href="studynestlogo.png">
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@48,400,0,0" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack.min.css" />
+    <script src="https://sdk.scdn.co/spotify-player.js"></script>
+    <script> tailwind.config = { darkMode: 'class' } </script>
 
-    /* Vault */
-    .vault-wrapper { height: 100%; position: relative; display: flex; flex-direction: column; }
-    .vault-item { background: var(--ios-input); padding: 12px 14px; border-radius: 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; margin-bottom: 8px; }
-    
-    /* Calculator */
-    .calc-screen { text-align:right; font-size:36px; font-weight:700; margin-bottom:4px; height:44px; overflow:hidden; }
-    .calc-grid-adv { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; flex: 1; }
-    .calc-btn { background: var(--ios-input); border:none; color:var(--text-main); border-radius:10px; font-size:16px; font-weight: 600; cursor:pointer; display:flex; align-items:center; justify-content:center; }
-    .calc-btn:hover { background: var(--inactive); }
-    .calc-orange { background: var(--ios-orange); color: white; }
-    .calc-sci { background: rgba(0, 136, 181, 0.15); color: var(--primary); font-size: 13px; }
+    <style>
+        :root {
+            --primary: #0088b5; --success: #10b981; --error: #ef4444; --inactive: #cbd5e1;
+            --bg: #f8fafc; --card-bg: #ffffff; --label: #64748b; --text-main: #0f172a; --text-sec: #64748b;
+            --ios-card: var(--card-bg); --ios-input: #f1f5f9; --ios-blue: var(--primary); 
+            --ios-green: var(--success); --ios-red: var(--error); --ios-orange: #f59e0b; --ios-yellow: #eab308;
+            --radius: 24px; --font: 'Ubuntu', sans-serif;
+            --music-bg: var(--card-bg); --music-accent: var(--primary); --music-art: #e2e8f0;
+        }
+        html.dark {
+            --inactive: #475569; --bg: #0f172a; --card-bg: #1e293b; --label: #94a3b8;
+            --text-main: #ffffff; --text-sec: #94a3b8; --ios-input: rgba(15, 23, 42, 0.6);
+            --music-bg: #0f172a; --music-art: #334155;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; user-select: none; }
+        body { background-color: var(--bg); color: var(--text-main); font-family: var(--font); height: 100vh; overflow: hidden; display: flex; flex-direction: column; transition: 0.5s; }
 
-    /* Todo */
-    .task-input-row { display: flex; gap: 10px; margin-bottom: 12px; }
-    .task-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
-    .task-item { display: flex; align-items: center; gap: 12px; padding: 12px 10px; background: var(--ios-input); border-radius: 12px; }
-    .task-check { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--label); display: flex; align-items: center; justify-content: center; color: transparent; cursor: pointer; }
-    .task-item.done .task-check { background: var(--primary); border-color: var(--primary); color: white; }
-    .task-item.done .task-text { text-decoration: line-through; opacity: 0.6; }
+        /* --- DASHBOARD UI --- */
+        #status-bar { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--text-main); color: var(--bg); padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: bold; display: none; z-index: 5000; pointer-events: none; }
+        #action-toast { position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%); background: var(--primary); color: white; padding: 10px 24px; border-radius: 50px; font-size: 14px; font-weight: 700; box-shadow: 0 10px 30px rgba(0,0,0,0.3); display: none; z-index: 6000; pointer-events: none; animation: popUpFade 2s ease forwards; }
+        @keyframes popUpFade { 0% { opacity: 0; transform: translate(-50%, 10px); } 10% { opacity: 1; transform: translate(-50%, 0); } 80% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -10px); } }
 
-    /* Clock & Weather */
-    .clock-container { display: flex; flex-direction: column; justify-content: center; height: 100%; text-align: center; }
-    .time-big { font-size: 56px; font-weight: 700; letter-spacing: -2px; line-height: 1; }
-    .date-sub { font-size: 16px; color: var(--primary); font-weight: 700; text-transform: uppercase; }
-    .weather-temp { font-size:32px; font-weight:700; cursor: pointer; }
+        nav { height: 60px; display: flex; justify-content: space-between; align-items: center; padding: 0 24px; background: var(--card-bg); border-bottom: 1px solid var(--inactive); z-index: 1000; transition: background-color 0.5s ease; }
+        .brand { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px; color: var(--text-main); }
+        .btn { background: var(--ios-input); border: none; color: var(--text-main); padding: 8px 16px; border-radius: 99px; font-size: 14px; font-weight: 600; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px; font-family: var(--font); }
+        .btn:hover { background: var(--inactive); }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-gold { background: linear-gradient(135deg, #FFD700, #FFA500); color: black; border: none; font-weight: 700; }
+        .btn-danger { background: rgba(239, 68, 68, 0.15); color: var(--error); }
+        
+        .user-avatar-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--inactive); background-size: cover; background-position: center; border: 2px solid var(--inactive); cursor: pointer; position: relative; }
+        .user-dropdown { position: absolute; top: 50px; right: 0; background: var(--card-bg); border: 1px solid var(--inactive); border-radius: 16px; padding: 8px; width: 180px; display: none; flex-direction: column; gap: 4px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); z-index: 2000; }
+        .user-dropdown.show { display: flex; }
+        .dropdown-item { padding: 10px 14px; font-size: 14px; font-weight: 500; color: var(--text-main); border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+        .dropdown-item:hover { background: var(--ios-input); }
 
-    /* Drawing */
-    .draw-wrapper { height: 100%; display: flex; gap: 12px; }
-    .draw-canvas { flex: 1; background: #ffffff; border-radius: 16px; border: 2px solid var(--inactive); cursor: crosshair; }
-    .draw-controls { display: flex; flex-direction: column; gap: 10px; width: 40px; }
-    .d-color { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 2px solid var(--inactive); }
-</style>
+        #dashboard-wrapper { flex: 1; padding: 24px; overflow-y: auto; overflow-x: hidden; cursor: default; }
+        .grid-stack-item-content { background: var(--card-bg) !important; border: 2px solid var(--inactive) !important; border-radius: var(--radius) !important; padding: 20px; display: flex; flex-direction: column; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); overflow: hidden; transition: 0.5s; }
+        .remove-widget { position: absolute; top: -12px; right: -12px; width: 28px; height: 28px; background: var(--error); border-radius: 50%; color: white; display: none; justify-content: center; align-items: center; font-size: 12px; font-weight: bold; cursor: pointer; z-index: 9999; }
+        .editing .remove-widget { display: flex; }
+        .editing .grid-stack-item-content { cursor: grab; border-color: var(--primary) !important; animation: jiggle 0.3s infinite ease-in-out; }
+        @keyframes jiggle { 0% { transform: rotate(-0.5deg); } 50% { transform: rotate(0.5deg); } 100% { transform: rotate(-0.5deg); } }
 
-<script>
-    const Utils = {
-        initTodo: (id) => {
-            const input = document.getElementById(`in-${id}`);
-            const list = document.getElementById(`list-${id}`);
-            if(input) {
-                input.onkeypress = (e) => {
-                    if(e.key === 'Enter' && input.value.trim()) {
-                        const div = document.createElement('div'); div.className = 'task-item';
-                        div.innerHTML = `<div class="task-check" onclick="this.parentElement.classList.toggle('done')"><i class="fa-solid fa-check"></i></div><span class="task-text">${input.value}</span><i class="fa-solid fa-xmark" style="margin-left:auto;cursor:pointer;color:var(--error)" onclick="this.parentElement.remove()"></i>`;
-                        list.prepend(div);
-                        input.value = '';
+        /* Modals */
+        #modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(8px); z-index: 1999; display: none; }
+        #modal-overlay.show { display: block; }
+        #add-modal, #settings-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); width: 90%; max-width: 550px; background: var(--card-bg); padding: 24px; border-radius: 24px; border: 2px solid var(--inactive); z-index: 2000; display: flex; flex-direction: column; opacity: 0; pointer-events: none; transition: 0.3s; }
+        #add-modal.show, #settings-modal.show { opacity: 1; pointer-events: all; transform: translate(-50%, -50%) scale(1); }
+        .modal-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 16px; overflow-y: auto; max-height: 60vh; padding: 4px; }
+        .add-card { background: var(--ios-input); padding: 16px; border-radius: 20px; text-align: center; cursor: pointer; display:flex; flex-direction:column; align-items:center; gap:12px; height: 110px; justify-content: center; border: 2px solid transparent; transition: 0.2s; }
+        .add-card:hover { border-color: var(--primary); transform: translateY(-3px); }
+        .add-label { font-size: 12px; font-weight: 600; color: var(--text-main); }
+        .add-icon { font-size: 32px; }
+
+        /* --- WIDGET STYLES (Previously in widgets.html) --- */
+        .w-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; height: 18px; flex-shrink: 0; }
+        .w-label { font-size: 12px; font-weight: 700; color: var(--label); text-transform: uppercase; letter-spacing: 0.5px; }
+        .w-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+        input, textarea, select { background: var(--ios-input); border: 2px solid transparent; border-radius: 12px; padding: 10px; color: var(--text-main); width: 100%; outline: none; font-family: var(--font); }
+
+        /* Converter */
+        .conv-wrapper { display: flex; flex-direction: column; gap: 12px; height: 100%; justify-content: center; }
+        .conv-row { display: flex; gap: 10px; align-items: center; }
+        .conv-input, .conv-select { background: var(--ios-input); border: 2px solid transparent; border-radius: 12px; padding: 10px; color: var(--text-main); flex: 1; outline: none; }
+        .conv-result { font-size: 28px; font-weight: 700; color: var(--success); text-align: center; }
+        /* Vault */
+        .vault-wrapper { height: 100%; position: relative; display: flex; flex-direction: column; }
+        .vault-item { background: var(--ios-input); padding: 12px 14px; border-radius: 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; margin-bottom: 8px; }
+        /* Calculator */
+        .calc-screen { text-align:right; font-size:36px; font-weight:700; margin-bottom:4px; height:44px; overflow:hidden; }
+        .calc-grid-adv { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; flex: 1; }
+        .calc-btn { background: var(--ios-input); border:none; color:var(--text-main); border-radius:10px; font-size:16px; font-weight: 600; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+        .calc-btn:hover { background: var(--inactive); }
+        .calc-orange { background: var(--ios-orange); color: white; }
+        .calc-sci { background: rgba(0, 136, 181, 0.15); color: var(--primary); font-size: 13px; }
+        /* Todo */
+        .task-input-row { display: flex; gap: 10px; margin-bottom: 12px; }
+        .task-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+        .task-item { display: flex; align-items: center; gap: 12px; padding: 12px 10px; background: var(--ios-input); border-radius: 12px; }
+        .task-check { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--label); display: flex; align-items: center; justify-content: center; color: transparent; cursor: pointer; }
+        .task-item.done .task-check { background: var(--primary); border-color: var(--primary); color: white; }
+        .task-item.done .task-text { text-decoration: line-through; opacity: 0.6; }
+        /* Clock & Weather */
+        .clock-container { display: flex; flex-direction: column; justify-content: center; height: 100%; text-align: center; }
+        .time-big { font-size: 56px; font-weight: 700; letter-spacing: -2px; line-height: 1; }
+        .date-sub { font-size: 16px; color: var(--primary); font-weight: 700; text-transform: uppercase; }
+        .weather-temp { font-size:32px; font-weight:700; cursor: pointer; }
+        /* Drawing */
+        .draw-wrapper { height: 100%; display: flex; gap: 12px; }
+        .draw-canvas { flex: 1; background: #ffffff; border-radius: 16px; border: 2px solid var(--inactive); cursor: crosshair; }
+        .draw-controls { display: flex; flex-direction: column; gap: 10px; width: 40px; }
+        .d-color { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 2px solid var(--inactive); }
+    </style>
+</head>
+<body>
+    <div id="status-bar">Syncing...</div>
+    <div id="action-toast">Copied!</div>
+    <div id="error-toast"></div>
+    <div id="modal-overlay" onclick="UI.closeAllModals()"></div>
+
+    <div id="add-modal">
+        <div class="flex justify-between items-center mb-6">
+            <div class="text-2xl font-bold" style="color:var(--text-main)">Gallery</div>
+            <button class="btn btn-danger" onclick="UI.toggleAdd(false)"><i class="fa-solid fa-xmark"></i> Close</button>
+        </div>
+        <div class="modal-grid">
+            <div class="add-card" onclick="Core.createWidget('clock', 4, 2)"><i class="fa-regular fa-clock add-icon" style="color:var(--label)"></i><span class="add-label">Clock</span></div>
+            <div class="add-card" onclick="Core.createWidget('todo', 3, 4)"><i class="fa-solid fa-check-circle add-icon" style="color:var(--ios-orange)"></i><span class="add-label">Reminders</span></div>
+            <div class="add-card" onclick="Core.createWidget('calc', 3, 5)"><i class="fa-solid fa-calculator add-icon" style="color:var(--ios-green)"></i><span class="add-label">Calculator</span></div>
+            <div class="add-card" onclick="Core.createWidget('music', 4, 2)"><i class="fa-brands fa-spotify add-icon" style="color:#1DB954"></i><span class="add-label">Spotify</span></div>
+            <div class="add-card" onclick="Core.createWidget('weather', 3, 2)"><i class="fa-solid fa-cloud-sun add-icon" style="color:var(--ios-yellow)"></i><span class="add-label">Weather</span></div>
+            <div class="add-card" onclick="Core.createWidget('notes', 6, 3)"><i class="fa-solid fa-note-sticky add-icon" style="color:var(--ios-yellow)"></i><span class="add-label">Notes</span></div>
+            <div class="add-card" onclick="Core.createWidget('youtube', 4, 3)"><i class="fa-brands fa-youtube add-icon" style="color:#FF0000"></i><span class="add-label">YouTube</span></div>
+            <div class="add-card" onclick="Core.createWidget('timer', 3, 2)"><i class="fa-solid fa-hourglass-end add-icon" style="color:var(--ios-orange)"></i><span class="add-label">Timer</span></div>
+            <div class="add-card" onclick="Core.createWidget('battery', 3, 2)"><i class="fa-solid fa-battery-half add-icon" style="color:var(--ios-green)"></i><span class="add-label">Battery</span></div>
+            <div class="add-card" onclick="Core.createWidget('converter', 4, 3)"><i class="fa-solid fa-right-left add-icon" style="color:#14b8a6"></i><span class="add-label">Converter</span></div>
+            <div class="add-card" onclick="Core.createWidget('vault', 4, 4)"><i class="fa-solid fa-lock add-icon" style="color:#ef4444"></i><span class="add-label">Vault</span></div>
+            <div class="add-card" onclick="Core.createWidget('draw', 4, 6)"><i class="fa-solid fa-pen-nib add-icon" style="color:#10b981"></i><span class="add-label">Whiteboard</span></div>
+            <div class="add-card" onclick="Core.createWidget('media', 4, 2)"><i class="fa-solid fa-play add-icon" style="color:var(--primary)"></i><span class="add-label">Media</span></div>
+            <div class="add-card" onclick="Core.createWidget('links', 4, 2)"><i class="fa-solid fa-gamepad add-icon" style="color:var(--primary)"></i><span class="add-label">Links</span></div>
+            <div class="add-card" onclick="Core.createWidget('calendar', 4, 4)"><i class="fa-regular fa-calendar add-icon" style="color:#ef4444"></i><span class="add-label">Calendar</span></div>
+            <div class="add-card" onclick="Core.createWidget('pandora', 3, 2)"><i class="fa-solid fa-hourglass-end add-icon" style="color:#eab308"></i><span class="add-label">Minutes</span></div>
+        </div>
+    </div>
+
+    <div id="settings-modal">
+        <div class="flex justify-between items-center mb-6">
+            <div class="text-2xl font-bold" style="color:var(--text-main)">Settings</div>
+            <button class="btn btn-danger" onclick="UI.toggleSettings(false)"><i class="fa-solid fa-xmark"></i> Close</button>
+        </div>
+        <div class="flex flex-col gap-5 items-center justify-center flex-1">
+             <div class="text-center">
+                 <div id="settings-avatar" style="width:80px; height:80px; margin:0 auto 12px auto; border-radius: 50%; background: var(--inactive); border: 3px solid var(--primary);"></div>
+                 <h3 id="settings-name" style="font-size: 20px; font-weight: 700;">User</h3>
+             </div>
+             <button class="btn btn-gold" onclick="window.location.href='checkout.html'"><i class="fa-solid fa-star"></i> Upgrade to Pro</button>
+             <button class="btn btn-danger" onclick="Core.reset()"><i class="fa-solid fa-trash"></i> Reset Dashboard</button>
+        </div>
+    </div>
+
+    <nav>
+        <div class="brand"><i class="fa-solid fa-layer-group" style="color: var(--primary);"></i> StudyNest</div>
+        <div class="flex gap-3 items-center">
+            <button class="btn" style="padding: 8px 12px;" onclick="Core.toggleTheme()">
+                <span class="material-symbols-rounded" id="navThemeIcon">dark_mode</span>
+            </button>
+            <button class="btn btn-gold" onclick="window.location.href='checkout.html'"><i class="fa-solid fa-star"></i> Upgrade</button>
+            <button class="btn btn-primary" onclick="UI.toggleAdd(true)"><i class="fa-solid fa-plus"></i> Add</button>
+            <button id="edit-btn" class="btn" onclick="Core.toggleEdit()"><i class="fa-solid fa-pen-nib"></i> Edit</button>
+            <div class="user-menu-container relative ml-2">
+                <div id="nav-user-avatar" class="user-avatar-btn" onclick="UI.toggleUserMenu()"></div>
+                <div id="user-dropdown" class="user-dropdown">
+                    <div class="dropdown-item" onclick="UI.toggleSettings(true)"><i class="fa-solid fa-gear"></i> Settings</div>
+                    <div class="dropdown-item danger" onclick="window.location.href='index.html'"><i class="fa-solid fa-right-from-bracket"></i> Log Out</div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div id="dashboard-wrapper">
+        <div class="grid-stack"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack-all.js"></script>
+
+    <script>
+        // Check if user is logged in via local fallback
+        if(!localStorage.getItem('studynest_guest_data') && !localStorage.getItem('studynest_guest_name')) {
+            // Note: Ideally you check Firebase auth state here, but for simplicity we rely on the previous redirection
+        }
+
+        const Utils = {
+            initTodo: (id) => {
+                const input = document.getElementById(`in-${id}`);
+                const list = document.getElementById(`list-${id}`);
+                if(input) {
+                    input.onkeypress = (e) => {
+                        if(e.key === 'Enter' && input.value.trim()) {
+                            const div = document.createElement('div'); div.className = 'task-item';
+                            div.innerHTML = `<div class="task-check" onclick="this.parentElement.classList.toggle('done')"><i class="fa-solid fa-check"></i></div><span class="task-text">${input.value}</span><i class="fa-solid fa-xmark" style="margin-left:auto;cursor:pointer;color:var(--error)" onclick="this.parentElement.remove()"></i>`;
+                            list.prepend(div);
+                            input.value = '';
+                        }
                     }
                 }
+            },
+            updateTime: () => {
+                const n = new Date();
+                document.querySelectorAll('.time-big').forEach(e => e.innerText = n.toLocaleTimeString([], {hour:'numeric', minute:'2-digit', hour12:true}));
+                document.querySelectorAll('.date-sub').forEach(e => e.innerText = n.toLocaleDateString(undefined, {weekday:'long', month:'short', day:'numeric'}));
+            },
+            initWeather: (id) => {
+                const el = document.getElementById(`temp-${id}`);
+                if(el) el.innerText = "72°F";
+            },
+            calc: (id, val) => {
+                const s = document.getElementById(`scr-${id}`);
+                if(val === 'AC') s.innerText = '0';
+                else if(val === '=') { try { s.innerText = eval(s.innerText.replace('×','*').replace('÷','/').replace('^','**').replace('π','Math.PI')); } catch { s.innerText = 'Error'; } }
+                else { s.innerText = s.innerText === '0' ? val : s.innerText + val; }
+            },
+            initCanvas: (id) => {
+                const cvs = document.getElementById(`canv-${id}`);
+                if(!cvs) return;
+                const ctx = cvs.getContext('2d');
+                const rect = cvs.getBoundingClientRect(); cvs.width = rect.width; cvs.height = rect.height;
+                let drawing = false;
+                ctx.lineWidth = 3; ctx.lineCap = 'round';
+                cvs.onmousedown = (e) => { drawing = true; ctx.beginPath(); ctx.moveTo(e.offsetX, e.offsetY); };
+                cvs.onmousemove = (e) => { if(drawing) { ctx.lineTo(e.offsetX, e.offsetY); ctx.stroke(); } };
+                cvs.onmouseup = () => drawing = false;
+            },
+            setPen: (id, color) => {
+                const cvs = document.getElementById(`canv-${id}`);
+                if(cvs) cvs.getContext('2d').strokeStyle = color;
+            },
+            clearCanvas: (id) => {
+                const cvs = document.getElementById(`canv-${id}`);
+                if(cvs) cvs.getContext('2d').clearRect(0,0,cvs.width,cvs.height);
             }
-        },
-        updateTime: () => {
-            const n = new Date();
-            document.querySelectorAll('.time-big').forEach(e => e.innerText = n.toLocaleTimeString([], {hour:'numeric', minute:'2-digit', hour12:true}));
-            document.querySelectorAll('.date-sub').forEach(e => e.innerText = n.toLocaleDateString(undefined, {weekday:'long', month:'short', day:'numeric'}));
-        },
-        initWeather: (id) => {
-            // Simulated Weather
-            const el = document.getElementById(`temp-${id}`);
-            if(el) el.innerText = "72°F";
-        },
-        calc: (id, val) => {
-            const s = document.getElementById(`scr-${id}`);
-            if(val === 'AC') s.innerText = '0';
-            else if(val === '=') { try { s.innerText = eval(s.innerText.replace('×','*').replace('÷','/').replace('^','**').replace('π','Math.PI')); } catch { s.innerText = 'Error'; } }
-            else { s.innerText = s.innerText === '0' ? val : s.innerText + val; }
-        },
-        initCanvas: (id) => {
-            const cvs = document.getElementById(`canv-${id}`);
-            if(!cvs) return;
-            const ctx = cvs.getContext('2d');
-            const rect = cvs.getBoundingClientRect(); cvs.width = rect.width; cvs.height = rect.height;
-            let drawing = false;
-            ctx.lineWidth = 3; ctx.lineCap = 'round';
-            cvs.onmousedown = (e) => { drawing = true; ctx.beginPath(); ctx.moveTo(e.offsetX, e.offsetY); };
-            cvs.onmousemove = (e) => { if(drawing) { ctx.lineTo(e.offsetX, e.offsetY); ctx.stroke(); } };
-            cvs.onmouseup = () => drawing = false;
-        },
-        setPen: (id, color) => {
-            const cvs = document.getElementById(`canv-${id}`);
-            if(cvs) cvs.getContext('2d').strokeStyle = color;
-        },
-        clearCanvas: (id) => {
-            const cvs = document.getElementById(`canv-${id}`);
-            if(cvs) cvs.getContext('2d').clearRect(0,0,cvs.width,cvs.height);
-        }
-    };
+        };
 
-    const Templates = {
-        get: (type, id, data) => {
-            const wrap = (l, c) => `<div class="remove-widget">✕</div><div class="w-header"><span class="w-label">${l}</span></div><div class="w-content">${c}</div>`;
-            const map = {
-                clock: `<div class="remove-widget">✕</div><div class="clock-container"><div class="time-big">00:00</div><div class="date-sub">Loading...</div></div>`,
-                todo: wrap('Reminders', `<div class="task-input-row"><input id="in-${id}" placeholder="Add task..."></div><div id="list-${id}" class="task-list"></div>`),
-                notes: wrap('Notes', `<textarea id="nt-${id}" style="flex:1;resize:none;background:transparent;border:none;padding:0;font-family:inherit;font-size:15px;" placeholder="Type here..."></textarea>`),
-                calc: wrap('Scientific', `<div id="scr-${id}" class="calc-screen">0</div><div class="calc-grid-adv"><button class="calc-btn calc-sci" onclick="Utils.calc('${id}','sin')">sin</button><button class="calc-btn calc-sci" onclick="Utils.calc('${id}','cos')">cos</button><button class="calc-btn calc-sci" onclick="Utils.calc('${id}','tan')">tan</button><button class="calc-btn calc-orange" onclick="Utils.calc('${id}','AC')">AC</button><button class="calc-btn calc-orange" onclick="Utils.calc('${id}','DEL')">⌫</button><button class="calc-btn" onclick="Utils.calc('${id}','7')">7</button><button class="calc-btn" onclick="Utils.calc('${id}','8')">8</button><button class="calc-btn" onclick="Utils.calc('${id}','9')">9</button><button class="calc-btn calc-orange" onclick="Utils.calc('${id}','×')">×</button><button class="calc-btn calc-orange" onclick="Utils.calc('${id}','÷')">÷</button><button class="calc-btn" onclick="Utils.calc('${id}','4')">4</button><button class="calc-btn" onclick="Utils.calc('${id}','5')">5</button><button class="calc-btn" onclick="Utils.calc('${id}','6')">6</button><button class="calc-btn calc-orange" onclick="Utils.calc('${id}','-')">-</button><button class="calc-btn calc-orange" onclick="Utils.calc('${id}','+')">+</button><button class="calc-btn" onclick="Utils.calc('${id}','1')">1</button><button class="calc-btn" onclick="Utils.calc('${id}','2')">2</button><button class="calc-btn" onclick="Utils.calc('${id}','3')">3</button><button class="calc-btn" onclick="Utils.calc('${id}','0')">0</button><button class="calc-btn calc-orange" onclick="Utils.calc('${id}','=')">=</button></div>`),
-                weather: wrap('Weather', `<div style="display:flex;align-items:center;justify-content:center;gap:20px;height:100%"><i class="fa-solid fa-cloud-sun" style="font-size:36px;color:var(--ios-yellow)"></i><div><div id="temp-${id}" class="weather-temp">--°</div><div style="font-size:12px;color:var(--label);">Partly Cloudy</div></div></div>`),
-                draw: wrap('Whiteboard', `<div class="draw-wrapper"><div class="draw-controls"><div class="d-color" style="background:#000" onclick="Utils.setPen('${id}','#000')"></div><div class="d-color" style="background:red" onclick="Utils.setPen('${id}','red')"></div><div class="d-color" style="background:blue" onclick="Utils.setPen('${id}','blue')"></div><button onclick="Utils.clearCanvas('${id}')" style="margin-top:auto"><i class="fa-solid fa-trash"></i></button></div><canvas id="canv-${id}" class="draw-canvas"></canvas></div>`),
-                music: wrap('Spotify', `<div style="display:flex; align-items:center; justify-content:center; height:100%; color:var(--label)">Spotify API Placeholder</div>`),
-                youtube: wrap('YouTube', `<div style="display:flex; align-items:center; justify-content:center; height:100%; color:var(--label)">YouTube Player Placeholder</div>`),
-                battery: wrap('Battery', `<div style="text-align:center; font-size:24px; font-weight:bold;">100%</div>`),
-                converter: wrap('Converter', `<div class="conv-wrapper"><input type="number" class="conv-input" placeholder="Value"><div class="conv-result">0</div></div>`),
-                vault: wrap('Vault', `<div class="vault-wrapper"><div class="vault-item"><span>Password 1</span><i class="fa-solid fa-copy"></i></div></div>`),
-                timer: wrap('Timer', `<div style="text-align:center; font-size:32px;">00:00</div>`),
-                media: wrap('Media', `<div style="text-align:center;">Media Controls</div>`),
-                links: wrap('Links', `<div style="text-align:center;">Quick Links</div>`),
-                calendar: wrap('Calendar', `<div style="text-align:center;">Calendar Widget</div>`),
-                pandora: wrap('Minutes', `<div style="text-align:center;">Pandora Widget</div>`)
+        const Templates = {
+            get: (type, id, data) => {
+                const wrap = (l, c) => `<div class="remove-widget">✕</div><div class="w-header"><span class="w-label">${l}</span></div><div class="w-content">${c}</div>`;
+                const map = {
+                    clock: `<div class="remove-widget">✕</div><div class="clock-container"><div class="time-big">00:00</div><div class="date-sub">Loading...</div></div>`,
+                    todo: wrap('Reminders', `<div class="task-input-row"><input id="in-${id}" placeholder="Add task..."></div><div id="list-${id}" class="task-list"></div>`),
+                    notes: wrap('Notes', `<textarea id="nt-${id}" style="flex:1;resize:none;background:transparent;border:none;padding:0;font-family:inherit;font-size:15px;" placeholder="Type here..."></textarea>`),
+                    calc: wrap('Scientific', `<div id="scr-${id}" class="calc-screen">0</div><div class="calc-grid-adv"><button class="calc-btn calc-sci" onclick="Utils.calc('${id}','sin')">sin</button><button class="calc-btn calc-sci" onclick="Utils.calc('${id}','cos')">cos</button><button class="calc-btn calc-sci" onclick="Utils.calc('${id}','tan')">tan</button><button class="calc-btn calc-orange" onclick="Utils.calc('${id}','AC')">AC</button><button class="calc-btn calc-orange" onclick="Utils.calc('${id}','DEL')">⌫</button><button class="calc-btn" onclick="Utils.calc('${id}','7')">7</button><button class="calc-btn" onclick="Utils.calc('${id}','8')">8</button><button class="calc-btn" onclick="Utils.calc('${id}','9')">9</button><button class="calc-btn calc-orange" onclick="Utils.calc('${id}','×')">×</button><button class="calc-btn calc-orange" onclick="Utils.calc('${id}','÷')">÷</button><button class="calc-btn" onclick="Utils.calc('${id}','4')">4</button><button class="calc-btn" onclick="Utils.calc('${id}','5')">5</button><button class="calc-btn" onclick="Utils.calc('${id}','6')">6</button><button class="calc-btn calc-orange" onclick="Utils.calc('${id}','-')">-</button><button class="calc-btn calc-orange" onclick="Utils.calc('${id}','+')">+</button><button class="calc-btn" onclick="Utils.calc('${id}','1')">1</button><button class="calc-btn" onclick="Utils.calc('${id}','2')">2</button><button class="calc-btn" onclick="Utils.calc('${id}','3')">3</button><button class="calc-btn" onclick="Utils.calc('${id}','0')">0</button><button class="calc-btn calc-orange" onclick="Utils.calc('${id}','=')">=</button></div>`),
+                    weather: wrap('Weather', `<div style="display:flex;align-items:center;justify-content:center;gap:20px;height:100%"><i class="fa-solid fa-cloud-sun" style="font-size:36px;color:var(--ios-yellow)"></i><div><div id="temp-${id}" class="weather-temp">--°</div><div style="font-size:12px;color:var(--label);">Partly Cloudy</div></div></div>`),
+                    draw: wrap('Whiteboard', `<div class="draw-wrapper"><div class="draw-controls"><div class="d-color" style="background:#000" onclick="Utils.setPen('${id}','#000')"></div><div class="d-color" style="background:red" onclick="Utils.setPen('${id}','red')"></div><div class="d-color" style="background:blue" onclick="Utils.setPen('${id}','blue')"></div><button onclick="Utils.clearCanvas('${id}')" style="margin-top:auto"><i class="fa-solid fa-trash"></i></button></div><canvas id="canv-${id}" class="draw-canvas"></canvas></div>`),
+                    music: wrap('Spotify', `<div style="display:flex; align-items:center; justify-content:center; height:100%; color:var(--label)">Spotify API Placeholder</div>`),
+                    youtube: wrap('YouTube', `<div style="display:flex; align-items:center; justify-content:center; height:100%; color:var(--label)">YouTube Player Placeholder</div>`),
+                    battery: wrap('Battery', `<div style="text-align:center; font-size:24px; font-weight:bold;">100%</div>`),
+                    converter: wrap('Converter', `<div class="conv-wrapper"><input type="number" class="conv-input" placeholder="Value"><div class="conv-result">0</div></div>`),
+                    vault: wrap('Vault', `<div class="vault-wrapper"><div class="vault-item"><span>Password 1</span><i class="fa-solid fa-copy"></i></div></div>`),
+                    timer: wrap('Timer', `<div style="text-align:center; font-size:32px;">00:00</div>`),
+                    media: wrap('Media', `<div style="text-align:center;">Media Controls</div>`),
+                    links: wrap('Links', `<div style="text-align:center;">Quick Links</div>`),
+                    calendar: wrap('Calendar', `<div style="text-align:center;">Calendar Widget</div>`),
+                    pandora: wrap('Minutes', `<div style="text-align:center;">Pandora Widget</div>`)
+                };
+                return map[type] || `<div>Error: ${type} not found</div>`;
+            }
+        };
+
+        const UI = {
+            toggleAdd: (show) => { const m=document.getElementById('add-modal'), o=document.getElementById('modal-overlay'); if(show){m.classList.add('show');o.classList.add('show');}else{m.classList.remove('show');o.classList.remove('show');}},
+            toggleSettings: (show) => { const m = document.getElementById('settings-modal'); const o = document.getElementById('modal-overlay'); document.getElementById('user-dropdown').classList.remove('show'); if(show){ m.classList.add('show'); o.classList.add('show'); } else { m.classList.remove('show'); o.classList.remove('show'); } },
+            toggleUserMenu: () => { document.getElementById('user-dropdown').classList.toggle('show'); },
+            closeAllModals: () => { UI.toggleAdd(false); UI.toggleSettings(false); },
+            showToast: (msg) => {
+                const el = document.getElementById('action-toast'); el.innerText = msg; el.style.display = 'block'; 
+                el.style.animation = 'none'; el.offsetHeight; el.style.animation = 'popUpFade 2s ease forwards'; 
+                setTimeout(() => { el.style.display = 'none'; }, 2000);
+            }
+        };
+
+        const Core = (() => {
+            let grid = null, editing = false;
+            const init = () => {
+                const isDark = localStorage.getItem('theme') !== 'light';
+                if(isDark) document.documentElement.classList.add('dark');
+                document.getElementById('navThemeIcon').innerText = isDark ? 'light_mode' : 'dark_mode';
+                // Try to get name from local storage (set by index.html) or default
+                document.getElementById('settings-name').innerText = localStorage.getItem('studynest_guest_name') || "User";
+
+                grid = GridStack.init({ column: 12, cellHeight: '85px', margin: 16, float: true, animate: true, disableDrag: true, disableResize: true });
+                grid.off('change added removed');
+                
+                loadData();
+                
+                document.getElementById('dashboard-wrapper').addEventListener('click', (e) => { if (editing && !e.target.closest('.grid-stack-item')) Core.toggleEdit(); if (!e.target.closest('.user-menu-container')) document.getElementById('user-dropdown').classList.remove('show'); });
             };
-            return map[type] || `<div>Error: ${type} not found</div>`;
-        }
-    };
-</script>
+
+            const toggleEdit = () => {
+                editing = !editing; grid.enableMove(editing); grid.enableResize(editing); document.body.classList.toggle('editing', editing);
+                const btn = document.getElementById('edit-btn');
+                if(editing) { btn.innerHTML = '<i class="fa-solid fa-check"></i> Done'; btn.classList.add('btn-primary'); } else { btn.innerHTML = '<i class="fa-solid fa-pen-nib"></i> Edit'; btn.classList.remove('btn-primary'); }
+            };
+
+            const toggleTheme = () => {
+                document.documentElement.classList.toggle('dark');
+                const isDark = document.documentElement.classList.contains('dark');
+                localStorage.setItem('theme', isDark ? 'dark' : 'light');
+                document.getElementById('navThemeIcon').innerText = isDark ? 'light_mode' : 'dark_mode';
+            };
+
+            const createWidget = (type, w, h) => {
+                const id = 'w-' + Math.random().toString(36).substr(2, 9);
+                const content = Templates.get(type, id);
+                const el = grid.addWidget({ w, h, content, minW: 2, minH: 2 });
+                el.setAttribute('data-type', type); el.id = 'w-' + id;
+                const removeBtn = el.querySelector('.remove-widget'); 
+                if(removeBtn) { el.appendChild(removeBtn); removeBtn.onclick = () => { grid.removeWidget(el); saveLayout(); }; }
+                
+                if (type === 'todo') Utils.initTodo(id);
+                if (type === 'clock') setInterval(Utils.updateTime, 1000);
+                if (type === 'weather') Utils.initWeather(id);
+                if (type === 'draw') setTimeout(() => Utils.initCanvas(id), 100);
+                
+                UI.toggleAdd(false);
+                saveLayout();
+            };
+
+            const saveLayout = () => {
+                const items = grid.getGridItems().map(el => {
+                    const type = el.getAttribute('data-type'); 
+                    return { x: el.gridstackNode.x, y: el.gridstackNode.y, w: el.gridstackNode.w, h: el.gridstackNode.h, type };
+                });
+                localStorage.setItem('studynest_guest_data', JSON.stringify(items));
+                document.getElementById('status-bar').style.display='block';
+                setTimeout(()=>document.getElementById('status-bar').style.display='none', 1000);
+            };
+
+            const loadData = () => {
+                const data = JSON.parse(localStorage.getItem('studynest_guest_data') || '[]');
+                if(data.length === 0) {
+                    createWidget('clock', 4, 2);
+                    createWidget('todo', 3, 4);
+                } else {
+                    grid.batchUpdate();
+                    data.forEach(item => {
+                        const id = 'w-' + Math.random().toString(36).substr(2, 9);
+                        const content = Templates.get(item.type, id);
+                        const el = grid.addWidget({ w: item.w, h: item.h, x: item.x, y: item.y, content, minW: 2, minH: 2 });
+                        el.setAttribute('data-type', item.type); el.id = 'w-' + id;
+                        const removeBtn = el.querySelector('.remove-widget'); 
+                        if(removeBtn) { el.appendChild(removeBtn); removeBtn.onclick = () => { grid.removeWidget(el); saveLayout(); }; }
+                        if(item.type === 'todo') Utils.initTodo(id);
+                        if(item.type === 'weather') Utils.initWeather(id);
+                        if(item.type === 'draw') setTimeout(() => Utils.initCanvas(id), 100);
+                    });
+                    grid.commit();
+                }
+                grid.on('change added removed', saveLayout);
+            };
+            
+            const reset = () => {
+                if(confirm("Reset Dashboard?")) {
+                    localStorage.removeItem('studynest_guest_data');
+                    location.reload();
+                }
+            };
+
+            return { init, toggleEdit, createWidget, saveLayout, reset, toggleTheme };
+        })();
+
+        window.onload = Core.init;
+    </script>
+</body>
+</html>
