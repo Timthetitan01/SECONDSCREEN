@@ -8,6 +8,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@48,400,0,0" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
     <script> tailwind.config = { darkMode: 'class' } </script>
 
     <style>
@@ -62,8 +67,8 @@
                 <h1 class="text-5xl font-extrabold text-center mb-10 tracking-tight" style="color: var(--text-main);">StudyNest</h1>
                 
                 <div class="input-container">
-                    <input type="text" id="usernameInput" class="custom-input" placeholder=" ">
-                    <label class="custom-label text-xl">Display Name</label>
+                    <input type="email" id="emailInput" class="custom-input" placeholder=" ">
+                    <label class="custom-label text-xl">Email Address</label>
                 </div>
 
                 <div class="input-container">
@@ -82,7 +87,7 @@
                         <span class="material-symbols-rounded icon-layer" id="icon-success">check_circle</span>
                     </div>
                     <div class="text-center mt-6 w-full flex flex-col items-center justify-center">
-                        <p id="cardName" class="text-4xl font-bold truncate transition-colors duration-500 w-full" style="color: var(--text-main);">Name</p>
+                        <p id="cardName" class="text-3xl font-bold truncate transition-colors duration-500 w-full" style="color: var(--text-main);">User</p>
                         <div class="h-12 flex items-center justify-center w-full mt-2 overflow-hidden">
                             <p id="cardPass" class="tracking-widest transition-all duration-200 ease-out truncate" style="color: var(--label); font-size: 2.25rem;">*******</p>
                         </div>
@@ -94,7 +99,8 @@
                         <span>Enter Dashboard</span>
                         <svg id="spinner" class="animate-spin absolute hidden w-8 h-8 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                     </button>
-                    <button class="w-full py-3 rounded-full border-2 border-[var(--inactive)] text-[var(--text-main)] font-bold hover:border-[var(--primary)] transition-colors flex items-center justify-center gap-2 bg-transparent" onclick="window.location.href='dashboard.html'">
+                    <button class="w-full py-3 rounded-full border-2 border-[var(--inactive)] text-[var(--text-main)] font-bold hover:border-[var(--primary)] transition-colors flex items-center justify-center gap-2 bg-transparent" onclick="Auth.googleLogin()">
+                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5">
                         Sign in with Google
                     </button>
                 </div>
@@ -103,6 +109,24 @@
     </div>
 
     <script>
+        // --- FIREBASE CONFIGURATION ---
+        // REPLACE THE KEYS BELOW WITH YOUR ACTUAL FIREBASE CONSOLE KEYS
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY_HERE",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.firebasestorage.app",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Initialize Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const auth = firebase.auth();
+        const provider = new firebase.auth.GoogleAuthProvider();
+
         const LoginUI = {
             init: () => {
                 const isDark = localStorage.getItem('theme') !== 'light';
@@ -110,20 +134,26 @@
                 LoginUI.updateIcons();
                 document.getElementById('themeToggleOverlay').addEventListener('click', LoginUI.toggleTheme);
                 
-                const uInput = document.getElementById('usernameInput');
+                const eInput = document.getElementById('emailInput');
                 const pInput = document.getElementById('passwordInput');
                 const cardName = document.getElementById('cardName');
                 const cardPass = document.getElementById('cardPass');
                 const strengthMeter = document.getElementById('strengthMeter');
                 const submitBtn = document.getElementById('submitBtn');
                 
-                uInput.addEventListener('focus', LoginUI.updateIconState); pInput.addEventListener('focus', LoginUI.updateIconState);
-                uInput.addEventListener('blur', () => setTimeout(LoginUI.updateIconState, 10)); pInput.addEventListener('blur', () => setTimeout(LoginUI.updateIconState, 10));
+                eInput.addEventListener('focus', LoginUI.updateIconState); pInput.addEventListener('focus', LoginUI.updateIconState);
+                eInput.addEventListener('blur', () => setTimeout(LoginUI.updateIconState, 10)); pInput.addEventListener('blur', () => setTimeout(LoginUI.updateIconState, 10));
 
-                uInput.addEventListener('input', (e) => {
-                    cardName.innerText = e.target.value || "Name";
-                    if (e.target.value.length >= 3) { uInput.classList.add('valid'); uInput.classList.remove('invalid'); LoginUI.uValid = true; } 
-                    else { uInput.classList.remove('valid'); if(e.target.value.length > 0) uInput.classList.add('invalid'); LoginUI.uValid = false; }
+                eInput.addEventListener('input', (e) => {
+                    const val = e.target.value;
+                    // Simple display logic: grab text before @
+                    cardName.innerText = val ? val.split('@')[0] : "User";
+                    
+                    // Basic Email Regex for validation
+                    const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+
+                    if (isValidEmail) { eInput.classList.add('valid'); eInput.classList.remove('invalid'); LoginUI.uValid = true; } 
+                    else { eInput.classList.remove('valid'); if(val.length > 0) eInput.classList.add('invalid'); LoginUI.uValid = false; }
                     LoginUI.checkReady();
                 });
 
@@ -136,34 +166,15 @@
                     if (/[A-Z]/.test(val)) strength += 25; if (/[0-9]/.test(val)) strength += 25;
                     strengthMeter.style.width = strength + '%';
                     strengthMeter.style.background = strength <= 25 ? 'var(--error)' : (strength <= 50 ? '#eab308' : 'var(--success)');
-                    if (strength >= 50) { pInput.classList.add('valid'); pInput.classList.remove('invalid'); LoginUI.pValid = true; } 
+                    
+                    if (len >= 6) { pInput.classList.add('valid'); pInput.classList.remove('invalid'); LoginUI.pValid = true; } 
                     else { pInput.classList.remove('valid'); if(len > 0) pInput.classList.add('invalid'); LoginUI.pValid = false; }
                     LoginUI.checkReady();
                 });
 
                 submitBtn.addEventListener('click', () => {
                     if (!LoginUI.uValid || !LoginUI.pValid) return;
-                    submitBtn.classList.add('loading');
-                    submitBtn.querySelector('span').style.display = 'none';
-                    document.getElementById('spinner').classList.remove('hidden');
-
-                    setTimeout(() => {
-                        document.getElementById('spinner').classList.add('hidden');
-                        submitBtn.classList.remove('loading');
-                        submitBtn.style.background = 'var(--success)';
-                        submitBtn.querySelector('span').style.display = 'block';
-                        submitBtn.querySelector('span').innerText = 'Success!';
-                        submitBtn.style.transform = 'scale(1.1)';
-                        LoginUI.successMode = true; LoginUI.updateIconState();
-                        
-                        // Save Guest Data and Redirect
-                        localStorage.setItem('studynest_guest_data', JSON.stringify([])); 
-                        localStorage.setItem('studynest_guest_name', uInput.value);
-
-                        setTimeout(() => {
-                           window.location.href = "dashboard.html";
-                        }, 1500);
-                    }, 1500);
+                    Auth.emailLogin(eInput.value, pInput.value);
                 });
             },
             toggleTheme: () => {
@@ -188,8 +199,76 @@
                 if (LoginUI.uValid && LoginUI.pValid) { b.classList.add('ready'); b.disabled = false; } 
                 else { b.classList.remove('ready'); b.disabled = true; }
             },
+            showLoading: (isLoading) => {
+                const btn = document.getElementById('submitBtn');
+                const spinner = document.getElementById('spinner');
+                const text = btn.querySelector('span');
+                if(isLoading) {
+                    btn.classList.add('loading');
+                    text.style.display = 'none';
+                    spinner.classList.remove('hidden');
+                } else {
+                    btn.classList.remove('loading');
+                    text.style.display = 'block';
+                    spinner.classList.add('hidden');
+                }
+            },
+            showSuccess: () => {
+                const btn = document.getElementById('submitBtn');
+                LoginUI.showLoading(false);
+                btn.style.background = 'var(--success)';
+                btn.querySelector('span').innerText = 'Success!';
+                btn.style.transform = 'scale(1.1)';
+                LoginUI.successMode = true; LoginUI.updateIconState();
+                
+                setTimeout(() => {
+                    window.location.href = "dashboard.html";
+                }, 1500);
+            },
             uValid: false, pValid: false, successMode: false
         };
+
+        const Auth = {
+            emailLogin: (email, password) => {
+                LoginUI.showLoading(true);
+                // Try to Sign In
+                auth.signInWithEmailAndPassword(email, password)
+                    .then((userCredential) => {
+                        // Signed in
+                        LoginUI.showSuccess();
+                    })
+                    .catch((error) => {
+                        if (error.code === 'auth/user-not-found') {
+                            // User doesn't exist, try to Sign Up (Create Account)
+                            Auth.emailSignUp(email, password);
+                        } else {
+                            LoginUI.showLoading(false);
+                            alert("Error: " + error.message);
+                        }
+                    });
+            },
+            emailSignUp: (email, password) => {
+                auth.createUserWithEmailAndPassword(email, password)
+                    .then((userCredential) => {
+                        // Signed up
+                        LoginUI.showSuccess();
+                    })
+                    .catch((error) => {
+                        LoginUI.showLoading(false);
+                        alert("Creation Error: " + error.message);
+                    });
+            },
+            googleLogin: () => {
+                auth.signInWithPopup(provider)
+                    .then((result) => {
+                        // Google Sign-in successful
+                        LoginUI.showSuccess();
+                    }).catch((error) => {
+                        alert("Google Error: " + error.message);
+                    });
+            }
+        };
+
         window.onload = LoginUI.init;
     </script>
 </body>
